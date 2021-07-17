@@ -1,0 +1,11 @@
+[workspace]
+
+members = [
+	"pabitell-lib",
+]
+
+default-members = [
+	"pabitell-lib",
+]
+
+exclude = []

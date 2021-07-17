@@ -1,0 +1,12 @@
+[package]
+name = "pabitell-lib"
+version = "0.1.0"
+authors = ["Stepan Henek"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1"
+uuid = "0.8"
+
+[dev-dependencies]
+uuid = { version = "0.8", features = ["v4"] }
