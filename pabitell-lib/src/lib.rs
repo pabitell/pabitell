@@ -1,244 +1,406 @@
+pub mod events;
+#[cfg(feature = "with_translations")]
+pub mod translations;
+
 use anyhow::Result;
-use std::fmt;
-use uuid;
+use std::{any::Any, collections::HashMap, fmt};
+use uuid::Uuid;
+
+pub trait AsAny: Any {
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ItemState {
+    Owned(&'static str),
+    InScene(&'static str),
+    Unassigned,
+}
+
+impl Default for ItemState {
+    fn default() -> Self {
+        Self::Unassigned
+    }
+}
 
 pub trait Id {
-    fn id(&self) -> &uuid::Uuid;
+    fn id(&self) -> &Uuid;
+    fn set_id(&mut self, id: Uuid);
+    /// unique name within world
+    fn roles(&self) -> Vec<&'static str>;
 }
 
-pub trait Description {
-    fn detail(&self, world: &Box<dyn World>) -> &str;
-    fn short(&self, world: &Box<dyn World>) -> &str;
+pub trait Named {
+    /// unique name within world
+    fn name(&self) -> &str;
 }
 
-pub trait Item: Id + Description + fmt::Debug {
-    fn quantity(&self) -> Option<usize>;
+pub trait Description: Named {
+    fn long(&self, world: &Box<dyn World>) -> String;
+    fn short(&self, world: &Box<dyn World>) -> String;
 }
 
-pub trait Character: Id + Description + fmt::Debug {
-    fn items(&self) -> &[usize];
-    fn location(&self) -> Option<usize>;
+pub trait Item: Id + Named + AsAny + Description + fmt::Debug {
+    fn state(&self) -> &ItemState;
+    fn set_state(&mut self, state: ItemState);
 }
 
-pub trait Location: Id + Description + fmt::Debug {
-    fn items(&self) -> &[usize];
+pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
+    fn scene(&self) -> Option<&'static str>;
+    fn set_scene(&mut self, scene: Option<&'static str>);
 }
 
-pub trait Event: Id + fmt::Debug {
-    fn characters(&self) -> Vec<usize> {
-        // Characters related to event
-        vec![]
-    }
+pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
+
+pub trait Event: Id + Named + Description + fmt::Debug {
+    fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str>;
     fn can_be_triggered(&self, world: &Box<dyn World>) -> bool;
-    fn trigger(self, world: &mut Box<dyn World>) -> Option<Box<dyn Description>>;
+    fn trigger(self, world: &mut Box<dyn World>);
+    fn perform(self, world: &mut Box<dyn World>) -> bool
+    where
+        Self: Sized,
+    {
+        if self.can_be_triggered(world) {
+            self.trigger(world);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 pub trait WorldBuilder<S>
 where
     S: World,
 {
-    fn id(self, id: uuid::Uuid) -> Self;
-    fn description(self, text: Box<dyn Description>) -> Self;
     fn character(self, character: Box<dyn Character>) -> Self;
     fn item(self, item: Box<dyn Item>) -> Self;
-    fn location(self, item: Box<dyn Location>) -> Self;
-    fn ready(&self) -> bool;
+    fn scene(self, scene: Box<dyn Scene>) -> Self;
     fn build(self) -> Result<S>;
+    fn make_world() -> Result<S>;
 }
 
-pub trait World: Id {
-    fn description(&self) -> &Box<dyn Description>;
-    fn locations(&self) -> &[Box<dyn Location>];
-    fn characters(&self) -> &[Box<dyn Character>];
-    fn items(&self) -> &[Box<dyn Item>];
+pub trait World: Id + Named {
+    fn lang(&self) -> &str;
+    fn set_lang(&mut self, lang: &str) -> bool;
+    fn description(&self) -> Box<dyn Description>;
+    fn scenes(&self) -> &HashMap<String, Box<dyn Scene>>;
+    fn scenes_mut(&mut self) -> &mut HashMap<String, Box<dyn Scene>>;
+    fn characters(&self) -> &HashMap<String, Box<dyn Character>>;
+    fn characters_mut(&mut self) -> &mut HashMap<String, Box<dyn Character>>;
+    fn items(&self) -> &HashMap<String, Box<dyn Item>>;
+    fn items_mut(&mut self) -> &mut HashMap<String, Box<dyn Item>>;
+    #[cfg(feature = "with_world_setup")]
+    fn setup(&mut self);
+    #[cfg(feature = "with_world_setup")]
+    fn randomize_ids(&mut self) {
+        self.set_id(Uuid::new_v4());
+
+        self.characters_mut()
+            .values_mut()
+            .for_each(|e| e.set_id(Uuid::new_v4()));
+
+        self.items_mut()
+            .values_mut()
+            .for_each(|e| e.set_id(Uuid::new_v4()));
+
+        self.scenes_mut()
+            .values_mut()
+            .for_each(|e| e.set_id(Uuid::new_v4()));
+    }
 }
 
 #[cfg(test)]
 pub mod test {
-    use super::{Character, Description, Event, Id, Item, Location, World, WorldBuilder};
-    use anyhow::{anyhow, Result};
-    use uuid;
+    use super::{
+        AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, World,
+        WorldBuilder,
+    };
+    use anyhow::Result;
+    use std::{any::Any, collections::HashMap};
+    use uuid::Uuid;
 
     #[derive(Debug, Default)]
     struct TestCharacter {
-        id: uuid::Uuid,
-        items: Vec<usize>,
-        location: Option<usize>,
+        id: Uuid,
+        scene: Option<&'static str>,
     }
 
     impl Id for TestCharacter {
-        fn id(&self) -> &uuid::Uuid {
+        fn id(&self) -> &Uuid {
             &self.id
+        }
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
+        }
+        fn roles(&self) -> Vec<&'static str> {
+            vec![]
+        }
+    }
+
+    impl Named for TestCharacter {
+        fn name(&self) -> &str {
+            "test_character"
         }
     }
 
     impl Description for TestCharacter {
-        fn short(&self, _: &Box<dyn World>) -> &str {
-            "Test Character"
+        fn short(&self, _: &Box<dyn World>) -> String {
+            "Test Character".into()
         }
-        fn detail(&self, _: &Box<dyn World>) -> &str {
-            "Character description and perhaps items which it is carying"
+        fn long(&self, _: &Box<dyn World>) -> String {
+            "Character description and perhaps items which it is carrying".into()
+        }
+    }
+
+    impl AsAny for TestCharacter {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
         }
     }
 
     impl Character for TestCharacter {
-        fn items(&self) -> &[usize] {
-            &self.items
+        fn scene(&self) -> Option<&'static str> {
+            self.scene
         }
-        fn location(&self) -> Option<usize> {
-            self.location
+        fn set_scene(&mut self, scene: Option<&'static str>) {
+            self.scene = scene
         }
     }
 
     #[derive(Debug, Default)]
     struct TestItem {
         id: uuid::Uuid,
-        quantity: Option<usize>,
+        state: ItemState,
     }
 
     impl Id for TestItem {
         fn id(&self) -> &uuid::Uuid {
             &self.id
         }
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
+        }
+        fn roles(&self) -> Vec<&'static str> {
+            vec![]
+        }
+    }
+
+    impl Named for TestItem {
+        fn name(&self) -> &str {
+            "test_item"
+        }
     }
 
     impl Description for TestItem {
-        fn short(&self, _: &Box<dyn World>) -> &str {
-            "Test Location"
+        fn short(&self, _: &Box<dyn World>) -> String {
+            "Test Scene".into()
         }
-        fn detail(&self, _: &Box<dyn World>) -> &str {
-            "Test location detailed description"
+        fn long(&self, _: &Box<dyn World>) -> String {
+            "Test scene detailed description".into()
+        }
+    }
+
+    impl AsAny for TestItem {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
         }
     }
 
     impl Item for TestItem {
-        fn quantity(&self) -> Option<usize> {
-            Some(1)
+        fn state(&self) -> &ItemState {
+            &self.state
+        }
+        fn set_state(&mut self, state: ItemState) {
+            self.state = state;
         }
     }
 
     #[derive(Debug, Default)]
-    struct TestLocation {
-        id: uuid::Uuid,
-        items: Vec<usize>,
+    struct TestScene {
+        id: Uuid,
     }
 
-    impl Id for TestLocation {
-        fn id(&self) -> &uuid::Uuid {
+    impl Id for TestScene {
+        fn id(&self) -> &Uuid {
             &self.id
         }
-    }
-
-    impl Description for TestLocation {
-        fn short(&self, _: &Box<dyn World>) -> &str {
-            "Test Location"
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
         }
-        fn detail(&self, _: &Box<dyn World>) -> &str {
-            "Test location detailed description"
+        fn roles(&self) -> Vec<&'static str> {
+            vec![]
         }
     }
 
-    impl Location for TestLocation {
-        fn items(&self) -> &[usize] {
-            &self.items
+    impl Named for TestScene {
+        fn name(&self) -> &str {
+            "test_scene"
         }
     }
+
+    impl Description for TestScene {
+        fn short(&self, _: &Box<dyn World>) -> String {
+            "Test Scene".into()
+        }
+        fn long(&self, _: &Box<dyn World>) -> String {
+            "Test location detailed description".into()
+        }
+    }
+
+    impl AsAny for TestScene {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
+
+    impl Scene for TestScene {}
 
     #[derive(Clone, Debug)]
     struct TestDescription;
-    impl Description for TestDescription {
-        fn short(&self, _: &Box<dyn World>) -> &str {
-            "Test Event"
+    impl Named for TestDescription {
+        fn name(&self) -> &str {
+            "test_description"
         }
-        fn detail(&self, _: &Box<dyn World>) -> &str {
-            "Test event to do something"
+    }
+
+    impl Description for TestDescription {
+        fn short(&self, _: &Box<dyn World>) -> String {
+            "Test Event".into()
+        }
+        fn long(&self, _: &Box<dyn World>) -> String {
+            "Test event to do something".into()
         }
     }
 
     #[derive(Debug, Clone)]
     struct TestEvent {
-        id: uuid::Uuid,
+        id: Uuid,
         description: TestDescription,
-        success: TestDescription,
-        failure: TestDescription,
     }
     impl Id for TestEvent {
-        fn id(&self) -> &uuid::Uuid {
+        fn id(&self) -> &Uuid {
             &self.id
+        }
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
+        }
+        fn roles(&self) -> Vec<&'static str> {
+            vec![]
+        }
+    }
+    impl Named for TestEvent {
+        fn name(&self) -> &str {
+            "test_event"
         }
     }
     impl Event for TestEvent {
-        fn trigger(self, world: &mut Box<dyn World>) -> Option<Box<dyn Description>> {
-            if self.can_be_triggered(world) {
-                return Some(Box::new(TestDescription));
-            } else {
-                None
-            }
+        fn trigger(self, _world: &mut Box<dyn World>) {}
+
+        fn can_be_triggered(&self, _world: &Box<dyn World>) -> bool {
+            true
         }
 
-        fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
-            if let Some(location) = world.characters()[0].location() {
-                if location == 0 {
-                    return true;
-                }
-            }
-
-            false
+        fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str> {
+            vec!["test_scene"]
+        }
+    }
+    impl Description for TestEvent {
+        fn short(&self, _: &Box<dyn World>) -> String {
+            "Test Event".into()
+        }
+        fn long(&self, _: &Box<dyn World>) -> String {
+            "Test event".into()
         }
     }
 
-    struct TestStory {
-        id: uuid::Uuid,
-        description: Box<dyn Description>,
-        items: Vec<Box<dyn Item>>,
-        locations: Vec<Box<dyn Location>>,
-        characters: Vec<Box<dyn Character>>,
+    #[derive(Debug, Default)]
+    struct TestWorld {
+        id: Uuid,
+        lang: String,
+        items: HashMap<String, Box<dyn Item>>,
+        scenes: HashMap<String, Box<dyn Scene>>,
+        characters: HashMap<String, Box<dyn Character>>,
     }
 
-    impl Id for TestStory {
-        fn id(&self) -> &uuid::Uuid {
+    impl Id for TestWorld {
+        fn id(&self) -> &Uuid {
             &self.id
         }
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
+        }
+        fn roles(&self) -> Vec<&'static str> {
+            vec![]
+        }
     }
 
-    impl World for TestStory {
-        fn description(&self) -> &Box<dyn Description> {
-            &self.description
+    impl Named for TestWorld {
+        fn name(&self) -> &str {
+            "test_world"
+        }
+    }
+
+    impl World for TestWorld {
+        fn description(&self) -> Box<dyn Description> {
+            Box::new(TestDescription)
         }
 
-        fn items(&self) -> &[Box<dyn Item>] {
+        fn scenes(&self) -> &HashMap<String, Box<dyn Scene>> {
+            &self.scenes
+        }
+
+        fn scenes_mut(&mut self) -> &mut HashMap<String, Box<dyn Scene>> {
+            &mut self.scenes
+        }
+
+        fn characters(&self) -> &HashMap<String, Box<dyn Character>> {
+            &self.characters
+        }
+
+        fn characters_mut(&mut self) -> &mut HashMap<String, Box<dyn Character>> {
+            &mut self.characters
+        }
+
+        fn items(&self) -> &HashMap<String, Box<dyn Item>> {
             &self.items
         }
 
-        fn locations(&self) -> &[Box<dyn Location>] {
-            &self.locations
+        fn items_mut(&mut self) -> &mut HashMap<String, Box<dyn Item>> {
+            &mut self.items
         }
 
-        fn characters(&self) -> &[Box<dyn Character>] {
-            &self.characters
+        fn lang(&self) -> &str {
+            &self.lang
         }
+
+        fn set_lang(&mut self, lang: &str) -> bool {
+            self.lang = lang.into();
+            true
+        }
+
+        #[cfg(feature = "with_world_setup")]
+        fn setup(&mut self) {}
     }
 
     #[derive(Default)]
-    struct TestStoryBuilder {
-        id: Option<uuid::Uuid>,
-        description: Option<Box<dyn Description>>,
+    struct TestWorldBuilder {
         characters: Vec<Box<dyn Character>>,
         items: Vec<Box<dyn Item>>,
-        locations: Vec<Box<dyn Location>>,
+        scenes: Vec<Box<dyn Scene>>,
     }
 
-    impl WorldBuilder<TestStory> for TestStoryBuilder {
-        fn id(mut self, id: uuid::Uuid) -> Self {
-            self.id = Some(id);
-            self
-        }
-
-        fn description(mut self, text: Box<dyn Description>) -> Self {
-            self.description = Some(text);
-            self
-        }
-
+    impl WorldBuilder<TestWorld> for TestWorldBuilder {
         fn character(mut self, character: Box<dyn Character>) -> Self {
             self.characters.push(character);
             self
@@ -249,44 +411,51 @@ pub mod test {
             self
         }
 
-        fn location(mut self, item: Box<dyn Location>) -> Self {
-            self.locations.push(item);
+        fn scene(mut self, item: Box<dyn Scene>) -> Self {
+            self.scenes.push(item);
             self
         }
 
-        fn ready(&self) -> bool {
-            return self.id.is_some() && !self.characters.is_empty();
+        fn build(self) -> Result<TestWorld> {
+            Ok(TestWorld {
+                lang: "en-US".into(),
+                characters: self
+                    .characters
+                    .into_iter()
+                    .map(|e| (e.name().into(), e))
+                    .collect(),
+                items: self
+                    .items
+                    .into_iter()
+                    .map(|e| (e.name().into(), e))
+                    .collect(),
+                scenes: self
+                    .scenes
+                    .into_iter()
+                    .map(|e| (e.name().into(), e))
+                    .collect(),
+                ..Default::default()
+            })
         }
 
-        fn build(self) -> Result<TestStory> {
-            Ok(TestStory {
-                id: self.id.ok_or_else(|| anyhow!("Missing id"))?,
-                description: self
-                    .description
-                    .ok_or_else(|| anyhow!("Missing description"))?,
-                characters: self.characters,
-                items: self.items,
-                locations: self.locations,
-            })
+        fn make_world() -> Result<TestWorld> {
+            Self::default().build()
         }
     }
 
     #[test]
     fn linear() {
-        let story = TestStoryBuilder::default()
-            .id(uuid::Uuid::new_v4())
-            .description(Box::new(TestDescription))
+        let world = TestWorldBuilder::default()
             .character(Box::new(TestCharacter::default()))
             .character(Box::new(TestCharacter::default()))
             .item(Box::new(TestItem::default()))
             .item(Box::new(TestItem::default()))
             .item(Box::new(TestItem::default()))
             .item(Box::new(TestItem::default()))
-            .location(Box::new(TestLocation::default()))
-            .location(Box::new(TestLocation::default()))
-            .location(Box::new(TestLocation::default()));
+            .scene(Box::new(TestScene::default()))
+            .scene(Box::new(TestScene::default()))
+            .scene(Box::new(TestScene::default()));
 
-        assert_eq!(story.ready(), true);
-        assert!(story.build().is_ok());
+        assert!(world.build().is_ok());
     }
 }

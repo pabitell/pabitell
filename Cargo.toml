@@ -2,6 +2,7 @@
 
 members = [
 	"pabitell-lib",
+	"stories/doggie-and-kitie/cake/",
 ]
 
 default-members = [

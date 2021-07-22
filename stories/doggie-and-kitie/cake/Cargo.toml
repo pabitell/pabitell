@@ -1,0 +1,19 @@
+[package]
+name = "doggie_and_kitie-cake"
+version = "0.1.0"
+edition = "2018"
+
+[features]
+with_world_setup = ["uuid/v4", "pabitell-lib/with_world_setup"]
+
+[dependencies]
+anyhow = "1"
+fluent-bundle = { version = "~0.15.0" }
+include_dir = { version = "~0.6.1" }
+intl-memoizer = { version = "~0.5.1" }
+lazy_static = { version = "~1.4.0" }
+pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
+uuid = "0.8"
+
+[dev-dependencies]
+uuid = { version = "0.8", features = ["v4"] }
