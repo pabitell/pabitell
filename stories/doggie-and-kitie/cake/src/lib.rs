@@ -232,6 +232,27 @@ impl World for DortWorld {
             })
         });
     }
+
+    fn finished(&self) -> bool {
+        // test if doggie and kitie are ready to go
+        let doggie = self
+            .characters()
+            .get("doggie")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<characters::Doggie>()
+            .unwrap();
+
+        let kitie = self
+            .characters()
+            .get("kitie")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<characters::Kitie>()
+            .unwrap();
+
+        doggie.scene() == Some("way_home") && kitie.scene() == Some("way_home")
+    }
 }
 
 #[cfg(test)]
@@ -500,6 +521,8 @@ pub mod tests {
         // Make sure that doggie and kitie reached final destination
         assert!(world.characters().get("doggie").unwrap().scene() == Some("way_home"));
         assert!(world.characters().get("kitie").unwrap().scene() == Some("way_home"));
+
+        assert!(world.finished());
     }
 
     #[test]

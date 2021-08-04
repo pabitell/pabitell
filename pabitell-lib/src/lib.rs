@@ -109,6 +109,7 @@ pub trait World: Id + Named {
             .values_mut()
             .for_each(|e| e.set_id(Uuid::new_v4()));
     }
+    fn finished(&self) -> bool;
 }
 
 #[cfg(test)]
@@ -391,6 +392,10 @@ pub mod test {
 
         #[cfg(feature = "with_world_setup")]
         fn setup(&mut self) {}
+
+        fn finished(&self) -> bool {
+            true
+        }
     }
 
     #[derive(Default)]
