@@ -1,6 +1,7 @@
 pub mod characters;
 pub mod events;
 pub mod items;
+pub mod narrator;
 pub mod scenes;
 pub mod translations;
 
@@ -19,7 +20,7 @@ use crate::translations::{get_message, RESOURCES};
 const DEFAULT_LANG: &str = "cs";
 
 #[derive(Debug, Default)]
-pub struct DortWorld {
+pub struct CakeWorld {
     id: Uuid,
     lang: String,
     items: HashMap<String, Box<dyn Item>>,
@@ -27,31 +28,31 @@ pub struct DortWorld {
     scenes: HashMap<String, Box<dyn Scene>>,
 }
 
-struct DortWorldDescription;
-impl Named for DortWorldDescription {
-    fn name(&self) -> &str {
+struct CakeWorldDescription;
+impl Named for CakeWorldDescription {
+    fn name(&self) -> &'static str {
         "description"
     }
 }
 
-impl Description for DortWorldDescription {
-    fn long(&self, world: &Box<dyn World>) -> String {
+impl Description for CakeWorldDescription {
+    fn long(&self, world: &dyn World) -> String {
         get_message(&format!("{}.long", world.name()), world.lang(), None)
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(&format!("{}.short", world.name()), world.lang(), None)
     }
 }
 
 #[derive(Default)]
-struct DortWorldBuilder {
+struct CakeWorldBuilder {
     items: Vec<Box<dyn Item>>,
     characters: Vec<Box<dyn Character>>,
     scenes: Vec<Box<dyn Scene>>,
 }
 
-impl WorldBuilder<DortWorld> for DortWorldBuilder {
+impl WorldBuilder<CakeWorld> for CakeWorldBuilder {
     fn character(mut self, character: Box<dyn Character>) -> Self {
         self.characters.push(character);
         self
@@ -67,8 +68,8 @@ impl WorldBuilder<DortWorld> for DortWorldBuilder {
         self
     }
 
-    fn build(self) -> Result<DortWorld> {
-        Ok(DortWorld {
+    fn build(self) -> Result<CakeWorld> {
+        Ok(CakeWorld {
             lang: DEFAULT_LANG.into(),
             characters: self
                 .characters
@@ -90,7 +91,7 @@ impl WorldBuilder<DortWorld> for DortWorldBuilder {
         })
     }
 
-    fn make_world() -> Result<DortWorld> {
+    fn make_world() -> Result<CakeWorld> {
         Self::default()
             .scene(Box::new(scenes::PlayGround::default()))
             .scene(Box::new(scenes::Kitchen::default()))
@@ -145,7 +146,7 @@ impl WorldBuilder<DortWorld> for DortWorldBuilder {
     }
 }
 
-impl Id for DortWorld {
+impl Id for CakeWorld {
     fn id(&self) -> &Uuid {
         &self.id
     }
@@ -157,13 +158,13 @@ impl Id for DortWorld {
     }
 }
 
-impl Named for DortWorld {
-    fn name(&self) -> &str {
+impl Named for CakeWorld {
+    fn name(&self) -> &'static str {
         "povidani_o_pejskovi_a_kocicce-dort"
     }
 }
 
-impl World for DortWorld {
+impl World for CakeWorld {
     fn characters(&self) -> &HashMap<String, Box<dyn Character>> {
         &self.characters
     }
@@ -189,7 +190,7 @@ impl World for DortWorld {
     }
 
     fn description(&self) -> Box<dyn Description> {
-        Box::new(DortWorldDescription)
+        Box::new(CakeWorldDescription)
     }
 
     fn lang(&self) -> &str {
@@ -257,15 +258,17 @@ impl World for DortWorld {
 
 #[cfg(test)]
 pub mod tests {
-    use pabitell_lib::{Description, Event, Id, ItemState, World, WorldBuilder};
+    use pabitell_lib::{
+        events as lib_events, Description, Event, Id, ItemState, Narrator, World, WorldBuilder,
+    };
     use uuid::Uuid;
 
     use super::events;
-    use crate::{characters, DortWorld, DortWorldBuilder};
+    use crate::{characters, narrator, CakeWorld, CakeWorldBuilder};
 
     #[cfg(feature = "with_world_setup")]
-    pub fn prepare_world() -> DortWorld {
-        let mut world = DortWorldBuilder::make_world().unwrap();
+    pub fn prepare_world() -> CakeWorld {
+        let mut world = CakeWorldBuilder::make_world().unwrap();
         world.setup();
         world
     }
@@ -319,201 +322,110 @@ pub mod tests {
     #[cfg(feature = "with_world_setup")]
     #[test]
     fn workflow() {
-        let mut world: Box<dyn World> = Box::new(prepare_world());
-        // pick sand cake
-        let event = events::make_pick("pick_sand_cake", "kitie", "sand_cake", false);
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_pick("pick_sand_cake", "doggie", "sand_cake", false);
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
+        let mut world = prepare_world();
+        let narrator = narrator::Cake::default();
 
-        // give_and_consume sand cake
-        let event = events::make_give("give_sand_cake", "kitie", "doggie", "sand_cake", true);
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_give("give_sand_cake", "kitie", "doggie", "sand_cake", true);
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
+        // pick sand cake
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 2);
+        assert!(events.iter().all(|e| e.name() == "pick_sand_cake"));
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+        assert!(!events[1].can_be_triggered(&world));
+        assert!(!events[1].perform(&mut world));
+
+        // give and consume sand cake
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 1);
+        assert!(events.iter().all(|e| e.name() == "give_sand_cake"));
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
 
         // move both characters to kitchen
-        let event = events::make_move_to_kitchen("doggie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_kitchen("doggie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-        let event = events::make_move_to_kitchen("kitie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_kitchen("kitie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 2);
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 1);
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
 
-        // Put thinkgs to cake
         let mut doggie = false;
-        for (pick_name, use_name, item) in [
-            ("pick_flour", "add_flour", "flour"),
-            ("pick_milk", "add_milk", "milk"),
-            ("pick_egg", "add_egg", "egg"),
-            ("pick_suggar", "add_sugar", "suggar"),
-            ("pick_salt", "add_salt", "salt"),
-            ("pick_cheese", "add_cheese", "cheese"),
-            ("pick_bacon", "add_bacon", "bacon"),
-            ("pick_peanuts", "add_peanuts", "peanuts"),
-            ("pick_cucumber", "add_cucumber", "cucumber"),
-            ("pick_bones", "add_bones", "bones"),
-            ("pick_four_mice", "add_four_mice", "four_mice"),
-            ("pick_sausages", "add_sausages", "sausages"),
-            ("pick_whipped_cream", "add_whipped_cream", "whipped_cream"),
-            ("pick_onion", "add_onion", "onion"),
-            ("pick_chocolate", "add_chocolate", "chocolate"),
-            ("pick_sauce", "add_sauce", "sauce"),
-            ("pick_garlic", "add_garlic", "garlic"),
-            ("pick_pepper", "add_pepper", "pepper"),
-            ("pick_lard", "add_lard", "lard"),
-            ("pick_candy", "add_candy", "candy"),
-            ("pick_greaves", "add_greaves", "greaves"),
-            ("pick_cinnamon", "add_cinnamon", "cinnamon"),
-            ("pick_porridge", "add_porridge", "porridge"),
-            (
-                "pick_cottage_cheese",
-                "add_cottage_cheese",
-                "cottage_cheese",
-            ),
-            ("pick_ginger_bread", "add_ginger_bread", "ginger_bread"),
-            ("pick_vinegar", "add_vinegar", "vinegar"),
-            ("pick_goose_head", "add_goose_head", "goose_head"),
-            ("pick_cocoa", "add_cocoa", "cocoa"),
-            ("pick_cabbadge", "add_cabbadge", "cabbadge"),
-            ("pick_raisins", "add_raisins", "raisins"),
-        ] {
-            let event = events::make_pick(
-                pick_name,
-                if doggie { "doggie" } else { "kitie" },
-                item,
-                false,
-            );
-            assert!(event.can_be_triggered(&world));
-            assert!(event.perform(&mut world));
-            let event = events::make_pick(
-                pick_name,
-                if doggie { "doggie" } else { "kitie" },
-                item,
-                false,
-            );
-            assert!(!event.can_be_triggered(&world));
-            assert!(!event.perform(&mut world));
-            let event = events::make_use_item(
-                use_name,
-                if doggie { "doggie" } else { "kitie" },
-                item,
-                true,
-            );
-            assert!(event.can_be_triggered(&world));
-            assert!(event.perform(&mut world));
-            let event = events::make_use_item(
-                use_name,
-                if doggie { "doggie" } else { "kitie" },
-                item,
-                true,
-            );
-            assert!(!event.can_be_triggered(&world));
-            assert!(!event.perform(&mut world));
-            doggie = !doggie;
+        let mut events = narrator.available_events(&world);
+        for event in narrator.available_events(&world).iter_mut() {
+            if event.roles().contains(&"pick") {
+                // Put thinkgs to cake
+                let cevent = event
+                    .as_any_mut()
+                    .downcast_mut::<lib_events::Pick>()
+                    .unwrap();
+                if cevent.character() == "kitie" {
+                    assert!(cevent.can_be_triggered(&world));
+                    assert!(cevent.perform(&mut world));
+                }
+            } else if event.roles().contains(&"void") {
+                // Put disliked thing to cake
+                let cevent = event
+                    .as_any_mut()
+                    .downcast_mut::<lib_events::Void>()
+                    .unwrap();
+                assert!(cevent.can_be_triggered(&world));
+                assert!(cevent.perform(&mut world));
+            }
         }
 
-        // Put disliked thing to cake
-        let event = events::make_disliked_pick("add_jam", "kitie", "jam");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_disliked_pick("add_jam", "kitie", "jam");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_disliked_pick("add_bread", "doggie", "bread");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_disliked_pick("add_bread", "kitie", "bread");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
+        for event in narrator.available_events(&world).iter_mut() {
+            if event.roles().contains(&"use_item") {
+                assert!(event.can_be_triggered(&world));
+                assert!(event.perform(&mut world));
+            }
+        }
 
         // move both characters to children's garden
-        let event = events::make_move_to_children_garden("doggie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_children_garden("doggie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-        let event = events::make_move_to_children_garden("kitie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_children_garden("kitie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-
-        for (name, item) in [
-            ("play_with_marbles", "marbles"),
-            ("play_with_ball", "ball"),
-            ("play_with_dice", "dice"),
-        ] {
-            let event =
-                events::make_pick(name, if doggie { "doggie" } else { "kitie" }, item, true);
-            assert!(event.can_be_triggered(&world));
-            assert!(event.perform(&mut world));
-            let event =
-                events::make_pick(name, if doggie { "doggie" } else { "kitie" }, item, true);
-            assert!(!event.can_be_triggered(&world));
-            assert!(!event.perform(&mut world));
-            doggie = !doggie;
+        for event in narrator.available_events(&world).iter_mut() {
+            if event.roles().contains(&"move") {
+                assert!(event.can_be_triggered(&world));
+                assert!(event.perform(&mut world));
+            }
         }
 
-        // move both characters to garden
-        let event = events::make_move_to_garden("doggie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_garden("doggie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-        let event = events::make_move_to_garden("kitie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_garden("kitie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
+        // play with children
+        for event in narrator.available_events(&world).iter_mut() {
+            let cevent = event
+                .as_any_mut()
+                .downcast_mut::<lib_events::Pick>()
+                .unwrap();
+            if cevent.character() == "doggie" {
+                assert!(cevent.can_be_triggered(&world));
+                assert!(cevent.perform(&mut world));
+            }
+        }
 
-        // find big bad dog
-        let event = events::make_find_bad_dog("doggie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_find_bad_dog("kitie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-
-        // go to children house
-        let event = events::make_move_to_children_house("doggie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_children_house("doggie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-        let event = events::make_move_to_children_house("kitie");
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        let event = events::make_move_to_children_house("kitie");
-        assert!(!event.can_be_triggered(&world));
-        assert!(!event.perform(&mut world));
-
-        for (name, item) in [
-            ("eat_soup", "soup"),
-            ("eat_meat", "meat"),
-            ("eat_dumplings", "dumplings"),
-            ("eat_pie", "pie"),
-        ] {
-            let event = events::make_eat_meal(name, "doggie", item);
+        // move to garden
+        for event in narrator.available_events(&world).iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
+        }
 
-            let event = events::make_eat_meal(name, "kitie", item);
+        // find big bad dog
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 2);
+        let mut event = events.remove(0);
+        assert!(event.can_be_triggered(&world));
+        assert!(event.perform(&mut world));
+
+        // go to children house
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 2);
+        for event in narrator.available_events(&world).iter_mut() {
+            assert!(event.can_be_triggered(&world));
+            assert!(event.perform(&mut world));
+        }
+
+        let mut events = narrator.available_events(&world);
+        assert_eq!(events.len(), 8);
+        for event in events.iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
         }
@@ -527,7 +439,7 @@ pub mod tests {
 
     #[test]
     fn languages() {
-        let mut world = DortWorldBuilder::make_world().unwrap();
+        let mut world = CakeWorldBuilder::make_world().unwrap();
         for lang in vec!["cs", "en-US"] {
             assert!(world.set_lang(lang));
         }

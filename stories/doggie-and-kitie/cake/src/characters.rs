@@ -29,13 +29,13 @@ impl Id for Kitie {
 }
 
 impl Named for Kitie {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "kitie"
     }
 }
 
 impl Description for Kitie {
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}-{}-long", world.name(), self.name()),
             world.lang(),
@@ -43,7 +43,7 @@ impl Description for Kitie {
         )
     }
 
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
@@ -100,13 +100,13 @@ impl Id for Doggie {
 }
 
 impl Named for Doggie {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "doggie"
     }
 }
 
 impl Description for Doggie {
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
@@ -114,7 +114,7 @@ impl Description for Doggie {
         )
     }
 
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}-{}-long", world.name(), self.name()),
             world.lang(),
@@ -152,20 +152,20 @@ impl Doggie {
 mod tests {
     use pabitell_lib::{World, WorldBuilder};
 
-    use crate::DortWorldBuilder;
+    use crate::CakeWorldBuilder;
 
     #[test]
     fn kitie() {
-        let world: Box<dyn World> = Box::new(DortWorldBuilder::make_world().unwrap());
+        let world = CakeWorldBuilder::make_world().unwrap();
         let kitie = world.characters().get("kitie").unwrap();
-        assert_eq!(kitie.short(&world as &Box<dyn World>), "Kočička");
+        assert_eq!(kitie.short(&world), "Kočička");
         assert_eq!(kitie.long(&world), "Kočička");
     }
     #[test]
     fn doggie() {
-        let world: Box<dyn World> = Box::new(DortWorldBuilder::make_world().unwrap());
+        let world = CakeWorldBuilder::make_world().unwrap();
         let doggie = world.characters().get("doggie").unwrap();
-        assert_eq!(doggie.short(&world as &Box<dyn World>), "Pejsek");
+        assert_eq!(doggie.short(&world), "Pejsek");
         assert_eq!(doggie.long(&world), "Pejsek");
     }
 }

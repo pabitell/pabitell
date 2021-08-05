@@ -27,13 +27,13 @@ macro_rules! simple_item {
         }
 
         impl Named for $class_name {
-            fn name(&self) -> &str {
+            fn name(&self) -> &'static str {
                 $name
             }
         }
 
         impl Description for $class_name {
-            fn long(&self, world: &Box<dyn World>) -> String {
+            fn long(&self, world: &dyn World) -> String {
                 get_message(
                     &format!("{}-{}-long", world.name(), $name),
                     world.lang(),
@@ -41,7 +41,7 @@ macro_rules! simple_item {
                 )
             }
 
-            fn short(&self, world: &Box<dyn World>) -> String {
+            fn short(&self, world: &dyn World) -> String {
                 get_message(
                     &format!("{}-{}-short", world.name(), $name),
                     world.lang(),

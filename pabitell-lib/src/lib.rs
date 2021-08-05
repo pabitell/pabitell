@@ -33,12 +33,12 @@ pub trait Id {
 
 pub trait Named {
     /// unique name within world
-    fn name(&self) -> &str;
+    fn name(&self) -> &'static str;
 }
 
 pub trait Description: Named {
-    fn long(&self, world: &Box<dyn World>) -> String;
-    fn short(&self, world: &Box<dyn World>) -> String;
+    fn long(&self, world: &dyn World) -> String;
+    fn short(&self, world: &dyn World) -> String;
 }
 
 pub trait Item: Id + Named + AsAny + Description + fmt::Debug {
@@ -53,14 +53,11 @@ pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
 
 pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
 
-pub trait Event: Id + Named + Description + fmt::Debug {
-    fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str>;
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool;
-    fn trigger(self, world: &mut Box<dyn World>);
-    fn perform(self, world: &mut Box<dyn World>) -> bool
-    where
-        Self: Sized,
-    {
+pub trait Event: Id + Named + AsAny + Description + fmt::Debug {
+    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str>;
+    fn can_be_triggered(&self, world: &dyn World) -> bool;
+    fn trigger(&mut self, world: &mut dyn World);
+    fn perform(&mut self, world: &mut dyn World) -> bool {
         if self.can_be_triggered(world) {
             self.trigger(world);
             true
@@ -112,6 +109,13 @@ pub trait World: Id + Named {
     fn finished(&self) -> bool;
 }
 
+pub trait Narrator<W>
+where
+    W: World,
+{
+    fn available_events(&self, w: &W) -> Vec<Box<dyn Event>>;
+}
+
 #[cfg(test)]
 pub mod test {
     use super::{
@@ -141,16 +145,16 @@ pub mod test {
     }
 
     impl Named for TestCharacter {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_character"
         }
     }
 
     impl Description for TestCharacter {
-        fn short(&self, _: &Box<dyn World>) -> String {
+        fn short(&self, _: &dyn World) -> String {
             "Test Character".into()
         }
-        fn long(&self, _: &Box<dyn World>) -> String {
+        fn long(&self, _: &dyn World) -> String {
             "Character description and perhaps items which it is carrying".into()
         }
     }
@@ -192,16 +196,16 @@ pub mod test {
     }
 
     impl Named for TestItem {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_item"
         }
     }
 
     impl Description for TestItem {
-        fn short(&self, _: &Box<dyn World>) -> String {
+        fn short(&self, _: &dyn World) -> String {
             "Test Scene".into()
         }
-        fn long(&self, _: &Box<dyn World>) -> String {
+        fn long(&self, _: &dyn World) -> String {
             "Test scene detailed description".into()
         }
     }
@@ -242,16 +246,16 @@ pub mod test {
     }
 
     impl Named for TestScene {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_scene"
         }
     }
 
     impl Description for TestScene {
-        fn short(&self, _: &Box<dyn World>) -> String {
+        fn short(&self, _: &dyn World) -> String {
             "Test Scene".into()
         }
-        fn long(&self, _: &Box<dyn World>) -> String {
+        fn long(&self, _: &dyn World) -> String {
             "Test location detailed description".into()
         }
     }
@@ -270,16 +274,16 @@ pub mod test {
     #[derive(Clone, Debug)]
     struct TestDescription;
     impl Named for TestDescription {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_description"
         }
     }
 
     impl Description for TestDescription {
-        fn short(&self, _: &Box<dyn World>) -> String {
+        fn short(&self, _: &dyn World) -> String {
             "Test Event".into()
         }
-        fn long(&self, _: &Box<dyn World>) -> String {
+        fn long(&self, _: &dyn World) -> String {
             "Test event to do something".into()
         }
     }
@@ -301,26 +305,34 @@ pub mod test {
         }
     }
     impl Named for TestEvent {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_event"
         }
     }
+    impl AsAny for TestEvent {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
     impl Event for TestEvent {
-        fn trigger(self, _world: &mut Box<dyn World>) {}
+        fn trigger(&mut self, _world: &mut dyn World) {}
 
-        fn can_be_triggered(&self, _world: &Box<dyn World>) -> bool {
+        fn can_be_triggered(&self, _world: &dyn World) -> bool {
             true
         }
 
-        fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str> {
+        fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
             vec!["test_scene"]
         }
     }
     impl Description for TestEvent {
-        fn short(&self, _: &Box<dyn World>) -> String {
+        fn short(&self, _: &dyn World) -> String {
             "Test Event".into()
         }
-        fn long(&self, _: &Box<dyn World>) -> String {
+        fn long(&self, _: &dyn World) -> String {
             "Test event".into()
         }
     }
@@ -347,7 +359,7 @@ pub mod test {
     }
 
     impl Named for TestWorld {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_world"
         }
     }

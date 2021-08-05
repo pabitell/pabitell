@@ -1,5 +1,5 @@
-use crate::{Description, Event, Id, ItemState, Named, World};
-use std::fmt;
+use crate::{AsAny, Description, Event, Id, ItemState, Named, World};
+use std::{any::Any, fmt};
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -10,10 +10,10 @@ pub struct Pick {
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Pick {
@@ -41,13 +41,13 @@ impl Id for Pick {
 }
 
 impl Named for Pick {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         self.name
     }
 }
 
 impl Description for Pick {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         if let Some(long) = self.make_long.as_ref() {
             (long)(self, world)
         } else {
@@ -55,7 +55,7 @@ impl Description for Pick {
         }
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         if let Some(short) = self.make_short.as_ref() {
             (short)(self, world)
         } else {
@@ -64,8 +64,17 @@ impl Description for Pick {
     }
 }
 
+impl AsAny for Pick {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 impl Event for Pick {
-    fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str> {
+    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
         if let ItemState::InScene(scene) = world.items().get(self.item).unwrap().state() {
             vec![scene]
         } else {
@@ -73,7 +82,7 @@ impl Event for Pick {
         }
     }
 
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
                 return false;
@@ -91,7 +100,7 @@ impl Event for Pick {
         }
     }
 
-    fn trigger(self, world: &mut Box<dyn World>) {
+    fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
             (world_update)(&self, world)
         }
@@ -115,10 +124,10 @@ impl Pick {
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -133,6 +142,10 @@ impl Pick {
             ..Default::default()
         }
     }
+
+    pub fn character(&self) -> &'static str {
+        self.character
+    }
 }
 
 #[derive(Default)]
@@ -144,8 +157,8 @@ pub struct Give {
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
-    make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Give {
@@ -174,13 +187,13 @@ impl Id for Give {
 }
 
 impl Named for Give {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         self.name
     }
 }
 
 impl Description for Give {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         if let Some(long) = self.make_long.as_ref() {
             (long)(self, world)
         } else {
@@ -188,7 +201,7 @@ impl Description for Give {
         }
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         if let Some(short) = self.make_short.as_ref() {
             (short)(self, world)
         } else {
@@ -197,8 +210,17 @@ impl Description for Give {
     }
 }
 
+impl AsAny for Give {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 impl Event for Give {
-    fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str> {
+    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
         if self.can_be_triggered(world) {
             if let Some(scene) = world.characters().get(self.from_character).unwrap().scene() {
                 vec![scene]
@@ -210,7 +232,7 @@ impl Event for Give {
         }
     }
 
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Item belongs to from_character
         if &ItemState::Owned(self.from_character) == world.items().get(self.item).unwrap().state() {
             // Characters are in the same scene
@@ -226,7 +248,7 @@ impl Event for Give {
         }
     }
 
-    fn trigger(self, world: &mut Box<dyn World>) {
+    fn trigger(&mut self, world: &mut dyn World) {
         world
             .items_mut()
             .get_mut(self.item)
@@ -247,8 +269,8 @@ impl Give {
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
-        make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -272,10 +294,10 @@ pub struct UseItem {
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for UseItem {
@@ -303,13 +325,13 @@ impl Id for UseItem {
 }
 
 impl Named for UseItem {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         self.name
     }
 }
 
 impl Description for UseItem {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         if let Some(long) = self.make_long.as_ref() {
             (long)(self, world)
         } else {
@@ -317,7 +339,7 @@ impl Description for UseItem {
         }
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         if let Some(short) = self.make_short.as_ref() {
             (short)(self, world)
         } else {
@@ -326,8 +348,17 @@ impl Description for UseItem {
     }
 }
 
+impl AsAny for UseItem {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 impl Event for UseItem {
-    fn in_scenes(&self, world: &Box<dyn World>) -> Vec<&'static str> {
+    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
         if self.can_be_triggered(world) {
             if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
                 vec![scene]
@@ -339,7 +370,7 @@ impl Event for UseItem {
         }
     }
 
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
                 return false;
@@ -348,7 +379,7 @@ impl Event for UseItem {
         world.items().get(self.item).unwrap().state() == &ItemState::Owned(self.character)
     }
 
-    fn trigger(self, world: &mut Box<dyn World>) {
+    fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
             (world_update)(&self, world)
         }
@@ -370,10 +401,10 @@ impl UseItem {
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -402,9 +433,9 @@ pub struct Move {
     from_scenes: Vec<&'static str>,
     to_scene: &'static str,
     roles: Vec<&'static str>,
-    custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Move {
@@ -431,13 +462,13 @@ impl Id for Move {
 }
 
 impl Named for Move {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         self.name
     }
 }
 
 impl Description for Move {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         if let Some(long) = self.make_long.as_ref() {
             (long)(self, world)
         } else {
@@ -445,7 +476,7 @@ impl Description for Move {
         }
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         if let Some(short) = self.make_short.as_ref() {
             (short)(self, world)
         } else {
@@ -454,12 +485,21 @@ impl Description for Move {
     }
 }
 
+impl AsAny for Move {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 impl Event for Move {
-    fn in_scenes(&self, _world: &Box<dyn World>) -> Vec<&'static str> {
+    fn in_scenes(&self, _world: &dyn World) -> Vec<&'static str> {
         self.from_scenes.clone()
     }
 
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Check custom condition
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -480,7 +520,7 @@ impl Event for Move {
         }
     }
 
-    fn trigger(self, world: &mut Box<dyn World>) {
+    fn trigger(&mut self, world: &mut dyn World) {
         world
             .characters_mut()
             .get_mut(self.character)
@@ -496,9 +536,9 @@ impl Move {
         from_scenes: Vec<&'static str>,
         to_scene: &'static str,
         roles: Vec<&'static str>,
-        custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -521,10 +561,10 @@ pub struct Void {
     character: &'static str,
     item: Option<&'static str>,
     in_scenes: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Void {
@@ -551,13 +591,13 @@ impl Id for Void {
 }
 
 impl Named for Void {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         self.name
     }
 }
 
 impl Description for Void {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         if let Some(long) = self.make_long.as_ref() {
             (long)(self, world)
         } else {
@@ -565,7 +605,7 @@ impl Description for Void {
         }
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         if let Some(short) = self.make_short.as_ref() {
             (short)(self, world)
         } else {
@@ -574,12 +614,21 @@ impl Description for Void {
     }
 }
 
+impl AsAny for Void {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 impl Event for Void {
-    fn in_scenes(&self, _world: &Box<dyn World>) -> Vec<&'static str> {
+    fn in_scenes(&self, _world: &dyn World) -> Vec<&'static str> {
         self.in_scenes.clone()
     }
 
-    fn can_be_triggered(&self, world: &Box<dyn World>) -> bool {
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
                 return false;
@@ -594,7 +643,7 @@ impl Event for Void {
         false
     }
 
-    fn trigger(self, world: &mut Box<dyn World>) {
+    fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
             (world_update)(&self, world)
         }
@@ -607,10 +656,10 @@ impl Void {
         character: &'static str,
         item: Option<&'static str>,
         in_scenes: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut Box<dyn World>)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &Box<dyn World>) -> String>>,
+        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
+        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,

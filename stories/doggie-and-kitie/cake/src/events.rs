@@ -16,7 +16,7 @@ pub fn make_pick(
         character,
         item,
         consume,
-        vec![],
+        vec!["pick"],
         None,
         None,
         Some(Box::new(|event, world| {
@@ -57,7 +57,7 @@ pub fn make_give(
         to_character,
         item,
         consume,
-        vec![],
+        vec!["give"],
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
@@ -89,7 +89,7 @@ pub fn make_move_to_kitchen(character: &'static str) -> events::Move {
         character,
         vec!["playground"],
         "kitchen",
-        vec![],
+        vec!["move"],
         Some(Box::new(|_event, world| {
             world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
         })),
@@ -161,7 +161,7 @@ pub fn make_move_to_children_garden(character: &'static str) -> events::Move {
         character,
         vec!["kitchen"],
         "children_garden",
-        vec![],
+        vec!["move"],
         Some(Box::new(|_event, world| {
             // Everything is in the cake
             world
@@ -206,7 +206,7 @@ pub fn make_use_item(
         character,
         item,
         consume,
-        vec![],
+        vec!["use_item"],
         None,
         Some(Box::new(|event, world| {
             // all characters in the same scene
@@ -244,13 +244,13 @@ pub fn make_move_to_garden(character: &'static str) -> events::Move {
         character,
         vec!["children_garden"],
         "garden",
-        vec![],
+        vec!["move"],
         Some(Box::new(|_event, world| {
             // Everything is in the cake
             world
                 .items()
                 .values()
-                .filter(|e| e.roles().contains(&"toys"))
+                .filter(|e| e.roles().contains(&"toy"))
                 .all(|e| e.state() == &ItemState::Unassigned)
         })),
         Some(Box::new(|event, world| {
@@ -323,7 +323,7 @@ pub fn make_move_to_children_house(character: &'static str) -> events::Move {
         character,
         vec!["garden"],
         "children_house",
-        vec![],
+        vec!["move"],
         Some(Box::new(|_event, world| {
             // Found bad dog
             world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned

@@ -25,13 +25,13 @@ impl Id for PlayGround {
 }
 
 impl Named for PlayGround {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "playground"
     }
 }
 
 impl Description for PlayGround {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -39,7 +39,7 @@ impl Description for PlayGround {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
@@ -78,13 +78,13 @@ impl Id for Kitchen {
 }
 
 impl Named for Kitchen {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "kitchen"
     }
 }
 
 impl Description for Kitchen {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -92,7 +92,7 @@ impl Description for Kitchen {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
@@ -131,13 +131,13 @@ impl Id for Garden {
 }
 
 impl Named for Garden {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "garden"
     }
 }
 
 impl Description for Garden {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -145,7 +145,7 @@ impl Description for Garden {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
@@ -184,13 +184,13 @@ impl Id for ChildrenHouse {
 }
 
 impl Named for ChildrenHouse {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "children_house"
     }
 }
 
 impl Description for ChildrenHouse {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -198,7 +198,7 @@ impl Description for ChildrenHouse {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
@@ -237,13 +237,13 @@ impl Id for ChildrenGarden {
 }
 
 impl Named for ChildrenGarden {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "children_garden"
     }
 }
 
 impl Description for ChildrenGarden {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -251,7 +251,7 @@ impl Description for ChildrenGarden {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
@@ -290,13 +290,13 @@ impl Id for WayHome {
 }
 
 impl Named for WayHome {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "way_home"
     }
 }
 
 impl Description for WayHome {
-    fn long(&self, world: &Box<dyn World>) -> String {
+    fn long(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.long", world.name(), self.name()),
             world.lang(),
@@ -304,7 +304,7 @@ impl Description for WayHome {
         )
     }
 
-    fn short(&self, world: &Box<dyn World>) -> String {
+    fn short(&self, world: &dyn World) -> String {
         get_message(
             &format!("{}.{}.short", world.name(), self.name()),
             world.lang(),
