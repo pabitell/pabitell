@@ -79,6 +79,7 @@ where
 }
 
 pub trait World: Id + Named {
+    fn available_languages(&self) -> Vec<&str>;
     fn lang(&self) -> &str;
     fn set_lang(&mut self, lang: &str) -> bool;
     fn description(&self) -> Box<dyn Description>;
@@ -109,11 +110,8 @@ pub trait World: Id + Named {
     fn finished(&self) -> bool;
 }
 
-pub trait Narrator<W>
-where
-    W: World,
-{
-    fn available_events(&self, w: &W) -> Vec<Box<dyn Event>>;
+pub trait Narrator {
+    fn available_events(&self, world: &dyn World) -> Vec<Box<dyn Event>>;
 }
 
 #[cfg(test)]
@@ -400,6 +398,10 @@ pub mod test {
         fn set_lang(&mut self, lang: &str) -> bool {
             self.lang = lang.into();
             true
+        }
+
+        fn available_languages(&self) -> Vec<&str> {
+            vec!["en-US"]
         }
 
         #[cfg(feature = "with_world_setup")]

@@ -8,8 +8,8 @@ use crate::{characters, events, CakeWorld};
 #[derive(Default, Debug)]
 pub struct Cake;
 
-impl Narrator<CakeWorld> for Cake {
-    fn available_events(&self, world: &CakeWorld) -> Vec<Box<dyn Event>> {
+impl Narrator for Cake {
+    fn available_events(&self, world: &dyn World) -> Vec<Box<dyn Event>> {
         let mut res = vec![];
         let doggie = world
             .characters()

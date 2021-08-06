@@ -146,6 +146,10 @@ impl Pick {
     pub fn character(&self) -> &'static str {
         self.character
     }
+
+    pub fn item(&self) -> &'static str {
+        self.item
+    }
 }
 
 #[derive(Default)]
@@ -422,6 +426,10 @@ impl UseItem {
 
     pub fn character(&self) -> &'static str {
         self.character
+    }
+
+    pub fn item(&self) -> &'static str {
+        self.item
     }
 }
 

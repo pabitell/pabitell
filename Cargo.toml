@@ -2,6 +2,7 @@
 
 members = [
 	"pabitell-lib",
+	"pabitell-cli",
 	"stories/doggie-and-kitie/cake/",
 ]
 

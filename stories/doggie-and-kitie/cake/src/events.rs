@@ -22,13 +22,13 @@ pub fn make_pick(
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.name(), event.item()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!("{}-{}_{}-nok", world.name(), event.name(), event.item()),
                     world.lang(),
                     None,
                 )
@@ -36,7 +36,7 @@ pub fn make_pick(
         })),
         Some(Box::new(|event, world| {
             get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
+                &format!("{}-{}_{}-short", world.name(), event.name(), event.item()),
                 world.lang(),
                 None,
             )
@@ -133,13 +133,23 @@ pub fn make_disliked_pick(
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}",
+                        world.name(),
+                        event.name(),
+                        event.item().unwrap()
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.name(),
+                        event.item().unwrap()
+                    ),
                     world.lang(),
                     None,
                 )
@@ -147,7 +157,12 @@ pub fn make_disliked_pick(
         })),
         Some(Box::new(|event, world| {
             get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.name(),
+                    event.item().unwrap()
+                ),
                 world.lang(),
                 None,
             )
@@ -216,13 +231,13 @@ pub fn make_use_item(
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.name(), event.item()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!("{}-{}_{}-nok", world.name(), event.name(), event.item()),
                     world.lang(),
                     None,
                 )
@@ -230,7 +245,7 @@ pub fn make_use_item(
         })),
         Some(Box::new(|event, world| {
             get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
+                &format!("{}-{}_{}-short", world.name(), event.name(), event.item()),
                 world.lang(),
                 None,
             )
@@ -439,13 +454,23 @@ pub fn make_eat_meal(
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}",
+                        world.name(),
+                        event.name(),
+                        event.item().unwrap()
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.name(),
+                        event.item().unwrap()
+                    ),
                     world.lang(),
                     None,
                 )
@@ -453,7 +478,12 @@ pub fn make_eat_meal(
         })),
         Some(Box::new(|event, world| {
             get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.name(),
+                    event.item().unwrap()
+                ),
                 world.lang(),
                 None,
             )

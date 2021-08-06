@@ -37,16 +37,16 @@ impl Named for CakeWorldDescription {
 
 impl Description for CakeWorldDescription {
     fn long(&self, world: &dyn World) -> String {
-        get_message(&format!("{}.long", world.name()), world.lang(), None)
+        get_message(&format!("{}-long", world.name()), world.lang(), None)
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(&format!("{}.short", world.name()), world.lang(), None)
+        get_message(&format!("{}-short", world.name()), world.lang(), None)
     }
 }
 
 #[derive(Default)]
-struct CakeWorldBuilder {
+pub struct CakeWorldBuilder {
     items: Vec<Box<dyn Item>>,
     characters: Vec<Box<dyn Character>>,
     scenes: Vec<Box<dyn Scene>>,
@@ -160,7 +160,7 @@ impl Id for CakeWorld {
 
 impl Named for CakeWorld {
     fn name(&self) -> &'static str {
-        "povidani_o_pejskovi_a_kocicce-dort"
+        "doggie_and_kitie-cake"
     }
 }
 
@@ -205,6 +205,10 @@ impl World for CakeWorld {
             }
         }
         false
+    }
+
+    fn available_languages(&self) -> Vec<&str> {
+        vec!["cs", "en-US"]
     }
 
     #[cfg(feature = "with_world_setup")]

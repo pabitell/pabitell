@@ -12,11 +12,7 @@ lazy_static! {
     static ref BUNDLES: HashMap<String, FluentBundle<FluentResource, IntlLangMemoizer>> = {
         let mut res = HashMap::new();
         for lang in get_available_locales(&RESOURCES).expect("failed to list translations") {
-            match get_bundle(
-                &RESOURCES,
-                lang.clone(),
-                "povidani-o-pejskovi-a-kocicce.dort",
-            ) {
+            match get_bundle(&RESOURCES, lang.clone(), "doggie_and_kitie-cake") {
                 Err(err) => panic!("failed to load translations: {}", err),
                 Ok(bundle) => {
                     res.insert(lang.to_string(), bundle);

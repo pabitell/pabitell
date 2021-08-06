@@ -1,0 +1,13 @@
+[package]
+name = "pabitell-cli"
+version = "0.1.0"
+edition = "2018"
+
+[features]
+default = []
+with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
+
+[dependencies]
+pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
+skim = "0.9"
+doggie_and_kitie_cake = { path = "../stories/doggie-and-kitie/cake/", features = ["with_world_setup"], optional = true }
