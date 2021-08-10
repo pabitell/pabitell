@@ -161,6 +161,7 @@ pub struct Give {
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
+    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
@@ -253,6 +254,10 @@ impl Event for Give {
     }
 
     fn trigger(&mut self, world: &mut dyn World) {
+        if let Some(world_update) = self.world_update.as_ref() {
+            (world_update)(&self, world)
+        }
+
         world
             .items_mut()
             .get_mut(self.item)
@@ -273,6 +278,7 @@ impl Give {
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
+        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
@@ -283,10 +289,23 @@ impl Give {
             item,
             consume,
             roles,
+            world_update,
             make_long,
             make_short,
             ..Default::default()
         }
+    }
+
+    pub fn from_character(&self) -> &'static str {
+        self.from_character
+    }
+
+    pub fn to_character(&self) -> &'static str {
+        self.to_character
+    }
+
+    pub fn item(&self) -> &'static str {
+        self.item
     }
 }
 
@@ -559,6 +578,10 @@ impl Move {
             make_short,
             ..Default::default()
         }
+    }
+
+    pub fn character(&self) -> &'static str {
+        self.character
     }
 }
 

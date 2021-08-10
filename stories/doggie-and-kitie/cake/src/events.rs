@@ -20,65 +20,116 @@ pub fn make_pick(
         None,
         None,
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name(),
+                    event.item()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}_{}", world.name(), event.name(), event.item()),
+                    &format!(
+                        "{}-{}_{}_{}",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item()
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}_{}-nok", world.name(), event.name(), event.item()),
+                    &format!(
+                        "{}-{}_{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}_{}-short", world.name(), event.name(), event.item()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
 
-pub fn make_give(
-    name: &'static str,
+pub fn make_give_sand_cake(
     from_character: &'static str,
     to_character: &'static str,
-    item: &'static str,
-    consume: bool,
 ) -> events::Give {
     events::Give::new(
-        name,
+        "give",
         from_character,
         to_character,
-        item,
-        consume,
+        "sand_cake",
+        true,
         vec!["give"],
+        Some(Box::new(|event, world| {
+            let character = world
+                .characters_mut()
+                .get_mut(event.to_character())
+                .unwrap()
+                .as_any_mut();
+
+            if let Some(kitie) = character.downcast_mut::<characters::Kitie>() {
+                kitie.sand_cake_last = true;
+            }
+
+            if let Some(doggie) = character.downcast_mut::<characters::Doggie>() {
+                doggie.sand_cake_last = true;
+            }
+        })),
+        Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}_to_{}-short",
+                    world.name(),
+                    event.from_character(),
+                    event.name(),
+                    event.item(),
+                    event.to_character()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
         Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}_{}_to_{}",
+                        world.name(),
+                        event.from_character(),
+                        event.name(),
+                        event.item(),
+                        event.to_character()
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}_{}_to_{}-nok",
+                        world.name(),
+                        event.from_character(),
+                        event.name(),
+                        event.item(),
+                        event.to_character()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -94,26 +145,36 @@ pub fn make_move_to_kitchen(character: &'static str) -> events::Move {
             world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.character(), event.name()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -131,11 +192,25 @@ pub fn make_disliked_pick(
         None,
         None,
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name(),
+                    event.item().unwrap()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
                     &format!(
-                        "{}-{}_{}",
+                        "{}-{}_{}_{}",
                         world.name(),
+                        event.character(),
                         event.name(),
                         event.item().unwrap()
                     ),
@@ -145,8 +220,9 @@ pub fn make_disliked_pick(
             } else {
                 get_message(
                     &format!(
-                        "{}-{}_{}-nok",
+                        "{}-{}_{}_{}-nok",
                         world.name(),
+                        event.character(),
                         event.name(),
                         event.item().unwrap()
                     ),
@@ -154,18 +230,6 @@ pub fn make_disliked_pick(
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!(
-                    "{}-{}_{}-short",
-                    world.name(),
-                    event.name(),
-                    event.item().unwrap()
-                ),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -186,26 +250,36 @@ pub fn make_move_to_children_garden(character: &'static str) -> events::Move {
                 .all(|e| e.state() == &ItemState::Unassigned)
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.character(), event.name()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -229,26 +303,44 @@ pub fn make_use_item(
             world.characters().values().all(|e| e.scene() == scene)
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name(),
+                    event.item()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}_{}", world.name(), event.name(), event.item()),
+                    &format!(
+                        "{}-{}_{}_{}",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item()
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}_{}-nok", world.name(), event.name(), event.item()),
+                    &format!(
+                        "{}-{}_{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}_{}-short", world.name(), event.name(), event.item()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -269,33 +361,43 @@ pub fn make_move_to_garden(character: &'static str) -> events::Move {
                 .all(|e| e.state() == &ItemState::Unassigned)
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.character(), event.name()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
 
 pub fn make_find_bad_dog(character: &'static str) -> events::Pick {
     events::Pick::new(
-        "find_bad_dog",
+        "find",
         character,
         "bad_dog",
         true,
@@ -308,26 +410,44 @@ pub fn make_find_bad_dog(character: &'static str) -> events::Pick {
                 .all(|e| e.scene() == Some("garden"))
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name(),
+                    event.item(),
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}_{}",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item(),
+                    ),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name(),
+                        event.item(),
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -344,26 +464,36 @@ pub fn make_move_to_children_house(character: &'static str) -> events::Move {
             world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
-                    &format!("{}-{}", world.name(), event.name()),
+                    &format!("{}-{}_{}", world.name(), event.character(), event.name()),
                     world.lang(),
                     None,
                 )
             } else {
                 get_message(
-                    &format!("{}-{}-nok", world.name(), event.name()),
+                    &format!(
+                        "{}-{}_{}-nok",
+                        world.name(),
+                        event.character(),
+                        event.name()
+                    ),
                     world.lang(),
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!("{}-{}-short", world.name(), event.name()),
-                world.lang(),
-                None,
-            )
         })),
     )
 }
@@ -452,11 +582,25 @@ pub fn make_eat_meal(
             }
         })),
         Some(Box::new(|event, world| {
+            get_message(
+                &format!(
+                    "{}-{}_{}_{}-short",
+                    world.name(),
+                    event.character(),
+                    event.name(),
+                    event.item().unwrap()
+                ),
+                world.lang(),
+                None,
+            )
+        })),
+        Some(Box::new(|event, world| {
             if event.can_be_triggered(world) {
                 get_message(
                     &format!(
-                        "{}-{}_{}",
+                        "{}-{}_{}_{}",
                         world.name(),
+                        event.character(),
                         event.name(),
                         event.item().unwrap()
                     ),
@@ -466,8 +610,9 @@ pub fn make_eat_meal(
             } else {
                 get_message(
                     &format!(
-                        "{}-{}_{}-nok",
+                        "{}-{}_{}_{}-nok",
                         world.name(),
+                        event.character(),
                         event.name(),
                         event.item().unwrap()
                     ),
@@ -475,18 +620,6 @@ pub fn make_eat_meal(
                     None,
                 )
             }
-        })),
-        Some(Box::new(|event, world| {
-            get_message(
-                &format!(
-                    "{}-{}_{}-short",
-                    world.name(),
-                    event.name(),
-                    event.item().unwrap()
-                ),
-                world.lang(),
-                None,
-            )
         })),
     )
 }

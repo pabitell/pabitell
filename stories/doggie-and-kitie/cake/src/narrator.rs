@@ -39,40 +39,22 @@ impl Narrator for Cake {
                         res.push(event);
                     }
                     ItemState::Owned("doggie") => {
-                        let event: Box<dyn Event> = Box::new(events::make_give(
-                            "give_sand_cake",
-                            "doggie",
-                            "kitie",
-                            "sand_cake",
-                            true,
-                        ));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_give_sand_cake("doggie", "kitie"));
                         res.push(event);
                     }
                     ItemState::Owned("kitie") => {
-                        let event: Box<dyn Event> = Box::new(events::make_give(
-                            "give_sand_cake",
-                            "kitie",
-                            "doggie",
-                            "sand_cake",
-                            true,
-                        ));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_give_sand_cake("kitie", "doggie"));
                         res.push(event);
                     }
                     ItemState::InScene("playground") => {
-                        let event: Box<dyn Event> = Box::new(events::make_pick(
-                            "pick_sand_cake",
-                            "kitie",
-                            "sand_cake",
-                            false,
-                        ));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_pick("pick", "kitie", "sand_cake", false));
                         res.push(event);
 
-                        let event: Box<dyn Event> = Box::new(events::make_pick(
-                            "pick_sand_cake",
-                            "doggie",
-                            "sand_cake",
-                            false,
-                        ));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_pick("pick", "doggie", "sand_cake", false));
                         res.push(event);
                     }
                     _ => {}
@@ -193,12 +175,7 @@ impl Narrator for Cake {
             (Some("garden"), Some("garden")) => {
                 if world.items().get("bad_dog").unwrap().state() == &ItemState::InScene("garden") {
                     for character in ["doggie", "kitie"] {
-                        let event: Box<dyn Event> = Box::new(events::make_pick(
-                            "find_bad_dog",
-                            character,
-                            "bad_dog",
-                            true,
-                        ));
+                        let event: Box<dyn Event> = Box::new(events::make_find_bad_dog(character));
                         res.push(event);
                     }
                 } else {

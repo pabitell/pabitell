@@ -1,10 +1,10 @@
 use pabitell_lib::{
-    AsAny, Character, Description, Event, Id, Item, Named, Scene, World, WorldBuilder,
+    AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, World, WorldBuilder,
 };
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::translations::get_message;
+use crate::{characters, translations::get_message};
 
 #[derive(Debug, Default)]
 pub struct PlayGround {
@@ -32,16 +32,66 @@ impl Named for PlayGround {
 
 impl Description for PlayGround {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        match world.items().get("sand_cake").unwrap().state() {
+            ItemState::Owned(character) => match *character {
+                "doggie" => get_message(
+                    &format!("{}-{}-doggie_pick", world.name(), self.name()),
+                    world.lang(),
+                    None,
+                ),
+                "kitie" => get_message(
+                    &format!("{}-{}-kitie_pick", world.name(), self.name()),
+                    world.lang(),
+                    None,
+                ),
+                _ => unreachable!(),
+            },
+            ItemState::InScene(_) => get_message(
+                &format!("{}-{}-initial", world.name(), self.name()),
+                world.lang(),
+                None,
+            ),
+            ItemState::Unassigned => {
+                let doggie = world
+                    .characters()
+                    .get("doggie")
+                    .unwrap()
+                    .as_any()
+                    .downcast_ref::<characters::Doggie>()
+                    .unwrap();
+
+                let kitie = world
+                    .characters()
+                    .get("kitie")
+                    .unwrap()
+                    .as_any()
+                    .downcast_ref::<characters::Kitie>()
+                    .unwrap();
+
+                if doggie.sand_cake_last {
+                    return get_message(
+                        &format!("{}-{}-doggie_last", world.name(), self.name()),
+                        world.lang(),
+                        None,
+                    );
+                }
+
+                if kitie.sand_cake_last {
+                    return get_message(
+                        &format!("{}-{}-kitie_last", world.name(), self.name()),
+                        world.lang(),
+                        None,
+                    );
+                }
+
+                unreachable!()
+            }
+        }
     }
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -85,16 +135,29 @@ impl Named for Kitchen {
 
 impl Description for Kitchen {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        if world
+            .items()
+            .values()
+            .filter(|e| e.roles().contains(&"accepted"))
+            .all(|e| e.state() == &ItemState::Unassigned)
+        {
+            get_message(
+                &format!("{}-{}-ready", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        } else {
+            get_message(
+                &format!("{}-{}-ingredients", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        }
     }
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -138,16 +201,24 @@ impl Named for Garden {
 
 impl Description for Garden {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        if world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned {
+            get_message(
+                &format!("{}-{}-found", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        } else {
+            get_message(
+                &format!("{}-{}-searching", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        }
     }
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -192,7 +263,7 @@ impl Named for ChildrenHouse {
 impl Description for ChildrenHouse {
     fn long(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
+            &format!("{}-{}-eating", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -200,7 +271,7 @@ impl Description for ChildrenHouse {
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -244,16 +315,29 @@ impl Named for ChildrenGarden {
 
 impl Description for ChildrenGarden {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        if world
+            .items()
+            .values()
+            .filter(|e| e.roles().contains(&"toy"))
+            .all(|e| e.state() == &ItemState::Unassigned)
+        {
+            get_message(
+                &format!("{}-{}-leaving", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        } else {
+            get_message(
+                &format!("{}-{}-playing", world.name(), self.name()),
+                world.lang(),
+                None,
+            )
+        }
     }
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -298,7 +382,7 @@ impl Named for WayHome {
 impl Description for WayHome {
     fn long(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.long", world.name(), self.name()),
+            &format!("{}-{}-end", world.name(), self.name()),
             world.lang(),
             None,
         )
@@ -306,7 +390,7 @@ impl Description for WayHome {
 
     fn short(&self, world: &dyn World) -> String {
         get_message(
-            &format!("{}.{}.short", world.name(), self.name()),
+            &format!("{}-{}-short", world.name(), self.name()),
             world.lang(),
             None,
         )

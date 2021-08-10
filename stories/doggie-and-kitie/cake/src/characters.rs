@@ -10,6 +10,7 @@ use crate::translations::get_message;
 pub struct Kitie {
     id: Uuid,
     scene: Option<&'static str>,
+    pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
     pub consumed_dumplings: bool,
@@ -81,6 +82,7 @@ impl Kitie {
 pub struct Doggie {
     id: Uuid,
     scene: Option<&'static str>,
+    pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
     pub consumed_dumplings: bool,

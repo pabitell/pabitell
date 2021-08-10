@@ -157,7 +157,6 @@ fn select_characters(world: &dyn World) -> Option<Vec<PabitellItem>> {
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
         .preview(Some(""))
-        .multi(true) // TODO how does multi work...
         .build()
         .unwrap();
 
@@ -359,10 +358,22 @@ pub fn main() {
                 state = View::MENU;
             }
             View::EVENTS => {
+                if !selected_characters.is_empty() {
+                    if let Some(scene) = world
+                        .characters()
+                        .get(&selected_characters[0].code)
+                        .unwrap()
+                        .scene()
+                    {
+                        let scene = world.scenes().get(scene).unwrap();
+                        println!("\n{}\n\n", scene.long(world.as_ref()));
+                    }
+                }
                 if let Some(events) = select_event(world.as_mut(), narrator.as_ref()) {
                     if !events.is_empty() {
                         let idx = events[0].idx;
                         let mut events = narrator.available_events(world.as_ref());
+                        println!("{}", events[idx].long(world.as_ref()));
                         events[idx].trigger(world.as_mut());
                         continue;
                     }
@@ -371,7 +382,7 @@ pub fn main() {
             }
         }
         println!(
-            "Selected Characters: {}",
+            "Selected Character: {}",
             selected_characters
                 .iter()
                 .map(|e| e.short.to_string())
