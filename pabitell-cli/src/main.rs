@@ -102,6 +102,7 @@ enum View {
     CHARACTERS,
     SCENES,
     EVENTS,
+    EXIT,
 }
 
 impl SkimItem for View {
@@ -112,6 +113,7 @@ impl SkimItem for View {
             Self::CHARACTERS => Cow::Borrowed("characters"),
             Self::SCENES => Cow::Borrowed("scenes"),
             Self::EVENTS => Cow::Borrowed("events"),
+            Self::EXIT => Cow::Borrowed("exit"),
         }
     }
 }
@@ -125,7 +127,13 @@ fn main_menu(world: &dyn World) -> Option<View> {
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for item in [View::ITEMS, View::CHARACTERS, View::SCENES, View::EVENTS] {
+    for item in [
+        View::ITEMS,
+        View::CHARACTERS,
+        View::SCENES,
+        View::EVENTS,
+        View::EXIT,
+    ] {
         let _ = tx_item.send(Arc::new(item));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -337,6 +345,7 @@ pub fn main() {
                 Some(View::CHARACTERS) => state = View::CHARACTERS,
                 Some(View::SCENES) => state = View::SCENES,
                 Some(View::EVENTS) => state = View::EVENTS,
+                Some(View::EXIT) => break,
                 _ => break,
             },
             View::CHARACTERS => {
@@ -380,6 +389,7 @@ pub fn main() {
                 }
                 state = View::MENU;
             }
+            View::EXIT => break,
         }
         println!(
             "Selected Character: {}",
