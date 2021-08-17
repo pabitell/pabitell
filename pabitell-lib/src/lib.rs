@@ -54,7 +54,6 @@ pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
 pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
 
 pub trait Event: Id + Named + AsAny + Description + fmt::Debug {
-    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str>;
     fn can_be_triggered(&self, world: &dyn World) -> bool;
     fn trigger(&mut self, world: &mut dyn World);
     fn perform(&mut self, world: &mut dyn World) -> bool {
@@ -320,10 +319,6 @@ pub mod test {
 
         fn can_be_triggered(&self, _world: &dyn World) -> bool {
             true
-        }
-
-        fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
-            vec!["test_scene"]
         }
     }
     impl Description for TestEvent {

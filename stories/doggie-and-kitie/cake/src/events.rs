@@ -188,7 +188,7 @@ pub fn make_disliked_pick(
         name,
         character,
         Some(item),
-        vec!["kitchen"],
+        Some(vec!["kitchen"]),
         None,
         None,
         Some(Box::new(|event, world| {
@@ -507,7 +507,7 @@ pub fn make_eat_meal(
         name,
         character,
         Some(item),
-        vec!["children_house"],
+        Some(vec!["children_house"]),
         Some(Box::new(|event, world| {
             // mark consumed
             let character = world

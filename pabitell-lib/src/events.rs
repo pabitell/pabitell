@@ -74,14 +74,6 @@ impl AsAny for Pick {
 }
 
 impl Event for Pick {
-    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
-        if let ItemState::InScene(scene) = world.items().get(self.item).unwrap().state() {
-            vec![scene]
-        } else {
-            vec![]
-        }
-    }
-
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -225,18 +217,6 @@ impl AsAny for Give {
 }
 
 impl Event for Give {
-    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
-        if self.can_be_triggered(world) {
-            if let Some(scene) = world.characters().get(self.from_character).unwrap().scene() {
-                vec![scene]
-            } else {
-                vec![]
-            }
-        } else {
-            vec![]
-        }
-    }
-
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Item belongs to from_character
         if &ItemState::Owned(self.from_character) == world.items().get(self.item).unwrap().state() {
@@ -381,18 +361,6 @@ impl AsAny for UseItem {
 }
 
 impl Event for UseItem {
-    fn in_scenes(&self, world: &dyn World) -> Vec<&'static str> {
-        if self.can_be_triggered(world) {
-            if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
-                vec![scene]
-            } else {
-                vec![]
-            }
-        } else {
-            vec![]
-        }
-    }
-
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -522,10 +490,6 @@ impl AsAny for Move {
 }
 
 impl Event for Move {
-    fn in_scenes(&self, _world: &dyn World) -> Vec<&'static str> {
-        self.from_scenes.clone()
-    }
-
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Check custom condition
         if let Some(custom_condition) = self.custom_condition.as_ref() {
@@ -591,7 +555,7 @@ pub struct Void {
     name: &'static str,
     character: &'static str,
     item: Option<&'static str>,
-    in_scenes: Vec<&'static str>,
+    scenes: Option<Vec<&'static str>>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
     make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -655,10 +619,6 @@ impl AsAny for Void {
 }
 
 impl Event for Void {
-    fn in_scenes(&self, _world: &dyn World) -> Vec<&'static str> {
-        self.in_scenes.clone()
-    }
-
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -666,12 +626,19 @@ impl Event for Void {
             }
         }
 
-        if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
-            if self.in_scenes.contains(&scene) {
-                return true;
+        if let Some(scenes) = self.scenes.as_ref() {
+            if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
+                if scenes.contains(&scene) {
+                    return true;
+                } else {
+                    false
+                }
+            } else {
+                false
             }
+        } else {
+            true
         }
-        false
     }
 
     fn trigger(&mut self, world: &mut dyn World) {
@@ -686,7 +653,7 @@ impl Void {
         name: &'static str,
         character: &'static str,
         item: Option<&'static str>,
-        in_scenes: Vec<&'static str>,
+        scenes: Option<Vec<&'static str>>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -696,7 +663,7 @@ impl Void {
             name,
             character,
             item,
-            in_scenes,
+            scenes,
             world_update,
             custom_condition,
             make_short,
