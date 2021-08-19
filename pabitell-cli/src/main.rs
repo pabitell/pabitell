@@ -267,20 +267,21 @@ fn select_items(world: &dyn World) -> Option<Vec<PabitellItem>> {
 #[derive(Clone)]
 struct EventItem {
     idx: usize,
-    short: String,
-    long: String,
+    action: String,
+    success: String,
+    fail: String,
 }
 
 impl SkimItem for EventItem {
     fn text(&self) -> Cow<str> {
-        Cow::Borrowed(&self.short)
+        Cow::Borrowed(&self.action)
     }
 
     fn display<'a>(&'a self, context: DisplayContext<'a>) -> AnsiString<'a> {
-        AnsiString::new_string(self.short.clone(), vec![])
+        AnsiString::new_string(self.action.clone(), vec![])
     }
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        ItemPreview::AnsiText(self.long.clone())
+        ItemPreview::AnsiText(self.success.clone())
     }
 }
 
@@ -291,8 +292,9 @@ fn select_event(world: &dyn World, narrator: &dyn Narrator) -> Option<Vec<EventI
         .enumerate()
         .map(|(idx, e)| EventItem {
             idx,
-            short: e.short(world),
-            long: e.long(world),
+            action: e.action_text(world),
+            success: e.success_text(world),
+            fail: e.fail_text(world),
         })
         .collect::<Vec<EventItem>>();
 
@@ -382,7 +384,11 @@ pub fn main() {
                     if !events.is_empty() {
                         let idx = events[0].idx;
                         let mut events = narrator.available_events(world.as_ref());
-                        println!("{}", events[idx].long(world.as_ref()));
+                        if events[idx].can_be_triggered(world.as_ref()) {
+                            println!("{}", events[idx].success_text(world.as_ref()));
+                        } else {
+                            println!("{}", events[idx].fail_text(world.as_ref()));
+                        }
                         events[idx].trigger(world.as_mut());
                         continue;
                     }

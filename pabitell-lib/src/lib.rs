@@ -53,7 +53,8 @@ pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
 
 pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
 
-pub trait Event: Id + Named + AsAny + Description + fmt::Debug {
+pub trait Event: Id + AsAny + fmt::Debug {
+    fn name(&self) -> &str;
     fn can_be_triggered(&self, world: &dyn World) -> bool;
     fn trigger(&mut self, world: &mut dyn World);
     fn perform(&mut self, world: &mut dyn World) -> bool {
@@ -64,6 +65,10 @@ pub trait Event: Id + Named + AsAny + Description + fmt::Debug {
             false
         }
     }
+    fn translation_base(&self) -> String;
+    fn action_text(&self, world: &dyn World) -> String;
+    fn success_text(&self, world: &dyn World) -> String;
+    fn fail_text(&self, world: &dyn World) -> String;
 }
 
 pub trait WorldBuilder<S>
@@ -320,13 +325,25 @@ pub mod test {
         fn can_be_triggered(&self, _world: &dyn World) -> bool {
             true
         }
-    }
-    impl Description for TestEvent {
-        fn short(&self, _: &dyn World) -> String {
-            "Test Event".into()
+
+        fn translation_base(&self) -> String {
+            "test_event".into()
         }
-        fn long(&self, _: &dyn World) -> String {
-            "Test event".into()
+
+        fn name(&self) -> &str {
+            "test_event"
+        }
+
+        fn action_text(&self, _: &dyn World) -> String {
+            "action".into()
+        }
+
+        fn success_text(&self, _: &dyn World) -> String {
+            "success".into()
+        }
+
+        fn fail_text(&self, _: &dyn World) -> String {
+            "fail".into()
         }
     }
 

@@ -49,12 +49,20 @@ impl Narrator for Cake {
                         res.push(event);
                     }
                     ItemState::InScene("playground") => {
-                        let event: Box<dyn Event> =
-                            Box::new(events::make_pick("pick", "kitie", "sand_cake", false));
+                        let event: Box<dyn Event> = Box::new(events::make_pick(
+                            "pick".into(),
+                            "kitie",
+                            "sand_cake",
+                            false,
+                        ));
                         res.push(event);
 
-                        let event: Box<dyn Event> =
-                            Box::new(events::make_pick("pick", "doggie", "sand_cake", false));
+                        let event: Box<dyn Event> = Box::new(events::make_pick(
+                            "pick".into(),
+                            "doggie",
+                            "sand_cake",
+                            false,
+                        ));
                         res.push(event);
                     }
                     _ => {}
@@ -76,7 +84,7 @@ impl Narrator for Cake {
                             if e.roles().contains(&"accepted") {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
-                                        "pick_ingredient",
+                                        "pick_ingredient".into(),
                                         character,
                                         e.name(),
                                         false,
@@ -87,7 +95,7 @@ impl Narrator for Cake {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> =
                                         Box::new(events::make_disliked_pick(
-                                            "pick_disliked_ingredient",
+                                            "pick_disliked_ingredient".into(),
                                             character,
                                             e.name(),
                                         ));
@@ -98,7 +106,7 @@ impl Narrator for Cake {
                     }
                     ItemState::Owned(character) => {
                         let event = Box::new(events::make_use_item(
-                            "add_ingredient",
+                            "add_ingredient".into(),
                             character,
                             e.name(),
                             true,
@@ -144,8 +152,12 @@ impl Narrator for Cake {
                     })
                     .for_each(|e| {
                         for character in ["doggie", "kitie"] {
-                            let event: Box<dyn Event> =
-                                Box::new(events::make_pick("play", character, e.name(), true));
+                            let event: Box<dyn Event> = Box::new(events::make_pick(
+                                "play".into(),
+                                character,
+                                e.name(),
+                                true,
+                            ));
                             res.push(event);
                         }
                     });
@@ -197,43 +209,43 @@ impl Narrator for Cake {
             (Some("children_house"), Some("children_house")) => {
                 if !doggie.consumed_pie {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "doggie", "pie"));
+                        Box::new(events::make_eat_meal("eat".into(), "doggie", "pie"));
                     res.push(event);
                 }
                 if !doggie.consumed_soup {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "doggie", "soup"));
+                        Box::new(events::make_eat_meal("eat".into(), "doggie", "soup"));
                     res.push(event);
                 }
                 if !doggie.consumed_dumplings {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "doggie", "dumplings"));
+                        Box::new(events::make_eat_meal("eat".into(), "doggie", "dumplings"));
                     res.push(event);
                 }
                 if !doggie.consumed_meat {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "doggie", "meat"));
+                        Box::new(events::make_eat_meal("eat".into(), "doggie", "meat"));
                     res.push(event);
                 }
 
                 if !kitie.consumed_pie {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "kitie", "pie"));
+                        Box::new(events::make_eat_meal("eat".into(), "kitie", "pie"));
                     res.push(event);
                 }
                 if !kitie.consumed_soup {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "kitie", "soup"));
+                        Box::new(events::make_eat_meal("eat".into(), "kitie", "soup"));
                     res.push(event);
                 }
                 if !kitie.consumed_dumplings {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "kitie", "dumplings"));
+                        Box::new(events::make_eat_meal("eat".into(), "kitie", "dumplings"));
                     res.push(event);
                 }
                 if !kitie.consumed_meat {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat", "kitie", "meat"));
+                        Box::new(events::make_eat_meal("eat".into(), "kitie", "meat"));
                     res.push(event);
                 }
             }

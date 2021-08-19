@@ -1,19 +1,20 @@
-use crate::{AsAny, Description, Event, Id, ItemState, Named, World};
+use crate::{AsAny, Event, Id, ItemState, World};
 use std::{any::Any, fmt};
 use uuid::Uuid;
 
 #[derive(Default)]
 pub struct Pick {
     id: Uuid,
-    name: &'static str,
+    name: String,
     character: &'static str,
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Pick {
@@ -40,30 +41,6 @@ impl Id for Pick {
     }
 }
 
-impl Named for Pick {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-}
-
-impl Description for Pick {
-    fn long(&self, world: &dyn World) -> String {
-        if let Some(long) = self.make_long.as_ref() {
-            (long)(self, world)
-        } else {
-            String::new()
-        }
-    }
-
-    fn short(&self, world: &dyn World) -> String {
-        if let Some(short) = self.make_short.as_ref() {
-            (short)(self, world)
-        } else {
-            String::new()
-        }
-    }
-}
-
 impl AsAny for Pick {
     fn as_any(&self) -> &dyn Any {
         self
@@ -74,6 +51,10 @@ impl AsAny for Pick {
 }
 
 impl Event for Pick {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -107,19 +88,45 @@ impl Event for Pick {
                 ItemState::Owned(self.character)
             });
     }
+
+    fn translation_base(&self) -> String {
+        format!("{}_{}_{}", self.character, self.name, self.item)
+    }
+
+    fn action_text(&self, world: &dyn World) -> String {
+        self.make_action_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn success_text(&self, world: &dyn World) -> String {
+        self.make_success_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.make_fail_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl Pick {
     pub fn new(
-        name: &'static str,
+        name: String,
         character: &'static str,
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -129,8 +136,9 @@ impl Pick {
             roles,
             custom_condition,
             world_update,
-            make_long,
-            make_short,
+            make_action_text,
+            make_success_text,
+            make_fail_text,
             ..Default::default()
         }
     }
@@ -147,15 +155,16 @@ impl Pick {
 #[derive(Default)]
 pub struct Give {
     id: Uuid,
-    name: &'static str,
+    name: String,
     from_character: &'static str,
     to_character: &'static str,
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Give {
@@ -183,30 +192,6 @@ impl Id for Give {
     }
 }
 
-impl Named for Give {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-}
-
-impl Description for Give {
-    fn long(&self, world: &dyn World) -> String {
-        if let Some(long) = self.make_long.as_ref() {
-            (long)(self, world)
-        } else {
-            String::new()
-        }
-    }
-
-    fn short(&self, world: &dyn World) -> String {
-        if let Some(short) = self.make_short.as_ref() {
-            (short)(self, world)
-        } else {
-            String::new()
-        }
-    }
-}
-
 impl AsAny for Give {
     fn as_any(&self) -> &dyn Any {
         self
@@ -217,6 +202,10 @@ impl AsAny for Give {
 }
 
 impl Event for Give {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Item belongs to from_character
         if &ItemState::Owned(self.from_character) == world.items().get(self.item).unwrap().state() {
@@ -248,19 +237,48 @@ impl Event for Give {
                 ItemState::Owned(self.to_character)
             });
     }
+
+    fn translation_base(&self) -> String {
+        format!(
+            "{}_{}_{}_to_{}",
+            self.from_character, self.name, self.item, self.to_character
+        )
+    }
+
+    fn action_text(&self, world: &dyn World) -> String {
+        self.make_action_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn success_text(&self, world: &dyn World) -> String {
+        self.make_success_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.make_fail_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl Give {
     pub fn new(
-        name: &'static str,
+        name: String,
         from_character: &'static str,
         to_character: &'static str,
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -270,8 +288,9 @@ impl Give {
             consume,
             roles,
             world_update,
-            make_long,
-            make_short,
+            make_action_text,
+            make_success_text,
+            make_fail_text,
             ..Default::default()
         }
     }
@@ -292,15 +311,16 @@ impl Give {
 #[derive(Default)]
 pub struct UseItem {
     id: Uuid,
-    name: &'static str,
+    name: String,
     character: &'static str,
     item: &'static str,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for UseItem {
@@ -327,30 +347,6 @@ impl Id for UseItem {
     }
 }
 
-impl Named for UseItem {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-}
-
-impl Description for UseItem {
-    fn long(&self, world: &dyn World) -> String {
-        if let Some(long) = self.make_long.as_ref() {
-            (long)(self, world)
-        } else {
-            String::new()
-        }
-    }
-
-    fn short(&self, world: &dyn World) -> String {
-        if let Some(short) = self.make_short.as_ref() {
-            (short)(self, world)
-        } else {
-            String::new()
-        }
-    }
-}
-
 impl AsAny for UseItem {
     fn as_any(&self) -> &dyn Any {
         self
@@ -361,6 +357,10 @@ impl AsAny for UseItem {
 }
 
 impl Event for UseItem {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -383,19 +383,45 @@ impl Event for UseItem {
                 .set_state(ItemState::Unassigned);
         }
     }
+
+    fn translation_base(&self) -> String {
+        format!("{}_{}_{}", self.character, self.name, self.item)
+    }
+
+    fn action_text(&self, world: &dyn World) -> String {
+        self.make_action_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn success_text(&self, world: &dyn World) -> String {
+        self.make_success_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.make_fail_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl UseItem {
     pub fn new(
-        name: &'static str,
+        name: String,
         character: &'static str,
         item: &'static str,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -405,8 +431,9 @@ impl UseItem {
             roles,
             world_update,
             custom_condition,
-            make_short,
-            make_long,
+            make_action_text,
+            make_success_text,
+            make_fail_text,
             ..Default::default()
         }
     }
@@ -423,14 +450,15 @@ impl UseItem {
 #[derive(Default)]
 pub struct Move {
     id: Uuid,
-    name: &'static str,
+    name: String,
     character: &'static str,
     from_scenes: Vec<&'static str>,
     to_scene: &'static str,
     roles: Vec<&'static str>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Move {
@@ -456,30 +484,6 @@ impl Id for Move {
     }
 }
 
-impl Named for Move {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-}
-
-impl Description for Move {
-    fn long(&self, world: &dyn World) -> String {
-        if let Some(long) = self.make_long.as_ref() {
-            (long)(self, world)
-        } else {
-            String::new()
-        }
-    }
-
-    fn short(&self, world: &dyn World) -> String {
-        if let Some(short) = self.make_short.as_ref() {
-            (short)(self, world)
-        } else {
-            String::new()
-        }
-    }
-}
-
 impl AsAny for Move {
     fn as_any(&self) -> &dyn Any {
         self
@@ -490,6 +494,10 @@ impl AsAny for Move {
 }
 
 impl Event for Move {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Check custom condition
         if let Some(custom_condition) = self.custom_condition.as_ref() {
@@ -518,18 +526,44 @@ impl Event for Move {
             .unwrap()
             .set_scene(Some(self.to_scene));
     }
+
+    fn translation_base(&self) -> String {
+        format!("{}_{}_to_{}", self.character, self.name, self.to_scene)
+    }
+
+    fn action_text(&self, world: &dyn World) -> String {
+        self.make_action_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn success_text(&self, world: &dyn World) -> String {
+        self.make_success_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.make_fail_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl Move {
     pub fn new(
-        name: &'static str,
+        name: String,
         character: &'static str,
         from_scenes: Vec<&'static str>,
         to_scene: &'static str,
         roles: Vec<&'static str>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -538,8 +572,9 @@ impl Move {
             to_scene,
             roles,
             custom_condition,
-            make_long,
-            make_short,
+            make_action_text,
+            make_success_text,
+            make_fail_text,
             ..Default::default()
         }
     }
@@ -552,14 +587,15 @@ impl Move {
 #[derive(Default)]
 pub struct Void {
     id: Uuid,
-    name: &'static str,
+    name: String,
     character: &'static str,
     item: Option<&'static str>,
     scenes: Option<Vec<&'static str>>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Void {
@@ -585,30 +621,6 @@ impl Id for Void {
     }
 }
 
-impl Named for Void {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-}
-
-impl Description for Void {
-    fn long(&self, world: &dyn World) -> String {
-        if let Some(long) = self.make_long.as_ref() {
-            (long)(self, world)
-        } else {
-            String::new()
-        }
-    }
-
-    fn short(&self, world: &dyn World) -> String {
-        if let Some(short) = self.make_short.as_ref() {
-            (short)(self, world)
-        } else {
-            String::new()
-        }
-    }
-}
-
 impl AsAny for Void {
     fn as_any(&self) -> &dyn Any {
         self
@@ -619,6 +631,10 @@ impl AsAny for Void {
 }
 
 impl Event for Void {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
             if !(custom_condition)(self, world) {
@@ -646,18 +662,48 @@ impl Event for Void {
             (world_update)(&self, world)
         }
     }
+
+    fn translation_base(&self) -> String {
+        if let Some(item) = self.item.as_ref() {
+            format!("{}_{}_{}", self.character, self.name, item)
+        } else {
+            format!("{}_{}", self.character, self.name)
+        }
+    }
+
+    fn action_text(&self, world: &dyn World) -> String {
+        self.make_action_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn success_text(&self, world: &dyn World) -> String {
+        self.make_success_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
+
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.make_fail_text
+            .as_ref()
+            .map(|e| (e)(self, world))
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl Void {
     pub fn new(
-        name: &'static str,
+        name: String,
         character: &'static str,
         item: Option<&'static str>,
         scenes: Option<Vec<&'static str>>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_short: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_long: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     ) -> Self {
         Self {
             name,
@@ -666,8 +712,9 @@ impl Void {
             scenes,
             world_update,
             custom_condition,
-            make_short,
-            make_long,
+            make_action_text,
+            make_success_text,
+            make_fail_text,
             ..Default::default()
         }
     }
