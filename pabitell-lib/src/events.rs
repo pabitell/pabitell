@@ -669,26 +669,7 @@ impl Event for Void {
 
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         if let Some(custom_condition) = self.custom_condition.as_ref() {
-            if !(custom_condition)(self, world) {
-                return false;
-            }
-        }
-
-        if !self.scenes.is_empty() {
-            if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
-                if self
-                    .scenes
-                    .iter()
-                    .map(|e| e.to_string())
-                    .any(|e| &e == scene)
-                {
-                    return true;
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
+            (custom_condition)(self, world)
         } else {
             true
         }
@@ -836,7 +817,6 @@ pub mod test {
             "void",
             "character",
             None as Option<String>,
-            vec![],
             None,
             None,
             None,

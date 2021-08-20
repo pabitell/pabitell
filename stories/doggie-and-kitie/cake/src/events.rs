@@ -124,9 +124,11 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
         name,
         character,
         Some(item),
-        vec!["kitchen".into()],
         None,
-        None,
+        Some(Box::new(|event, world| {
+            let character = world.characters().get(event.character()).unwrap();
+            character.scene() == &Some("kitchen".to_string())
+        })),
         Some(Box::new(|event, world| {
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
@@ -347,7 +349,6 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
         name,
         character,
         Some(item),
-        vec!["children_house".into()],
         Some(Box::new(|event, world| {
             // mark consumed
             let character = world
@@ -414,6 +415,10 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
             }
         })),
         Some(Box::new(|event, world| {
+            let character = world.characters().get(event.character()).unwrap();
+            if character.scene() != &Some("children_house".into()) {
+                return false;
+            }
             // item is meal
             if let Some(item) = event.item() {
                 world.items().get(item).unwrap().roles().contains(&"meal")
