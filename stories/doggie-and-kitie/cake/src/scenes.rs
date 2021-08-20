@@ -33,7 +33,7 @@ impl Named for PlayGround {
 impl Description for PlayGround {
     fn long(&self, world: &dyn World) -> String {
         match world.items().get("sand_cake").unwrap().state() {
-            ItemState::Owned(character) => match *character {
+            ItemState::Owned(character) => match character.as_str() {
                 "doggie" => get_message(
                     &format!("{}-{}-doggie_pick", world.name(), self.name()),
                     world.lang(),

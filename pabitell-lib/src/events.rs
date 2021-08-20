@@ -6,8 +6,8 @@ use uuid::Uuid;
 pub struct Pick {
     id: Uuid,
     name: String,
-    character: &'static str,
-    item: &'static str,
+    character: String,
+    item: String,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
@@ -62,8 +62,10 @@ impl Event for Pick {
             }
         }
 
-        if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
-            if &ItemState::InScene(scene) == world.items().get(self.item).unwrap().state() {
+        if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
+            if &ItemState::InScene(scene.to_string())
+                == world.items().get(&self.item).unwrap().state()
+            {
                 true
             } else {
                 false
@@ -80,12 +82,12 @@ impl Event for Pick {
 
         world
             .items_mut()
-            .get_mut(self.item)
+            .get_mut(&self.item)
             .unwrap()
             .set_state(if self.consume {
                 ItemState::Unassigned
             } else {
-                ItemState::Owned(self.character)
+                ItemState::Owned(self.character.to_string())
             });
     }
 
@@ -116,10 +118,10 @@ impl Event for Pick {
 }
 
 impl Pick {
-    pub fn new(
-        name: String,
-        character: &'static str,
-        item: &'static str,
+    pub fn new<SN, SC, SI>(
+        name: SN,
+        character: SC,
+        item: SI,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
@@ -127,11 +129,16 @@ impl Pick {
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    ) -> Self {
+    ) -> Self
+    where
+        SN: ToString,
+        SC: ToString,
+        SI: ToString,
+    {
         Self {
-            name,
-            character,
-            item,
+            name: name.to_string(),
+            character: character.to_string(),
+            item: item.to_string(),
             consume,
             roles,
             custom_condition,
@@ -143,12 +150,12 @@ impl Pick {
         }
     }
 
-    pub fn character(&self) -> &'static str {
-        self.character
+    pub fn character(&self) -> &str {
+        &self.character
     }
 
-    pub fn item(&self) -> &'static str {
-        self.item
+    pub fn item(&self) -> &str {
+        &self.item
     }
 }
 
@@ -156,9 +163,9 @@ impl Pick {
 pub struct Give {
     id: Uuid,
     name: String,
-    from_character: &'static str,
-    to_character: &'static str,
-    item: &'static str,
+    from_character: String,
+    to_character: String,
+    item: String,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
@@ -208,10 +215,16 @@ impl Event for Give {
 
     fn can_be_triggered(&self, world: &dyn World) -> bool {
         // Item belongs to from_character
-        if &ItemState::Owned(self.from_character) == world.items().get(self.item).unwrap().state() {
+        if &ItemState::Owned(self.from_character.to_string())
+            == world.items().get(&self.item).unwrap().state()
+        {
             // Characters are in the same scene
-            if world.characters().get(self.from_character).unwrap().scene()
-                == world.characters().get(self.to_character).unwrap().scene()
+            if world
+                .characters()
+                .get(&self.from_character)
+                .unwrap()
+                .scene()
+                == world.characters().get(&self.to_character).unwrap().scene()
             {
                 true
             } else {
@@ -229,12 +242,12 @@ impl Event for Give {
 
         world
             .items_mut()
-            .get_mut(self.item)
+            .get_mut(&self.item)
             .unwrap()
             .set_state(if self.consume {
                 ItemState::Unassigned
             } else {
-                ItemState::Owned(self.to_character)
+                ItemState::Owned(self.to_character.to_string())
             });
     }
 
@@ -268,23 +281,29 @@ impl Event for Give {
 }
 
 impl Give {
-    pub fn new(
-        name: String,
-        from_character: &'static str,
-        to_character: &'static str,
-        item: &'static str,
+    pub fn new<SN, SFC, STC, SI>(
+        name: SN,
+        from_character: SFC,
+        to_character: STC,
+        item: SI,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    ) -> Self {
+    ) -> Self
+    where
+        SN: ToString,
+        SFC: ToString,
+        STC: ToString,
+        SI: ToString,
+    {
         Self {
-            name,
-            from_character,
-            to_character,
-            item,
+            name: name.to_string(),
+            from_character: from_character.to_string(),
+            to_character: to_character.to_string(),
+            item: item.to_string(),
             consume,
             roles,
             world_update,
@@ -295,16 +314,16 @@ impl Give {
         }
     }
 
-    pub fn from_character(&self) -> &'static str {
-        self.from_character
+    pub fn from_character(&self) -> &str {
+        &self.from_character
     }
 
-    pub fn to_character(&self) -> &'static str {
-        self.to_character
+    pub fn to_character(&self) -> &str {
+        &self.to_character
     }
 
-    pub fn item(&self) -> &'static str {
-        self.item
+    pub fn item(&self) -> &str {
+        &self.item
     }
 }
 
@@ -312,8 +331,8 @@ impl Give {
 pub struct UseItem {
     id: Uuid,
     name: String,
-    character: &'static str,
-    item: &'static str,
+    character: String,
+    item: String,
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
@@ -367,7 +386,8 @@ impl Event for UseItem {
                 return false;
             }
         }
-        world.items().get(self.item).unwrap().state() == &ItemState::Owned(self.character)
+        world.items().get(&self.item).unwrap().state()
+            == &ItemState::Owned(self.character.to_string())
     }
 
     fn trigger(&mut self, world: &mut dyn World) {
@@ -378,7 +398,7 @@ impl Event for UseItem {
         if self.consume {
             world
                 .items_mut()
-                .get_mut(self.item)
+                .get_mut(&self.item)
                 .unwrap()
                 .set_state(ItemState::Unassigned);
         }
@@ -411,10 +431,10 @@ impl Event for UseItem {
 }
 
 impl UseItem {
-    pub fn new(
-        name: String,
-        character: &'static str,
-        item: &'static str,
+    pub fn new<SN, SC, SI>(
+        name: SN,
+        character: SC,
+        item: SI,
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
@@ -422,11 +442,16 @@ impl UseItem {
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    ) -> Self {
+    ) -> Self
+    where
+        SN: ToString,
+        SC: ToString,
+        SI: ToString,
+    {
         Self {
-            name,
-            character,
-            item,
+            name: name.to_string(),
+            character: character.to_string(),
+            item: item.to_string(),
             consume,
             roles,
             world_update,
@@ -438,12 +463,12 @@ impl UseItem {
         }
     }
 
-    pub fn character(&self) -> &'static str {
-        self.character
+    pub fn character(&self) -> &str {
+        &self.character
     }
 
-    pub fn item(&self) -> &'static str {
-        self.item
+    pub fn item(&self) -> &str {
+        &self.item
     }
 }
 
@@ -451,9 +476,9 @@ impl UseItem {
 pub struct Move {
     id: Uuid,
     name: String,
-    character: &'static str,
+    character: String,
     from_scenes: Vec<&'static str>,
-    to_scene: &'static str,
+    to_scene: String,
     roles: Vec<&'static str>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -506,14 +531,11 @@ impl Event for Move {
             }
         }
 
-        if let Some(scene) = world
-            .characters()
-            .get(self.character)
-            .unwrap()
-            .scene()
-            .as_ref()
-        {
-            self.from_scenes.contains(scene)
+        if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
+            self.from_scenes
+                .iter()
+                .map(|e| e.to_string())
+                .any(|e| &e == scene)
         } else {
             false
         }
@@ -522,9 +544,9 @@ impl Event for Move {
     fn trigger(&mut self, world: &mut dyn World) {
         world
             .characters_mut()
-            .get_mut(self.character)
+            .get_mut(&self.character)
             .unwrap()
-            .set_scene(Some(self.to_scene));
+            .set_scene(Some(self.to_scene.to_string()));
     }
 
     fn translation_base(&self) -> String {
@@ -554,22 +576,27 @@ impl Event for Move {
 }
 
 impl Move {
-    pub fn new(
-        name: String,
-        character: &'static str,
+    pub fn new<SN, SC, SS>(
+        name: SN,
+        character: SC,
         from_scenes: Vec<&'static str>,
-        to_scene: &'static str,
+        to_scene: SS,
         roles: Vec<&'static str>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    ) -> Self {
+    ) -> Self
+    where
+        SN: ToString,
+        SC: ToString,
+        SS: ToString,
+    {
         Self {
-            name,
-            character,
+            name: name.to_string(),
+            character: character.to_string(),
             from_scenes,
-            to_scene,
+            to_scene: to_scene.to_string(),
             roles,
             custom_condition,
             make_action_text,
@@ -579,8 +606,8 @@ impl Move {
         }
     }
 
-    pub fn character(&self) -> &'static str {
-        self.character
+    pub fn character(&self) -> &str {
+        &self.character
     }
 }
 
@@ -588,8 +615,8 @@ impl Move {
 pub struct Void {
     id: Uuid,
     name: String,
-    character: &'static str,
-    item: Option<&'static str>,
+    character: String,
+    item: Option<String>,
     scenes: Option<Vec<&'static str>>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
@@ -643,8 +670,8 @@ impl Event for Void {
         }
 
         if let Some(scenes) = self.scenes.as_ref() {
-            if let Some(scene) = world.characters().get(self.character).unwrap().scene() {
-                if scenes.contains(&scene) {
+            if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
+                if scenes.iter().map(|e| e.to_string()).any(|e| &e == scene) {
                     return true;
                 } else {
                     false
@@ -694,21 +721,26 @@ impl Event for Void {
 }
 
 impl Void {
-    pub fn new(
-        name: String,
-        character: &'static str,
-        item: Option<&'static str>,
+    pub fn new<SN, SC, SI>(
+        name: SN,
+        character: SC,
+        item: Option<SI>,
         scenes: Option<Vec<&'static str>>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    ) -> Self {
+    ) -> Self
+    where
+        SN: ToString,
+        SI: ToString,
+        SC: ToString,
+    {
         Self {
-            name,
-            character,
-            item,
+            name: name.to_string(),
+            character: character.to_string(),
+            item: item.map(|e| e.to_string()),
             scenes,
             world_update,
             custom_condition,
@@ -719,11 +751,11 @@ impl Void {
         }
     }
 
-    pub fn character(&self) -> &'static str {
-        self.character
+    pub fn character(&self) -> &str {
+        &self.character
     }
 
-    pub fn item(&self) -> Option<&'static str> {
-        self.item
+    pub fn item(&self) -> &Option<String> {
+        &self.item
     }
 }

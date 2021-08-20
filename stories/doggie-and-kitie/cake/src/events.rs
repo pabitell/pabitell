@@ -1,16 +1,9 @@
 use super::characters;
 use pabitell_lib::{events, Character, Description, Event, Id, ItemState, Named, World};
-use std::any::Any;
-use uuid::Uuid;
 
 use crate::translations::get_message;
 
-pub fn make_pick(
-    name: String,
-    character: &'static str,
-    item: &'static str,
-    consume: bool,
-) -> events::Pick {
+pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> events::Pick {
     events::Pick::new(
         name,
         character,
@@ -43,15 +36,12 @@ pub fn make_pick(
     )
 }
 
-pub fn make_give_sand_cake(
-    from_character: &'static str,
-    to_character: &'static str,
-) -> events::Give {
+pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::Give {
     events::Give::new(
-        "give".into(),
+        "give",
         from_character,
         to_character,
-        "sand_cake",
+        "sand_cake".to_string(),
         true,
         vec!["give"],
         Some(Box::new(|event, world| {
@@ -93,9 +83,9 @@ pub fn make_give_sand_cake(
     )
 }
 
-pub fn make_move_to_kitchen(character: &'static str) -> events::Move {
+pub fn make_move_to_kitchen(character: &str) -> events::Move {
     events::Move::new(
-        "move".into(),
+        "move",
         character,
         vec!["playground"],
         "kitchen",
@@ -127,11 +117,7 @@ pub fn make_move_to_kitchen(character: &'static str) -> events::Move {
     )
 }
 
-pub fn make_disliked_pick(
-    name: String,
-    character: &'static str,
-    item: &'static str,
-) -> events::Void {
+pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Void {
     events::Void::new(
         name,
         character,
@@ -163,9 +149,9 @@ pub fn make_disliked_pick(
     )
 }
 
-pub fn make_move_to_children_garden(character: &'static str) -> events::Move {
+pub fn make_move_to_children_garden(character: &str) -> events::Move {
     events::Move::new(
-        "move".into(),
+        "move",
         character,
         vec!["kitchen"],
         "children_garden",
@@ -202,16 +188,11 @@ pub fn make_move_to_children_garden(character: &'static str) -> events::Move {
     )
 }
 
-pub fn make_use_item(
-    name: String,
-    character: &'static str,
-    item: &'static str,
-    consume: bool,
-) -> events::UseItem {
+pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> events::UseItem {
     events::UseItem::new(
         name,
         character,
-        item,
+        item.to_string(),
         consume,
         vec!["use_item"],
         None,
@@ -244,9 +225,9 @@ pub fn make_use_item(
     )
 }
 
-pub fn make_move_to_garden(character: &'static str) -> events::Move {
+pub fn make_move_to_garden(character: &str) -> events::Move {
     events::Move::new(
-        "move".into(),
+        "move",
         character,
         vec!["children_garden"],
         "garden",
@@ -283,9 +264,9 @@ pub fn make_move_to_garden(character: &'static str) -> events::Move {
     )
 }
 
-pub fn make_find_bad_dog(character: &'static str) -> events::Pick {
+pub fn make_find_bad_dog(character: &str) -> events::Pick {
     events::Pick::new(
-        "find".into(),
+        "find",
         character,
         "bad_dog",
         true,
@@ -295,7 +276,7 @@ pub fn make_find_bad_dog(character: &'static str) -> events::Pick {
             world
                 .characters()
                 .values()
-                .all(|e| e.scene() == Some("garden"))
+                .all(|e| e.scene().clone() == Some("garden".to_string()))
         })),
         Some(Box::new(|event, world| {
             get_message(
@@ -321,9 +302,9 @@ pub fn make_find_bad_dog(character: &'static str) -> events::Pick {
     )
 }
 
-pub fn make_move_to_children_house(character: &'static str) -> events::Move {
+pub fn make_move_to_children_house(character: &str) -> events::Move {
     events::Move::new(
-        "move".into(),
+        "move",
         character,
         vec!["garden"],
         "children_house",
@@ -356,7 +337,7 @@ pub fn make_move_to_children_house(character: &'static str) -> events::Move {
     )
 }
 
-pub fn make_eat_meal(name: String, character: &'static str, item: &'static str) -> events::Void {
+pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
     events::Void::new(
         name,
         character,
@@ -372,20 +353,20 @@ pub fn make_eat_meal(name: String, character: &'static str, item: &'static str) 
 
             if let Some(kitie) = character.downcast_mut::<characters::Kitie>() {
                 match event.item() {
-                    Some("meat") => kitie.consumed_meat = true,
-                    Some("dumplings") => kitie.consumed_dumplings = true,
-                    Some("soup") => kitie.consumed_soup = true,
-                    Some("pie") => kitie.consumed_pie = true,
+                    Some(i) if i == "meat" => kitie.consumed_meat = true,
+                    Some(i) if i == "dumplings" => kitie.consumed_dumplings = true,
+                    Some(i) if i == "soup" => kitie.consumed_soup = true,
+                    Some(i) if i == "pie" => kitie.consumed_pie = true,
                     _ => unreachable!(),
                 }
             }
 
             if let Some(doggie) = character.downcast_mut::<characters::Doggie>() {
                 match event.item() {
-                    Some("meat") => doggie.consumed_meat = true,
-                    Some("dumplings") => doggie.consumed_dumplings = true,
-                    Some("soup") => doggie.consumed_soup = true,
-                    Some("pie") => doggie.consumed_pie = true,
+                    Some(i) if i == "meat" => doggie.consumed_meat = true,
+                    Some(i) if i == "dumplings" => doggie.consumed_dumplings = true,
+                    Some(i) if i == "soup" => doggie.consumed_soup = true,
+                    Some(i) if i == "pie" => doggie.consumed_pie = true,
                     _ => unreachable!(),
                 }
             }
@@ -416,7 +397,7 @@ pub fn make_eat_meal(name: String, character: &'static str, item: &'static str) 
                     .as_any_mut()
                     .downcast_mut::<characters::Doggie>()
                     .unwrap();
-                doggie.set_scene(Some("way_home"));
+                doggie.set_scene(Some("way_home".into()));
                 let kitie = world
                     .characters_mut()
                     .get_mut("kitie")
@@ -424,7 +405,7 @@ pub fn make_eat_meal(name: String, character: &'static str, item: &'static str) 
                     .as_any_mut()
                     .downcast_mut::<characters::Kitie>()
                     .unwrap();
-                kitie.set_scene(Some("way_home"));
+                kitie.set_scene(Some("way_home".into()));
             }
         })),
         Some(Box::new(|event, world| {

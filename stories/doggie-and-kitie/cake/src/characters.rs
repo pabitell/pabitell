@@ -9,7 +9,7 @@ use crate::translations::get_message;
 #[derive(Debug, Default)]
 pub struct Kitie {
     id: Uuid,
-    scene: Option<&'static str>,
+    scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
@@ -63,11 +63,11 @@ impl AsAny for Kitie {
 }
 
 impl Character for Kitie {
-    fn scene(&self) -> Option<&'static str> {
-        self.scene
+    fn scene(&self) -> &Option<String> {
+        &self.scene
     }
 
-    fn set_scene(&mut self, scene: Option<&'static str>) {
+    fn set_scene(&mut self, scene: Option<String>) {
         self.scene = scene
     }
 }
@@ -81,7 +81,7 @@ impl Kitie {
 #[derive(Debug, Default)]
 pub struct Doggie {
     id: Uuid,
-    scene: Option<&'static str>,
+    scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
@@ -135,11 +135,11 @@ impl AsAny for Doggie {
 }
 
 impl Character for Doggie {
-    fn scene(&self) -> Option<&'static str> {
-        self.scene
+    fn scene(&self) -> &Option<String> {
+        &self.scene
     }
 
-    fn set_scene(&mut self, scene: Option<&'static str>) {
+    fn set_scene(&mut self, scene: Option<String>) {
         self.scene = scene
     }
 }

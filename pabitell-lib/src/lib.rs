@@ -13,8 +13,8 @@ pub trait AsAny: Any {
 
 #[derive(Debug, PartialEq)]
 pub enum ItemState {
-    Owned(&'static str),
-    InScene(&'static str),
+    Owned(String),
+    InScene(String),
     Unassigned,
 }
 
@@ -47,8 +47,8 @@ pub trait Item: Id + Named + AsAny + Description + fmt::Debug {
 }
 
 pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
-    fn scene(&self) -> Option<&'static str>;
-    fn set_scene(&mut self, scene: Option<&'static str>);
+    fn scene(&self) -> &Option<String>;
+    fn set_scene(&mut self, scene: Option<String>);
 }
 
 pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
@@ -131,7 +131,7 @@ pub mod test {
     #[derive(Debug, Default)]
     struct TestCharacter {
         id: Uuid,
-        scene: Option<&'static str>,
+        scene: Option<String>,
     }
 
     impl Id for TestCharacter {
@@ -171,10 +171,10 @@ pub mod test {
     }
 
     impl Character for TestCharacter {
-        fn scene(&self) -> Option<&'static str> {
-            self.scene
+        fn scene(&self) -> &Option<String> {
+            &self.scene
         }
-        fn set_scene(&mut self, scene: Option<&'static str>) {
+        fn set_scene(&mut self, scene: Option<String>) {
             self.scene = scene
         }
     }

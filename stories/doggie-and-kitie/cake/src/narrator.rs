@@ -27,10 +27,10 @@ impl Narrator for Cake {
             .downcast_ref::<characters::Kitie>()
             .unwrap();
 
-        match (doggie.scene(), kitie.scene()) {
-            (Some("playground"), Some("playground")) => {
+        match (doggie.scene().as_ref(), kitie.scene().as_ref()) {
+            (Some(d), Some(k)) if d == "playground" && k == "playground" => {
                 let sand_cake = world.items().get("sand_cake").unwrap();
-                match *sand_cake.state() {
+                match sand_cake.state() {
                     ItemState::Unassigned => {
                         let event: Box<dyn Event> =
                             Box::new(events::make_move_to_kitchen("doggie"));
@@ -38,17 +38,17 @@ impl Narrator for Cake {
                         let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("kitie"));
                         res.push(event);
                     }
-                    ItemState::Owned("doggie") => {
+                    ItemState::Owned(e) if e == "doggie" => {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_give_sand_cake("doggie", "kitie"));
+                            Box::new(events::make_give_sand_cake("doggie".into(), "kitie".into()));
                         res.push(event);
                     }
-                    ItemState::Owned("kitie") => {
+                    ItemState::Owned(e) if e == "kitie" => {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_give_sand_cake("kitie", "doggie"));
+                            Box::new(events::make_give_sand_cake("kitie".into(), "doggie".into()));
                         res.push(event);
                     }
-                    ItemState::InScene("playground") => {
+                    ItemState::InScene(e) if e == "playground" => {
                         let event: Box<dyn Event> = Box::new(events::make_pick(
                             "pick".into(),
                             "kitie",
@@ -68,18 +68,18 @@ impl Narrator for Cake {
                     _ => {}
                 }
             }
-            (Some("playground"), Some("kitchen")) => {
+            (Some(d), Some(k)) if d == "playground" && k == "kitchen" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("doggie"));
                 res.push(event);
             }
-            (Some("kitchen"), Some("playground")) => {
+            (Some(d), Some(k)) if d == "kitchen" && k == "playground" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("kitie"));
                 res.push(event);
             }
-            (Some("kitchen"), Some("kitchen")) => {
+            (Some(d), Some(k)) if d == "kitchen" && k == "kitchen" => {
                 // Pick ingredient
                 world.items().values().for_each(|e| match e.state() {
-                    ItemState::InScene("kitchen") => {
+                    ItemState::InScene(p) if p == "kitchen" => {
                         if e.roles().contains(&"ingredient") {
                             if e.roles().contains(&"accepted") {
                                 for character in ["doggie", "kitie"] {
@@ -132,23 +132,23 @@ impl Narrator for Cake {
                     }
                 }
             }
-            (Some("kitchen"), Some("children_garden")) => {
+            (Some(d), Some(k)) if d == "kitchen" && k == "children_garden" => {
                 let event: Box<dyn Event> =
                     Box::new(events::make_move_to_children_garden("doggie"));
                 res.push(event);
             }
-            (Some("children_garden"), Some("kitchen")) => {
+            (Some(d), Some(k)) if d == "children_garden" && k == "kitchen" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_garden("kitie"));
                 res.push(event);
             }
-            (Some("children_garden"), Some("children_garden")) => {
+            (Some(d), Some(k)) if d == "children_garden" && k == "children_garden" => {
                 // make picks
                 world
                     .items()
                     .values()
                     .filter(|e| {
                         e.roles().contains(&"toy")
-                            && e.state() == &ItemState::InScene("children_garden")
+                            && e.state() == &ItemState::InScene("children_garden".into())
                     })
                     .for_each(|e| {
                         for character in ["doggie", "kitie"] {
@@ -176,16 +176,18 @@ impl Narrator for Cake {
                     }
                 }
             }
-            (Some("children_garden"), Some("garden")) => {
+            (Some(d), Some(k)) if d == "children_garden" && k == "garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_garden("doggie"));
                 res.push(event);
             }
-            (Some("garden"), Some("children_garden")) => {
+            (Some(d), Some(k)) if d == "garden" && k == "children_garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_garden("kitie"));
                 res.push(event);
             }
-            (Some("garden"), Some("garden")) => {
-                if world.items().get("bad_dog").unwrap().state() == &ItemState::InScene("garden") {
+            (Some(d), Some(k)) if d == "garden" && k == "garden" => {
+                if world.items().get("bad_dog").unwrap().state()
+                    == &ItemState::InScene("garden".into())
+                {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> = Box::new(events::make_find_bad_dog(character));
                         res.push(event);
@@ -198,15 +200,15 @@ impl Narrator for Cake {
                     }
                 }
             }
-            (Some("garden"), Some("children_house")) => {
+            (Some(d), Some(k)) if d == "garden" && k == "children_house" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_house("doggie"));
                 res.push(event);
             }
-            (Some("children_house"), Some("garden")) => {
+            (Some(d), Some(k)) if d == "children_house" && k == "garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_house("kitie"));
                 res.push(event);
             }
-            (Some("children_house"), Some("children_house")) => {
+            (Some(d), Some(k)) if d == "children_house" && k == "children_house" => {
                 if !doggie.consumed_pie {
                     let event: Box<dyn Event> =
                         Box::new(events::make_eat_meal("eat".into(), "doggie", "pie"));
@@ -249,7 +251,7 @@ impl Narrator for Cake {
                     res.push(event);
                 }
             }
-            (Some("way_home"), Some("way_home")) => {}
+            (Some(d), Some(k)) if d == "way_home" && k == "way_home" => {}
             _ => unreachable!(),
         }
 

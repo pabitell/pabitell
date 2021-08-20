@@ -217,19 +217,19 @@ impl World for CakeWorld {
 
         self.characters_mut()
             .values_mut()
-            .for_each(|c| c.set_scene(Some("playground")));
+            .for_each(|c| c.set_scene(Some("playground".into())));
 
         self.items_mut().values_mut().for_each(|i| {
             i.set_state(match i.name() {
-                "sand_cake" => ItemState::InScene("playground"),
-                "bad_dog" => ItemState::InScene("garden"),
+                "sand_cake" => ItemState::InScene("playground".into()),
+                "bad_dog" => ItemState::InScene("garden".into()),
                 _ => {
                     if i.roles().contains(&"ingredient") {
-                        ItemState::InScene("kitchen")
+                        ItemState::InScene("kitchen".into())
                     } else if i.roles().contains(&"toy") {
-                        ItemState::InScene("children_garden")
+                        ItemState::InScene("children_garden".into())
                     } else if i.roles().contains(&"meal") {
-                        ItemState::InScene("children_house")
+                        ItemState::InScene("children_house".into())
                     } else {
                         ItemState::Unassigned
                     }
@@ -256,7 +256,8 @@ impl World for CakeWorld {
             .downcast_ref::<characters::Kitie>()
             .unwrap();
 
-        doggie.scene() == Some("way_home") && kitie.scene() == Some("way_home")
+        doggie.scene().clone() == Some("way_home".to_string())
+            && kitie.scene().clone() == Some("way_home".to_string())
     }
 }
 
@@ -283,43 +284,43 @@ pub mod tests {
         let world = prepare_world();
         assert_eq!(
             world.characters().get("kitie").unwrap().scene(),
-            Some("playground")
+            &Some("playground".into())
         );
         assert_eq!(
             world.characters().get("doggie").unwrap().scene(),
-            Some("playground")
+            &Some("playground".into())
         );
         assert_eq!(
             world.items().get("sand_cake").unwrap().state(),
-            &ItemState::InScene("playground")
+            &ItemState::InScene("playground".into())
         );
         assert_eq!(
             world.items().get("milk").unwrap().state(),
-            &ItemState::InScene("kitchen")
+            &ItemState::InScene("kitchen".into())
         );
         assert_eq!(
             world.items().get("jam").unwrap().state(),
-            &ItemState::InScene("kitchen")
+            &ItemState::InScene("kitchen".into())
         );
         assert_eq!(
             world.items().get("bread").unwrap().state(),
-            &ItemState::InScene("kitchen")
+            &ItemState::InScene("kitchen".into())
         );
         assert_eq!(
             world.items().get("raisins").unwrap().state(),
-            &ItemState::InScene("kitchen")
+            &ItemState::InScene("kitchen".into())
         );
         assert_eq!(
             world.items().get("ball").unwrap().state(),
-            &ItemState::InScene("children_garden")
+            &ItemState::InScene("children_garden".into())
         );
         assert_eq!(
             world.items().get("bad_dog").unwrap().state(),
-            &ItemState::InScene("garden")
+            &ItemState::InScene("garden".into())
         );
         assert_eq!(
             world.items().get("dumplings").unwrap().state(),
-            &ItemState::InScene("children_house")
+            &ItemState::InScene("children_house".into())
         );
     }
 
@@ -439,8 +440,8 @@ pub mod tests {
         }
 
         // Make sure that doggie and kitie reached final destination
-        assert!(world.characters().get("doggie").unwrap().scene() == Some("way_home"));
-        assert!(world.characters().get("kitie").unwrap().scene() == Some("way_home"));
+        assert!(world.characters().get("doggie").unwrap().scene() == &Some("way_home".into()));
+        assert!(world.characters().get("kitie").unwrap().scene() == &Some("way_home".into()));
 
         assert!(world.finished());
     }
