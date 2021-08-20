@@ -54,6 +54,11 @@ pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
 pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
 
 pub trait Event: Id + AsAny + fmt::Debug {
+    fn kind(&self) -> &str {
+        std::any::type_name::<Self>()
+            .rsplitn(2, "::")
+            .collect::<Vec<&str>>()[0]
+    }
     fn name(&self) -> &str;
     fn can_be_triggered(&self, world: &dyn World) -> bool;
     fn trigger(&mut self, world: &mut dyn World);

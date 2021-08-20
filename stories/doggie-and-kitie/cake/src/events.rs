@@ -41,7 +41,7 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
         "give",
         from_character,
         to_character,
-        "sand_cake".to_string(),
+        "sand_cake",
         true,
         vec!["give"],
         Some(Box::new(|event, world| {
@@ -59,6 +59,7 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
                 doggie.sand_cake_last = true;
             }
         })),
+        None,
         Some(Box::new(|event, world| {
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
@@ -90,6 +91,7 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
         vec!["playground"],
         "kitchen",
         vec!["move"],
+        None,
         Some(Box::new(|_event, world| {
             world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
         })),
@@ -122,7 +124,7 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
         name,
         character,
         Some(item),
-        Some(vec!["kitchen"]),
+        vec!["kitchen".into()],
         None,
         None,
         Some(Box::new(|event, world| {
@@ -156,6 +158,7 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
         vec!["kitchen"],
         "children_garden",
         vec!["move"],
+        None,
         Some(Box::new(|_event, world| {
             // Everything is in the cake
             world
@@ -232,6 +235,7 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
         vec!["children_garden"],
         "garden",
         vec!["move"],
+        None,
         Some(Box::new(|_event, world| {
             // Everything is in the cake
             world
@@ -309,6 +313,7 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
         vec!["garden"],
         "children_house",
         vec!["move"],
+        None,
         Some(Box::new(|_event, world| {
             // Found bad dog
             world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned
@@ -342,7 +347,7 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
         name,
         character,
         Some(item),
-        Some(vec!["children_house"]),
+        vec!["children_house".into()],
         Some(Box::new(|event, world| {
             // mark consumed
             let character = world

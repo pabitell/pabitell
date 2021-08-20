@@ -169,6 +169,7 @@ pub struct Give {
     consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -289,6 +290,7 @@ impl Give {
         consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -307,6 +309,7 @@ impl Give {
             consume,
             roles,
             world_update,
+            custom_condition,
             make_action_text,
             make_success_text,
             make_fail_text,
@@ -480,6 +483,7 @@ pub struct Move {
     from_scenes: Vec<&'static str>,
     to_scene: String,
     roles: Vec<&'static str>,
+    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -582,6 +586,7 @@ impl Move {
         from_scenes: Vec<&'static str>,
         to_scene: SS,
         roles: Vec<&'static str>,
+        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -598,6 +603,7 @@ impl Move {
             from_scenes,
             to_scene: to_scene.to_string(),
             roles,
+            world_update,
             custom_condition,
             make_action_text,
             make_success_text,
@@ -617,7 +623,7 @@ pub struct Void {
     name: String,
     character: String,
     item: Option<String>,
-    scenes: Option<Vec<&'static str>>,
+    scenes: Vec<String>,
     world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
     custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -669,9 +675,14 @@ impl Event for Void {
             }
         }
 
-        if let Some(scenes) = self.scenes.as_ref() {
+        if !self.scenes.is_empty() {
             if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
-                if scenes.iter().map(|e| e.to_string()).any(|e| &e == scene) {
+                if self
+                    .scenes
+                    .iter()
+                    .map(|e| e.to_string())
+                    .any(|e| &e == scene)
+                {
                     return true;
                 } else {
                     false
@@ -725,7 +736,7 @@ impl Void {
         name: SN,
         character: SC,
         item: Option<SI>,
-        scenes: Option<Vec<&'static str>>,
+        scenes: Vec<String>,
         world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
         custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
@@ -757,5 +768,84 @@ impl Void {
 
     pub fn item(&self) -> &Option<String> {
         &self.item
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::{Give, Move, Pick, UseItem, Void};
+    use crate::Event;
+
+    #[test]
+    fn kinds() {
+        let pick = Pick::new(
+            "pick",
+            "character",
+            "item",
+            false,
+            vec![],
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert_eq!(pick.kind(), "Pick");
+
+        let give = Give::new(
+            "give",
+            "from_character",
+            "to_character",
+            "item",
+            false,
+            vec![],
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert_eq!(give.kind(), "Give");
+
+        let move_event = Move::new(
+            "move",
+            "character",
+            vec!["from_scene"],
+            "to_scene",
+            vec![],
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert_eq!(move_event.kind(), "Move");
+
+        let use_item = UseItem::new(
+            "use_item",
+            "character",
+            "item",
+            false,
+            vec![],
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert_eq!(use_item.kind(), "UseItem");
+
+        let void = Void::new(
+            "void",
+            "character",
+            None as Option<String>,
+            vec![],
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert_eq!(void.kind(), "Void");
     }
 }
