@@ -13,6 +13,7 @@ pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> even
         None,
         None,
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -20,6 +21,7 @@ pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> even
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -27,6 +29,7 @@ pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> even
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -45,6 +48,8 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
         true,
         vec!["give"],
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Give>().unwrap();
+
             let character = world
                 .characters_mut()
                 .get_mut(event.to_character())
@@ -61,6 +66,7 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
         })),
         None,
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Give>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -68,6 +74,7 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Give>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -75,6 +82,7 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Give>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -96,6 +104,7 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
             world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -103,6 +112,7 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -110,6 +120,7 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -126,10 +137,12 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
         Some(item),
         None,
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             let character = world.characters().get(event.character()).unwrap();
             character.scene() == &Some("kitchen".to_string())
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -137,6 +150,7 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -144,6 +158,7 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -170,6 +185,7 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
                 .all(|e| e.state() == &ItemState::Unassigned)
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -177,6 +193,7 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -184,6 +201,7 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -202,11 +220,13 @@ pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> 
         vec!["use_item"],
         None,
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::UseItem>().unwrap();
             // all characters in the same scene
             let scene = world.characters().get(event.character()).unwrap().scene();
             world.characters().values().all(|e| e.scene() == scene)
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::UseItem>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -214,6 +234,7 @@ pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> 
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::UseItem>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -221,6 +242,7 @@ pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> 
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::UseItem>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -247,6 +269,7 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
                 .all(|e| e.state() == &ItemState::Unassigned)
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -254,6 +277,7 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -261,6 +285,7 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -285,6 +310,7 @@ pub fn make_find_bad_dog(character: &str) -> events::Pick {
                 .all(|e| e.scene().clone() == Some("garden".to_string()))
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -292,6 +318,7 @@ pub fn make_find_bad_dog(character: &str) -> events::Pick {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -299,6 +326,7 @@ pub fn make_find_bad_dog(character: &str) -> events::Pick {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -321,6 +349,7 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
             world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -328,6 +357,7 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -335,6 +365,7 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),
@@ -350,6 +381,7 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
         character,
         Some(item),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             // mark consumed
             let character = world
                 .characters_mut()
@@ -415,6 +447,8 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
             }
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
+
             let character = world.characters().get(event.character()).unwrap();
             if character.scene() != &Some("children_house".into()) {
                 return false;
@@ -427,6 +461,7 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
             }
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-action", world.name(), event.translation_base(),),
                 world.lang(),
@@ -434,6 +469,7 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-success", world.name(), event.translation_base(),),
                 world.lang(),
@@ -441,6 +477,7 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
             )
         })),
         Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Void>().unwrap();
             get_message(
                 &format!("{}-{}-fail", world.name(), event.translation_base(),),
                 world.lang(),

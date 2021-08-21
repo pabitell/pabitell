@@ -74,6 +74,11 @@ pub trait Event: Id + AsAny + fmt::Debug {
     fn action_text(&self, world: &dyn World) -> String;
     fn success_text(&self, world: &dyn World) -> String;
     fn fail_text(&self, world: &dyn World) -> String;
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>);
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>);
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
 }
 
 pub trait WorldBuilder<S>
@@ -349,6 +354,24 @@ pub mod test {
 
         fn fail_text(&self, _: &dyn World) -> String {
             "fail".into()
+        }
+
+        fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {}
+        fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {}
+        fn set_make_action_text(
+            &mut self,
+            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        ) {
+        }
+        fn set_make_success_text(
+            &mut self,
+            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        ) {
+        }
+        fn set_make_fail_text(
+            &mut self,
+            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        ) {
         }
     }
 

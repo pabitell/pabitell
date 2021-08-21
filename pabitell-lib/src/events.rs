@@ -10,11 +10,11 @@ pub struct Pick {
     item: String,
     consume: bool,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Pick {
@@ -77,7 +77,7 @@ impl Event for Pick {
 
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(&self, world)
+            (world_update)(self.as_any(), world)
         }
 
         world
@@ -115,6 +115,25 @@ impl Event for Pick {
             .map(|e| (e)(self, world))
             .unwrap_or_else(String::new)
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 impl Pick {
@@ -124,11 +143,11 @@ impl Pick {
         item: SI,
         consume: bool,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
@@ -168,11 +187,11 @@ pub struct Give {
     item: String,
     consume: bool,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Give {
@@ -238,7 +257,7 @@ impl Event for Give {
 
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(&self, world)
+            (world_update)(self.as_any(), world)
         }
 
         world
@@ -279,6 +298,25 @@ impl Event for Give {
             .map(|e| (e)(self, world))
             .unwrap_or_else(String::new)
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 impl Give {
@@ -289,11 +327,11 @@ impl Give {
         item: SI,
         consume: bool,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
@@ -338,11 +376,11 @@ pub struct UseItem {
     item: String,
     consume: bool,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for UseItem {
@@ -395,7 +433,7 @@ impl Event for UseItem {
 
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(&self, world)
+            (world_update)(self.as_any(), world)
         }
 
         if self.consume {
@@ -431,6 +469,25 @@ impl Event for UseItem {
             .map(|e| (e)(self, world))
             .unwrap_or_else(String::new)
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 impl UseItem {
@@ -440,11 +497,11 @@ impl UseItem {
         item: SI,
         consume: bool,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
@@ -483,11 +540,11 @@ pub struct Move {
     from_scenes: Vec<&'static str>,
     to_scene: String,
     roles: Vec<&'static str>,
-    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Move {
@@ -577,6 +634,25 @@ impl Event for Move {
             .map(|e| (e)(self, world))
             .unwrap_or_else(String::new)
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 impl Move {
@@ -586,11 +662,11 @@ impl Move {
         from_scenes: Vec<&'static str>,
         to_scene: SS,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
@@ -615,6 +691,25 @@ impl Move {
     pub fn character(&self) -> &str {
         &self.character
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 #[derive(Default)]
@@ -623,11 +718,11 @@ pub struct Void {
     name: String,
     character: String,
     item: Option<String>,
-    world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
 }
 
 impl fmt::Debug for Void {
@@ -677,7 +772,7 @@ impl Event for Void {
 
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(&self, world)
+            (world_update)(self.as_any(), world)
         }
     }
 
@@ -709,6 +804,25 @@ impl Event for Void {
             .map(|e| (e)(self, world))
             .unwrap_or_else(String::new)
     }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.custom_condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
 }
 
 impl Void {
@@ -716,11 +830,11 @@ impl Void {
         name: SN,
         character: SC,
         item: Option<SI>,
-        world_update: Option<Box<dyn Fn(&Self, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&Self, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&Self, &dyn World) -> String>>,
+        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
