@@ -343,6 +343,7 @@ pub mod tests {
 
         // give and consume sand cake
         let mut events = narrator.available_events(&world);
+        dbg!(&events);
         assert_eq!(events.len(), 1);
         assert!(events
             .iter()

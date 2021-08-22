@@ -1,6 +1,8 @@
+pub mod conditions;
 pub mod events;
 #[cfg(feature = "with_translations")]
 pub mod translations;
+pub mod updates;
 
 use anyhow::Result;
 use std::{any::Any, collections::HashMap, fmt};
@@ -11,7 +13,7 @@ pub trait AsAny: Any {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ItemState {
     Owned(String),
     InScene(String),
@@ -60,8 +62,18 @@ pub trait Event: Id + AsAny + fmt::Debug {
             .collect::<Vec<&str>>()[0]
     }
     fn name(&self) -> &str;
-    fn can_be_triggered(&self, world: &dyn World) -> bool;
-    fn trigger(&mut self, world: &mut dyn World);
+    fn can_be_triggered(&self, world: &dyn World) -> bool {
+        if let Some(condition) = self.get_condition().as_ref() {
+            (condition)(self.as_any(), world)
+        } else {
+            true
+        }
+    }
+    fn trigger(&mut self, world: &mut dyn World) {
+        if let Some(world_update) = self.get_world_update().as_ref() {
+            (world_update)(self.as_any(), world)
+        }
+    }
     fn perform(&mut self, world: &mut dyn World) -> bool {
         if self.can_be_triggered(world) {
             self.trigger(world);
@@ -71,14 +83,35 @@ pub trait Event: Id + AsAny + fmt::Debug {
         }
     }
     fn translation_base(&self) -> String;
-    fn action_text(&self, world: &dyn World) -> String;
-    fn success_text(&self, world: &dyn World) -> String;
-    fn fail_text(&self, world: &dyn World) -> String;
+    fn action_text(&self, world: &dyn World) -> String {
+        self.get_make_action_text()
+            .as_ref()
+            .map(|e| (e)(self.as_any(), world))
+            .unwrap_or_else(String::new)
+    }
+    fn success_text(&self, world: &dyn World) -> String {
+        self.get_make_success_text()
+            .as_ref()
+            .map(|e| (e)(self.as_any(), world))
+            .unwrap_or_else(String::new)
+    }
+    fn fail_text(&self, world: &dyn World) -> String {
+        self.get_make_fail_text()
+            .as_ref()
+            .map(|e| (e)(self.as_any(), world))
+            .unwrap_or_else(String::new)
+    }
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>);
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>);
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
     fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>;
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
 }
 
 pub trait WorldBuilder<S>
@@ -356,22 +389,38 @@ pub mod test {
             "fail".into()
         }
 
-        fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {}
-        fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {}
+        fn set_world_update(&mut self, _update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {}
+        fn set_condition(&mut self, _condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        }
         fn set_make_action_text(
             &mut self,
-            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+            _text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         ) {
         }
         fn set_make_success_text(
             &mut self,
-            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+            _text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         ) {
         }
         fn set_make_fail_text(
             &mut self,
-            text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+            _text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         ) {
+        }
+        fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+            &None
+        }
+        fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+            &None
+        }
+        fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+            &None
+        }
+        fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+            &None
+        }
+        fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+            &None
         }
     }
 

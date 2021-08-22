@@ -1,4 +1,4 @@
-use crate::{AsAny, Event, Id, ItemState, World};
+use crate::{AsAny, Event, Id, World};
 use std::{any::Any, fmt};
 use uuid::Uuid;
 
@@ -8,10 +8,9 @@ pub struct Pick {
     name: String,
     character: String,
     item: String,
-    consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -22,7 +21,6 @@ impl fmt::Debug for Pick {
         f.debug_struct(&format!("Pick({})", self.name()))
             .field("character", &self.character)
             .field("item", &self.item)
-            .field("consume", &self.consume)
             .finish()
     }
 }
@@ -55,65 +53,8 @@ impl Event for Pick {
         &self.name
     }
 
-    fn can_be_triggered(&self, world: &dyn World) -> bool {
-        if let Some(custom_condition) = self.custom_condition.as_ref() {
-            if !(custom_condition)(self, world) {
-                return false;
-            }
-        }
-
-        if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
-            if &ItemState::InScene(scene.to_string())
-                == world.items().get(&self.item).unwrap().state()
-            {
-                true
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn trigger(&mut self, world: &mut dyn World) {
-        if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(self.as_any(), world)
-        }
-
-        world
-            .items_mut()
-            .get_mut(&self.item)
-            .unwrap()
-            .set_state(if self.consume {
-                ItemState::Unassigned
-            } else {
-                ItemState::Owned(self.character.to_string())
-            });
-    }
-
     fn translation_base(&self) -> String {
         format!("{}_{}_{}", self.character, self.name, self.item)
-    }
-
-    fn action_text(&self, world: &dyn World) -> String {
-        self.make_action_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn success_text(&self, world: &dyn World) -> String {
-        self.make_success_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn fail_text(&self, world: &dyn World) -> String {
-        self.make_fail_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -121,7 +62,7 @@ impl Event for Pick {
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -134,6 +75,26 @@ impl Event for Pick {
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_fail_text = text;
     }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
+    }
 }
 
 impl Pick {
@@ -141,10 +102,9 @@ impl Pick {
         name: SN,
         character: SC,
         item: SI,
-        consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -158,9 +118,8 @@ impl Pick {
             name: name.to_string(),
             character: character.to_string(),
             item: item.to_string(),
-            consume,
             roles,
-            custom_condition,
+            condition,
             world_update,
             make_action_text,
             make_success_text,
@@ -185,10 +144,9 @@ pub struct Give {
     from_character: String,
     to_character: String,
     item: String,
-    consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -200,7 +158,6 @@ impl fmt::Debug for Give {
             .field("from_character", &self.from_character)
             .field("to_character", &self.to_character)
             .field("item", &self.item)
-            .field("consume", &self.consume)
             .finish()
     }
 }
@@ -233,44 +190,6 @@ impl Event for Give {
         &self.name
     }
 
-    fn can_be_triggered(&self, world: &dyn World) -> bool {
-        // Item belongs to from_character
-        if &ItemState::Owned(self.from_character.to_string())
-            == world.items().get(&self.item).unwrap().state()
-        {
-            // Characters are in the same scene
-            if world
-                .characters()
-                .get(&self.from_character)
-                .unwrap()
-                .scene()
-                == world.characters().get(&self.to_character).unwrap().scene()
-            {
-                true
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn trigger(&mut self, world: &mut dyn World) {
-        if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(self.as_any(), world)
-        }
-
-        world
-            .items_mut()
-            .get_mut(&self.item)
-            .unwrap()
-            .set_state(if self.consume {
-                ItemState::Unassigned
-            } else {
-                ItemState::Owned(self.to_character.to_string())
-            });
-    }
-
     fn translation_base(&self) -> String {
         format!(
             "{}_{}_{}_to_{}",
@@ -278,33 +197,12 @@ impl Event for Give {
         )
     }
 
-    fn action_text(&self, world: &dyn World) -> String {
-        self.make_action_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn success_text(&self, world: &dyn World) -> String {
-        self.make_success_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn fail_text(&self, world: &dyn World) -> String {
-        self.make_fail_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -314,8 +212,29 @@ impl Event for Give {
     fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_success_text = text;
     }
+
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_fail_text = text;
+    }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
     }
 }
 
@@ -325,10 +244,9 @@ impl Give {
         from_character: SFC,
         to_character: STC,
         item: SI,
-        consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -344,10 +262,9 @@ impl Give {
             from_character: from_character.to_string(),
             to_character: to_character.to_string(),
             item: item.to_string(),
-            consume,
             roles,
             world_update,
-            custom_condition,
+            condition,
             make_action_text,
             make_success_text,
             make_fail_text,
@@ -374,10 +291,9 @@ pub struct UseItem {
     name: String,
     character: String,
     item: String,
-    consume: bool,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -388,7 +304,6 @@ impl fmt::Debug for UseItem {
         f.debug_struct(&format!("UseItem({})", self.name()))
             .field("character", &self.character)
             .field("item", &self.item)
-            .field("consume", &self.item)
             .finish()
     }
 }
@@ -421,53 +336,8 @@ impl Event for UseItem {
         &self.name
     }
 
-    fn can_be_triggered(&self, world: &dyn World) -> bool {
-        if let Some(custom_condition) = self.custom_condition.as_ref() {
-            if !(custom_condition)(self, world) {
-                return false;
-            }
-        }
-        world.items().get(&self.item).unwrap().state()
-            == &ItemState::Owned(self.character.to_string())
-    }
-
-    fn trigger(&mut self, world: &mut dyn World) {
-        if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(self.as_any(), world)
-        }
-
-        if self.consume {
-            world
-                .items_mut()
-                .get_mut(&self.item)
-                .unwrap()
-                .set_state(ItemState::Unassigned);
-        }
-    }
-
     fn translation_base(&self) -> String {
         format!("{}_{}_{}", self.character, self.name, self.item)
-    }
-
-    fn action_text(&self, world: &dyn World) -> String {
-        self.make_action_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn success_text(&self, world: &dyn World) -> String {
-        self.make_success_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn fail_text(&self, world: &dyn World) -> String {
-        self.make_fail_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -475,7 +345,7 @@ impl Event for UseItem {
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -488,6 +358,26 @@ impl Event for UseItem {
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_fail_text = text;
     }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
+    }
 }
 
 impl UseItem {
@@ -495,10 +385,9 @@ impl UseItem {
         name: SN,
         character: SC,
         item: SI,
-        consume: bool,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -512,10 +401,9 @@ impl UseItem {
             name: name.to_string(),
             character: character.to_string(),
             item: item.to_string(),
-            consume,
             roles,
             world_update,
-            custom_condition,
+            condition,
             make_action_text,
             make_success_text,
             make_fail_text,
@@ -537,11 +425,10 @@ pub struct Move {
     id: Uuid,
     name: String,
     character: String,
-    from_scenes: Vec<&'static str>,
-    to_scene: String,
+    scene: String,
     roles: Vec<&'static str>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -551,7 +438,7 @@ impl fmt::Debug for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("Move({})", self.name()))
             .field("character", &self.character)
-            .field("to_scene", &self.to_scene)
+            .field("to_scene", &self.scene)
             .finish()
     }
 }
@@ -584,55 +471,8 @@ impl Event for Move {
         &self.name
     }
 
-    fn can_be_triggered(&self, world: &dyn World) -> bool {
-        // Check custom condition
-        if let Some(custom_condition) = self.custom_condition.as_ref() {
-            if !(custom_condition)(self, world) {
-                return false;
-            }
-        }
-
-        if let Some(scene) = world.characters().get(&self.character).unwrap().scene() {
-            self.from_scenes
-                .iter()
-                .map(|e| e.to_string())
-                .any(|e| &e == scene)
-        } else {
-            false
-        }
-    }
-
-    fn trigger(&mut self, world: &mut dyn World) {
-        world
-            .characters_mut()
-            .get_mut(&self.character)
-            .unwrap()
-            .set_scene(Some(self.to_scene.to_string()));
-    }
-
     fn translation_base(&self) -> String {
-        format!("{}_{}_to_{}", self.character, self.name, self.to_scene)
-    }
-
-    fn action_text(&self, world: &dyn World) -> String {
-        self.make_action_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn success_text(&self, world: &dyn World) -> String {
-        self.make_success_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn fail_text(&self, world: &dyn World) -> String {
-        self.make_fail_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
+        format!("{}_{}_to_{}", self.character, self.name, self.scene)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -640,7 +480,7 @@ impl Event for Move {
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -653,17 +493,36 @@ impl Event for Move {
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_fail_text = text;
     }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
+    }
 }
 
 impl Move {
     pub fn new<SN, SC, SS>(
         name: SN,
         character: SC,
-        from_scenes: Vec<&'static str>,
-        to_scene: SS,
+        scene: SS,
         roles: Vec<&'static str>,
         world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -676,11 +535,10 @@ impl Move {
         Self {
             name: name.to_string(),
             character: character.to_string(),
-            from_scenes,
-            to_scene: to_scene.to_string(),
+            scene: scene.to_string(),
             roles,
             world_update,
-            custom_condition,
+            condition,
             make_action_text,
             make_success_text,
             make_fail_text,
@@ -692,12 +550,16 @@ impl Move {
         &self.character
     }
 
+    pub fn scene(&self) -> &str {
+        &self.scene
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -719,7 +581,7 @@ pub struct Void {
     character: String,
     item: Option<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -762,20 +624,6 @@ impl Event for Void {
         &self.name
     }
 
-    fn can_be_triggered(&self, world: &dyn World) -> bool {
-        if let Some(custom_condition) = self.custom_condition.as_ref() {
-            (custom_condition)(self, world)
-        } else {
-            true
-        }
-    }
-
-    fn trigger(&mut self, world: &mut dyn World) {
-        if let Some(world_update) = self.world_update.as_ref() {
-            (world_update)(self.as_any(), world)
-        }
-    }
-
     fn translation_base(&self) -> String {
         if let Some(item) = self.item.as_ref() {
             format!("{}_{}_{}", self.character, self.name, item)
@@ -784,33 +632,12 @@ impl Event for Void {
         }
     }
 
-    fn action_text(&self, world: &dyn World) -> String {
-        self.make_action_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn success_text(&self, world: &dyn World) -> String {
-        self.make_success_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
-    fn fail_text(&self, world: &dyn World) -> String {
-        self.make_fail_text
-            .as_ref()
-            .map(|e| (e)(self, world))
-            .unwrap_or_else(String::new)
-    }
-
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
 
     fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.custom_condition = condition;
+        self.condition = condition;
     }
 
     fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
@@ -823,6 +650,26 @@ impl Event for Void {
     fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
         self.make_fail_text = text;
     }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
+    }
 }
 
 impl Void {
@@ -831,7 +678,7 @@ impl Void {
         character: SC,
         item: Option<SI>,
         world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        custom_condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
         make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
         make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -846,7 +693,7 @@ impl Void {
             character: character.to_string(),
             item: item.map(|e| e.to_string()),
             world_update,
-            custom_condition,
+            condition,
             make_action_text,
             make_success_text,
             make_fail_text,
@@ -874,7 +721,6 @@ pub mod test {
             "pick",
             "character",
             "item",
-            false,
             vec![],
             None,
             None,
@@ -889,7 +735,6 @@ pub mod test {
             "from_character",
             "to_character",
             "item",
-            false,
             vec![],
             None,
             None,
@@ -902,7 +747,6 @@ pub mod test {
         let move_event = Move::new(
             "move",
             "character",
-            vec!["from_scene"],
             "to_scene",
             vec![],
             None,
@@ -917,7 +761,6 @@ pub mod test {
             "use_item",
             "character",
             "item",
-            false,
             vec![],
             None,
             None,

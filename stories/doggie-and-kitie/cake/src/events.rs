@@ -1,5 +1,5 @@
 use super::characters;
-use pabitell_lib::{events, Character, Description, Event, Id, ItemState, Named, World};
+use pabitell_lib::{conditions, events, updates, Character, Event, ItemState};
 
 use crate::translations::get_message;
 
@@ -8,10 +8,30 @@ pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> even
         name,
         character,
         item,
-        consume,
         vec!["pick"],
-        None,
-        None,
+        Some(Box::new(move |event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
+
+            updates::assign_item(
+                world,
+                event.item().to_string(),
+                if consume {
+                    ItemState::Unassigned
+                } else {
+                    ItemState::Owned(event.character().to_string())
+                },
+            )
+            .unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
+            conditions::same_scene(
+                world,
+                &vec![event.character().to_string()],
+                &vec![event.item().to_string()],
+            )
+            .unwrap()
+        })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Pick>().unwrap();
             get_message(
@@ -45,10 +65,11 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
         from_character,
         to_character,
         "sand_cake",
-        true,
         vec!["give"],
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Give>().unwrap();
+
+            updates::assign_item(world, event.item().to_string(), ItemState::Unassigned).unwrap();
 
             let character = world
                 .characters_mut()
@@ -64,7 +85,16 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
                 doggie.sand_cake_last = true;
             }
         })),
-        None,
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Give>().unwrap();
+            conditions::can_give(
+                world,
+                event.from_character().to_string(),
+                event.to_character().to_string(),
+                event.item().to_string(),
+            )
+            .unwrap()
+        })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Give>().unwrap();
             get_message(
@@ -96,12 +126,26 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
     events::Move::new(
         "move",
         character,
-        vec!["playground"],
         "kitchen",
         vec!["move"],
-        None,
-        Some(Box::new(|_event, world| {
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
+            updates::move_character(
+                world,
+                event.character().to_string(),
+                Some(event.scene().to_string()),
+            )
+            .unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
+                && conditions::in_scenes(
+                    world,
+                    event.character().to_string(),
+                    &vec!["playground".into()],
+                )
+                .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Move>().unwrap();
@@ -172,17 +216,31 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
     events::Move::new(
         "move",
         character,
-        vec!["kitchen"],
         "children_garden",
         vec!["move"],
-        None,
-        Some(Box::new(|_event, world| {
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
+            updates::move_character(
+                world,
+                event.character().to_string(),
+                Some(event.scene().to_string()),
+            )
+            .unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             // Everything is in the cake
             world
                 .items()
                 .values()
                 .filter(|e| e.roles().contains(&"accepted"))
                 .all(|e| e.state() == &ItemState::Unassigned)
+                && conditions::in_scenes(
+                    world,
+                    event.character().to_string(),
+                    &vec!["kitchen".into()],
+                )
+                .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Move>().unwrap();
@@ -216,14 +274,32 @@ pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> 
         name,
         character,
         item.to_string(),
-        consume,
         vec!["use_item"],
-        None,
+        Some(Box::new(move |event, world| {
+            let event = event.downcast_ref::<events::UseItem>().unwrap();
+            if consume {
+                updates::assign_item(world, event.item().to_string(), ItemState::Unassigned)
+                    .unwrap();
+            }
+        })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::UseItem>().unwrap();
-            // all characters in the same scene
-            let scene = world.characters().get(event.character()).unwrap().scene();
-            world.characters().values().all(|e| e.scene() == scene)
+            conditions::same_scene(
+                world,
+                &world
+                    .characters()
+                    .values()
+                    .map(|e| e.name().to_string())
+                    .collect::<Vec<_>>(),
+                &vec![],
+            )
+            .unwrap()
+                && conditions::has_item(
+                    world,
+                    event.character().to_string(),
+                    event.item().to_string(),
+                )
+                .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::UseItem>().unwrap();
@@ -256,17 +332,31 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
     events::Move::new(
         "move",
         character,
-        vec!["children_garden"],
         "garden",
         vec!["move"],
-        None,
-        Some(Box::new(|_event, world| {
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
+            updates::move_character(
+                world,
+                event.character().to_string(),
+                Some(event.scene().to_string()),
+            )
+            .unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             // Everything is in the cake
             world
                 .items()
                 .values()
                 .filter(|e| e.roles().contains(&"toy"))
                 .all(|e| e.state() == &ItemState::Unassigned)
+                && conditions::in_scenes(
+                    world,
+                    event.character().to_string(),
+                    &vec!["children_garden".into()],
+                )
+                .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Move>().unwrap();
@@ -300,14 +390,24 @@ pub fn make_find_bad_dog(character: &str) -> events::Pick {
         "find",
         character,
         "bad_dog",
-        true,
         vec![],
-        None,
-        Some(Box::new(|_, world| {
-            world
-                .characters()
-                .values()
-                .all(|e| e.scene().clone() == Some("garden".to_string()))
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
+
+            updates::assign_item(world, event.item().to_string(), ItemState::Unassigned).unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Pick>().unwrap();
+            conditions::same_scene(
+                world,
+                &world
+                    .characters()
+                    .values()
+                    .map(|e| e.name().to_string())
+                    .collect::<Vec<_>>(),
+                &vec![event.item().to_string()],
+            )
+            .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Pick>().unwrap();
@@ -340,13 +440,27 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
     events::Move::new(
         "move",
         character,
-        vec!["garden"],
         "children_house",
         vec!["move"],
-        None,
-        Some(Box::new(|_event, world| {
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
+            updates::move_character(
+                world,
+                event.character().to_string(),
+                Some(event.scene().to_string()),
+            )
+            .unwrap();
+        })),
+        Some(Box::new(|event, world| {
+            let event = event.downcast_ref::<events::Move>().unwrap();
             // Found bad dog
             world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned
+                && conditions::in_scenes(
+                    world,
+                    event.character().to_string(),
+                    &vec!["garden".into()],
+                )
+                .unwrap()
         })),
         Some(Box::new(|event, world| {
             let event = event.downcast_ref::<events::Move>().unwrap();
