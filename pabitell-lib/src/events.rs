@@ -98,17 +98,7 @@ impl Event for Pick {
 }
 
 impl Pick {
-    pub fn new<SN, SC, SI>(
-        name: SN,
-        character: SC,
-        item: SI,
-        roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    ) -> Self
+    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI, roles: Vec<&'static str>) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -119,11 +109,6 @@ impl Pick {
             character: character.to_string(),
             item: item.to_string(),
             roles,
-            condition,
-            world_update,
-            make_action_text,
-            make_success_text,
-            make_fail_text,
             ..Default::default()
         }
     }
@@ -245,11 +230,6 @@ impl Give {
         to_character: STC,
         item: SI,
         roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
     ) -> Self
     where
         SN: ToString,
@@ -263,11 +243,6 @@ impl Give {
             to_character: to_character.to_string(),
             item: item.to_string(),
             roles,
-            world_update,
-            condition,
-            make_action_text,
-            make_success_text,
-            make_fail_text,
             ..Default::default()
         }
     }
@@ -381,17 +356,7 @@ impl Event for UseItem {
 }
 
 impl UseItem {
-    pub fn new<SN, SC, SI>(
-        name: SN,
-        character: SC,
-        item: SI,
-        roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    ) -> Self
+    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI, roles: Vec<&'static str>) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -402,11 +367,6 @@ impl UseItem {
             character: character.to_string(),
             item: item.to_string(),
             roles,
-            world_update,
-            condition,
-            make_action_text,
-            make_success_text,
-            make_fail_text,
             ..Default::default()
         }
     }
@@ -516,17 +476,7 @@ impl Event for Move {
 }
 
 impl Move {
-    pub fn new<SN, SC, SS>(
-        name: SN,
-        character: SC,
-        scene: SS,
-        roles: Vec<&'static str>,
-        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    ) -> Self
+    pub fn new<SN, SC, SS>(name: SN, character: SC, scene: SS, roles: Vec<&'static str>) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -537,11 +487,6 @@ impl Move {
             character: character.to_string(),
             scene: scene.to_string(),
             roles,
-            world_update,
-            condition,
-            make_action_text,
-            make_success_text,
-            make_fail_text,
             ..Default::default()
         }
     }
@@ -552,25 +497,6 @@ impl Move {
 
     pub fn scene(&self) -> &str {
         &self.scene
-    }
-
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
-        self.world_update = update;
-    }
-
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        self.condition = condition;
-    }
-
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
-        self.make_success_text = text;
-    }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
-        self.make_fail_text = text;
     }
 }
 
@@ -673,16 +599,7 @@ impl Event for Void {
 }
 
 impl Void {
-    pub fn new<SN, SC, SI>(
-        name: SN,
-        character: SC,
-        item: Option<SI>,
-        world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-        condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-        make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-        make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    ) -> Self
+    pub fn new<SN, SC, SI>(name: SN, character: SC, item: Option<SI>) -> Self
     where
         SN: ToString,
         SI: ToString,
@@ -692,11 +609,6 @@ impl Void {
             name: name.to_string(),
             character: character.to_string(),
             item: item.map(|e| e.to_string()),
-            world_update,
-            condition,
-            make_action_text,
-            make_success_text,
-            make_fail_text,
             ..Default::default()
         }
     }
@@ -717,69 +629,19 @@ pub mod test {
 
     #[test]
     fn kinds() {
-        let pick = Pick::new(
-            "pick",
-            "character",
-            "item",
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let pick = Pick::new("pick", "character", "item", vec![]);
         assert_eq!(pick.kind(), "Pick");
 
-        let give = Give::new(
-            "give",
-            "from_character",
-            "to_character",
-            "item",
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let give = Give::new("give", "from_character", "to_character", "item", vec![]);
         assert_eq!(give.kind(), "Give");
 
-        let move_event = Move::new(
-            "move",
-            "character",
-            "to_scene",
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let move_event = Move::new("move", "character", "to_scene", vec![]);
         assert_eq!(move_event.kind(), "Move");
 
-        let use_item = UseItem::new(
-            "use_item",
-            "character",
-            "item",
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let use_item = UseItem::new("use_item", "character", "item", vec![]);
         assert_eq!(use_item.kind(), "UseItem");
 
-        let void = Void::new(
-            "void",
-            "character",
-            None as Option<String>,
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let void = Void::new("void", "character", None as Option<String>);
         assert_eq!(void.kind(), "Void");
     }
 }
