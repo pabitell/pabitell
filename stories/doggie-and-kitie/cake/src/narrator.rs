@@ -80,8 +80,8 @@ impl Narrator for Cake {
                 // Pick ingredient
                 world.items().values().for_each(|e| match e.state() {
                     ItemState::InScene(p) if p == "kitchen" => {
-                        if e.roles().contains(&"ingredient") {
-                            if e.roles().contains(&"accepted") {
+                        if e.get_tags().contains(&"ingredient".to_string()) {
+                            if e.get_tags().contains(&"accepted".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
                                         "pick_ingredient".into(),
@@ -91,7 +91,7 @@ impl Narrator for Cake {
                                     ));
                                     res.push(event);
                                 }
-                            } else if e.roles().contains(&"rejected") {
+                            } else if e.get_tags().contains(&"rejected".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> =
                                         Box::new(events::make_disliked_pick(
@@ -121,7 +121,8 @@ impl Narrator for Cake {
                     .items()
                     .values()
                     .filter(|e| {
-                        e.roles().contains(&"ingredient") && e.roles().contains(&"accepted")
+                        e.get_tags().contains(&"ingredient".to_string())
+                            && e.get_tags().contains(&"accepted".to_string())
                     })
                     .all(|e| e.state() == &ItemState::Unassigned)
                 {
@@ -147,7 +148,7 @@ impl Narrator for Cake {
                     .items()
                     .values()
                     .filter(|e| {
-                        e.roles().contains(&"toy")
+                        e.get_tags().contains(&"toy".to_string())
                             && e.state() == &ItemState::InScene("children_garden".into())
                     })
                     .for_each(|e| {
@@ -166,7 +167,7 @@ impl Narrator for Cake {
                 if world
                     .items()
                     .values()
-                    .filter(|e| e.roles().contains(&"toy"))
+                    .filter(|e| e.get_tags().contains(&"toy".to_string()))
                     .all(|e| e.state() == &ItemState::Unassigned)
                 {
                     for character in ["doggie", "kitie"] {

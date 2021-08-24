@@ -1,4 +1,4 @@
-use crate::{AsAny, Event, Id, World};
+use crate::{AsAny, Event, Id, Tagged, World};
 use std::{any::Any, fmt};
 use uuid::Uuid;
 
@@ -8,7 +8,7 @@ pub struct Pick {
     name: String,
     character: String,
     item: String,
-    roles: Vec<&'static str>,
+    tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -33,9 +33,15 @@ impl Id for Pick {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
+}
 
-    fn roles(&self) -> Vec<&'static str> {
-        self.roles.clone()
+impl Tagged for Pick {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
     }
 }
 
@@ -98,7 +104,7 @@ impl Event for Pick {
 }
 
 impl Pick {
-    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI, roles: Vec<&'static str>) -> Self
+    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -108,7 +114,6 @@ impl Pick {
             name: name.to_string(),
             character: character.to_string(),
             item: item.to_string(),
-            roles,
             ..Default::default()
         }
     }
@@ -129,7 +134,7 @@ pub struct Give {
     from_character: String,
     to_character: String,
     item: String,
-    roles: Vec<&'static str>,
+    tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -155,9 +160,15 @@ impl Id for Give {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
+}
 
-    fn roles(&self) -> Vec<&'static str> {
-        self.roles.clone()
+impl Tagged for Give {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
     }
 }
 
@@ -224,13 +235,7 @@ impl Event for Give {
 }
 
 impl Give {
-    pub fn new<SN, SFC, STC, SI>(
-        name: SN,
-        from_character: SFC,
-        to_character: STC,
-        item: SI,
-        roles: Vec<&'static str>,
-    ) -> Self
+    pub fn new<SN, SFC, STC, SI>(name: SN, from_character: SFC, to_character: STC, item: SI) -> Self
     where
         SN: ToString,
         SFC: ToString,
@@ -242,7 +247,6 @@ impl Give {
             from_character: from_character.to_string(),
             to_character: to_character.to_string(),
             item: item.to_string(),
-            roles,
             ..Default::default()
         }
     }
@@ -266,7 +270,7 @@ pub struct UseItem {
     name: String,
     character: String,
     item: String,
-    roles: Vec<&'static str>,
+    tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -291,9 +295,15 @@ impl Id for UseItem {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
+}
 
-    fn roles(&self) -> Vec<&'static str> {
-        self.roles.clone()
+impl Tagged for UseItem {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
     }
 }
 
@@ -356,7 +366,7 @@ impl Event for UseItem {
 }
 
 impl UseItem {
-    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI, roles: Vec<&'static str>) -> Self
+    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -366,7 +376,6 @@ impl UseItem {
             name: name.to_string(),
             character: character.to_string(),
             item: item.to_string(),
-            roles,
             ..Default::default()
         }
     }
@@ -386,7 +395,7 @@ pub struct Move {
     name: String,
     character: String,
     scene: String,
-    roles: Vec<&'static str>,
+    tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -411,9 +420,15 @@ impl Id for Move {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
+}
 
-    fn roles(&self) -> Vec<&'static str> {
-        self.roles.clone()
+impl Tagged for Move {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
     }
 }
 
@@ -476,7 +491,7 @@ impl Event for Move {
 }
 
 impl Move {
-    pub fn new<SN, SC, SS>(name: SN, character: SC, scene: SS, roles: Vec<&'static str>) -> Self
+    pub fn new<SN, SC, SS>(name: SN, character: SC, scene: SS) -> Self
     where
         SN: ToString,
         SC: ToString,
@@ -486,7 +501,6 @@ impl Move {
             name: name.to_string(),
             character: character.to_string(),
             scene: scene.to_string(),
-            roles,
             ..Default::default()
         }
     }
@@ -506,6 +520,7 @@ pub struct Void {
     name: String,
     character: String,
     item: Option<String>,
+    tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
     make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
@@ -530,9 +545,15 @@ impl Id for Void {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
+}
 
-    fn roles(&self) -> Vec<&'static str> {
-        vec!["void"]
+impl Tagged for Void {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
     }
 }
 
@@ -629,16 +650,16 @@ pub mod test {
 
     #[test]
     fn kinds() {
-        let pick = Pick::new("pick", "character", "item", vec![]);
+        let pick = Pick::new("pick", "character", "item");
         assert_eq!(pick.kind(), "Pick");
 
-        let give = Give::new("give", "from_character", "to_character", "item", vec![]);
+        let give = Give::new("give", "from_character", "to_character", "item");
         assert_eq!(give.kind(), "Give");
 
-        let move_event = Move::new("move", "character", "to_scene", vec![]);
+        let move_event = Move::new("move", "character", "to_scene");
         assert_eq!(move_event.kind(), "Move");
 
-        let use_item = UseItem::new("use_item", "character", "item", vec![]);
+        let use_item = UseItem::new("use_item", "character", "item");
         assert_eq!(use_item.kind(), "UseItem");
 
         let void = Void::new("void", "character", None as Option<String>);

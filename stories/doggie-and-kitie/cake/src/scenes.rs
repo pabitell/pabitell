@@ -1,5 +1,6 @@
 use pabitell_lib::{
-    AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, World, WorldBuilder,
+    AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, Tagged, World,
+    WorldBuilder,
 };
 use std::any::Any;
 use uuid::Uuid;
@@ -18,11 +19,9 @@ impl Id for PlayGround {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for PlayGround {}
 
 impl Named for PlayGround {
     fn name(&self) -> &'static str {
@@ -121,11 +120,9 @@ impl Id for Kitchen {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for Kitchen {}
 
 impl Named for Kitchen {
     fn name(&self) -> &'static str {
@@ -138,7 +135,7 @@ impl Description for Kitchen {
         if world
             .items()
             .values()
-            .filter(|e| e.roles().contains(&"accepted"))
+            .filter(|e| e.get_tags().contains(&"accepted".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
         {
             get_message(
@@ -187,11 +184,9 @@ impl Id for Garden {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for Garden {}
 
 impl Named for Garden {
     fn name(&self) -> &'static str {
@@ -248,11 +243,9 @@ impl Id for ChildrenHouse {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for ChildrenHouse {}
 
 impl Named for ChildrenHouse {
     fn name(&self) -> &'static str {
@@ -301,11 +294,9 @@ impl Id for ChildrenGarden {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for ChildrenGarden {}
 
 impl Named for ChildrenGarden {
     fn name(&self) -> &'static str {
@@ -318,7 +309,7 @@ impl Description for ChildrenGarden {
         if world
             .items()
             .values()
-            .filter(|e| e.roles().contains(&"toy"))
+            .filter(|e| e.get_tags().contains(&"toy".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
         {
             get_message(
@@ -367,11 +358,9 @@ impl Id for WayHome {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for WayHome {}
 
 impl Named for WayHome {
     fn name(&self) -> &'static str {

@@ -1,10 +1,12 @@
 use super::characters;
-use pabitell_lib::{conditions, events, updates, Character, Event, ItemState};
+use pabitell_lib::{conditions, events, updates, Character, Event, ItemState, Tagged};
 
 use crate::translations::get_message;
 
 pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> events::Pick {
-    let mut event = events::Pick::new(name, character, item, vec!["pick"]);
+    let mut event = events::Pick::new(name, character, item);
+
+    event.set_tags(vec!["pick".to_string()]);
 
     event.set_world_update(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
@@ -60,13 +62,8 @@ pub fn make_pick(name: &str, character: &str, item: &str, consume: bool) -> even
 }
 
 pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::Give {
-    let mut event = events::Give::new(
-        "give",
-        from_character,
-        to_character,
-        "sand_cake",
-        vec!["give"],
-    );
+    let mut event = events::Give::new("give", from_character, to_character, "sand_cake");
+    event.set_tags(vec!["give".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Give>().unwrap();
@@ -125,7 +122,8 @@ pub fn make_give_sand_cake(from_character: &str, to_character: &str) -> events::
 }
 
 pub fn make_move_to_kitchen(character: &str) -> events::Move {
-    let mut event = events::Move::new("move", character, "kitchen", vec!["move"]);
+    let mut event = events::Move::new("move", character, "kitchen");
+    event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         updates::move_character(
@@ -174,6 +172,7 @@ pub fn make_move_to_kitchen(character: &str) -> events::Move {
 
 pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Void {
     let mut event = events::Void::new(name, character, Some(item));
+    event.set_tags(vec!["disliked_pick".to_string()]);
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         let character = world.characters().get(event.character()).unwrap();
@@ -207,7 +206,8 @@ pub fn make_disliked_pick(name: &str, character: &str, item: &str) -> events::Vo
 }
 
 pub fn make_move_to_children_garden(character: &str) -> events::Move {
-    let mut event = events::Move::new("move", character, "children_garden", vec!["move"]);
+    let mut event = events::Move::new("move", character, "children_garden");
+    event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         updates::move_character(
@@ -223,7 +223,7 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
         world
             .items()
             .values()
-            .filter(|e| e.roles().contains(&"accepted"))
+            .filter(|e| e.get_tags().contains(&"accepted".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
             && conditions::in_scenes(
                 world,
@@ -260,7 +260,8 @@ pub fn make_move_to_children_garden(character: &str) -> events::Move {
 }
 
 pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> events::UseItem {
-    let mut event = events::UseItem::new(name, character, item.to_string(), vec!["use_item"]);
+    let mut event = events::UseItem::new(name, character, item.to_string());
+    event.set_tags(vec!["use_item".to_string()]);
     event.set_world_update(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         if consume {
@@ -314,7 +315,8 @@ pub fn make_use_item(name: &str, character: &str, item: &str, consume: bool) -> 
 }
 
 pub fn make_move_to_garden(character: &str) -> events::Move {
-    let mut event = events::Move::new("move", character, "garden", vec!["move"]);
+    let mut event = events::Move::new("move", character, "garden");
+    event.set_tags(vec!["move".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -331,7 +333,7 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
         world
             .items()
             .values()
-            .filter(|e| e.roles().contains(&"toy"))
+            .filter(|e| e.get_tags().contains(&"toy".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
             && conditions::in_scenes(
                 world,
@@ -368,7 +370,8 @@ pub fn make_move_to_garden(character: &str) -> events::Move {
 }
 
 pub fn make_find_bad_dog(character: &str) -> events::Pick {
-    let mut event = events::Pick::new("find", character, "bad_dog", vec![]);
+    let mut event = events::Pick::new("find", character, "bad_dog");
+    event.set_tags(vec!["find".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
@@ -416,7 +419,8 @@ pub fn make_find_bad_dog(character: &str) -> events::Pick {
 }
 
 pub fn make_move_to_children_house(character: &str) -> events::Move {
-    let mut event = events::Move::new("move", character, "children_house", vec!["move"]);
+    let mut event = events::Move::new("move", character, "children_house");
+    event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         updates::move_character(
@@ -462,6 +466,8 @@ pub fn make_move_to_children_house(character: &str) -> events::Move {
 
 pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
     let mut event = events::Void::new(name, character, Some(item));
+    event.set_tags(vec!["eat".to_string()]);
+
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         // mark consumed
@@ -537,7 +543,12 @@ pub fn make_eat_meal(name: &str, character: &str, item: &str) -> events::Void {
         }
         // item is meal
         if let Some(item) = event.item() {
-            world.items().get(item).unwrap().roles().contains(&"meal")
+            world
+                .items()
+                .get(item)
+                .unwrap()
+                .get_tags()
+                .contains(&"meal".to_string())
         } else {
             false
         }

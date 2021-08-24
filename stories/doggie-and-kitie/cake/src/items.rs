@@ -1,11 +1,11 @@
-use pabitell_lib::{AsAny, Description, Id, Item, ItemState, Named, World};
+use pabitell_lib::{AsAny, Description, Id, Item, ItemState, Named, Tagged, World};
 use std::any::Any;
 use uuid::Uuid;
 
 use crate::translations::get_message;
 
 macro_rules! simple_item {
-    ($class_name: ident, $name: literal, $roles: expr) => {
+    ($class_name: ident, $name: literal, [$( $tag:expr ),* ]) => {
         #[derive(Debug, Default)]
         pub struct $class_name {
             id: Uuid,
@@ -20,15 +20,21 @@ macro_rules! simple_item {
             fn set_id(&mut self, id: Uuid) {
                 self.id = id;
             }
-
-            fn roles(&self) -> Vec<&'static str> {
-                $roles
-            }
         }
 
         impl Named for $class_name {
             fn name(&self) -> &'static str {
                 $name
+            }
+        }
+
+        impl Tagged for $class_name {
+            fn get_tags(&self) -> Vec<String> {
+                let mut res: Vec<String> = vec![];
+                $(
+                    res.push($tag.into());
+                )*
+                res
             }
         }
 
@@ -71,55 +77,47 @@ macro_rules! simple_item {
     };
 }
 
-simple_item!(SandCake, "sand_cake", vec![]);
-simple_item!(Flour, "flour", vec!["ingredient", "accepted"]);
-simple_item!(Milk, "milk", vec!["ingredient", "accepted"]);
-simple_item!(Egg, "egg", vec!["ingredient", "accepted"]);
-simple_item!(Suggar, "suggar", vec!["ingredient", "accepted"]);
-simple_item!(Salt, "salt", vec!["ingredient", "accepted"]);
-simple_item!(Jam, "jam", vec!["ingredient", "rejected"]);
-simple_item!(Cheese, "cheese", vec!["ingredient", "accepted"]);
-simple_item!(Bacon, "bacon", vec!["ingredient", "accepted"]);
-simple_item!(Peanuts, "peanuts", vec!["ingredient", "accepted"]);
-simple_item!(Cucumber, "cucumber", vec!["ingredient", "accepted"]);
-simple_item!(Bones, "bones", vec!["ingredient", "accepted"]);
-simple_item!(FourMice, "four_mice", vec!["ingredient", "accepted"]);
-simple_item!(Sausages, "sausages", vec!["ingredient", "accepted"]);
-simple_item!(
-    WhippedCream,
-    "whipped_cream",
-    vec!["ingredient", "accepted"]
-);
-simple_item!(Onion, "onion", vec!["ingredient", "accepted"]);
-simple_item!(Chocolate, "chocolate", vec!["ingredient", "accepted"]);
-simple_item!(Sauce, "sauce", vec!["ingredient", "accepted"]);
-simple_item!(Garlic, "garlic", vec!["ingredient", "accepted"]);
-simple_item!(Pepper, "pepper", vec!["ingredient", "accepted"]);
-simple_item!(Lard, "lard", vec!["ingredient", "accepted"]);
-simple_item!(Candy, "candy", vec!["ingredient", "accepted"]);
-simple_item!(Greaves, "greaves", vec!["ingredient", "accepted"]);
-simple_item!(Cinnamon, "cinnamon", vec!["ingredient", "accepted"]);
-simple_item!(Porridge, "porridge", vec!["ingredient", "accepted"]);
-simple_item!(
-    CottageCheese,
-    "cottage_cheese",
-    vec!["ingredient", "accepted"]
-);
-simple_item!(GingerBread, "ginger_bread", vec!["ingredient", "accepted"]);
-simple_item!(Vinegar, "vinegar", vec!["ingredient", "accepted"]);
-simple_item!(GooseHead, "goose_head", vec!["ingredient", "accepted"]);
-simple_item!(Cocoa, "cocoa", vec!["ingredient", "accepted"]);
-simple_item!(Cabbadge, "cabbadge", vec!["ingredient", "accepted"]);
-simple_item!(Raisins, "raisins", vec!["ingredient", "accepted"]);
-simple_item!(Bread, "bread", vec!["ingredient", "rejected"]);
+simple_item!(SandCake, "sand_cake", []);
+simple_item!(Flour, "flour", ["ingredient", "accepted"]);
+simple_item!(Milk, "milk", ["ingredient", "accepted"]);
+simple_item!(Egg, "egg", ["ingredient", "accepted"]);
+simple_item!(Suggar, "suggar", ["ingredient", "accepted"]);
+simple_item!(Salt, "salt", ["ingredient", "accepted"]);
+simple_item!(Jam, "jam", ["ingredient", "rejected"]);
+simple_item!(Cheese, "cheese", ["ingredient", "accepted"]);
+simple_item!(Bacon, "bacon", ["ingredient", "accepted"]);
+simple_item!(Peanuts, "peanuts", ["ingredient", "accepted"]);
+simple_item!(Cucumber, "cucumber", ["ingredient", "accepted"]);
+simple_item!(Bones, "bones", ["ingredient", "accepted"]);
+simple_item!(FourMice, "four_mice", ["ingredient", "accepted"]);
+simple_item!(Sausages, "sausages", ["ingredient", "accepted"]);
+simple_item!(WhippedCream, "whipped_cream", ["ingredient", "accepted"]);
+simple_item!(Onion, "onion", ["ingredient", "accepted"]);
+simple_item!(Chocolate, "chocolate", ["ingredient", "accepted"]);
+simple_item!(Sauce, "sauce", ["ingredient", "accepted"]);
+simple_item!(Garlic, "garlic", ["ingredient", "accepted"]);
+simple_item!(Pepper, "pepper", ["ingredient", "accepted"]);
+simple_item!(Lard, "lard", ["ingredient", "accepted"]);
+simple_item!(Candy, "candy", ["ingredient", "accepted"]);
+simple_item!(Greaves, "greaves", ["ingredient", "accepted"]);
+simple_item!(Cinnamon, "cinnamon", ["ingredient", "accepted"]);
+simple_item!(Porridge, "porridge", ["ingredient", "accepted"]);
+simple_item!(CottageCheese, "cottage_cheese", ["ingredient", "accepted"]);
+simple_item!(GingerBread, "ginger_bread", ["ingredient", "accepted"]);
+simple_item!(Vinegar, "vinegar", ["ingredient", "accepted"]);
+simple_item!(GooseHead, "goose_head", ["ingredient", "accepted"]);
+simple_item!(Cocoa, "cocoa", ["ingredient", "accepted"]);
+simple_item!(Cabbadge, "cabbadge", ["ingredient", "accepted"]);
+simple_item!(Raisins, "raisins", ["ingredient", "accepted"]);
+simple_item!(Bread, "bread", ["ingredient", "rejected"]);
 
-simple_item!(Marbles, "marbles", vec!["toy"]);
-simple_item!(Ball, "ball", vec!["toy"]);
-simple_item!(Dice, "dice", vec!["toy"]);
+simple_item!(Marbles, "marbles", ["toy"]);
+simple_item!(Ball, "ball", ["toy"]);
+simple_item!(Dice, "dice", ["toy"]);
 
-simple_item!(BadDog, "bad_dog", vec!["animal"]);
+simple_item!(BadDog, "bad_dog", ["animal"]);
 
-simple_item!(Soup, "soup", vec!["meal"]);
-simple_item!(Meat, "meat", vec!["meal"]);
-simple_item!(Pie, "pie", vec!["meal"]);
-simple_item!(Dumplings, "dumplings", vec!["meal"]);
+simple_item!(Soup, "soup", ["meal"]);
+simple_item!(Meat, "meat", ["meal"]);
+simple_item!(Pie, "pie", ["meal"]);
+simple_item!(Dumplings, "dumplings", ["meal"]);

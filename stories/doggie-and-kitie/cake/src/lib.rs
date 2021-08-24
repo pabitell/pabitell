@@ -9,8 +9,8 @@ use anyhow::Result;
 #[cfg(feature = "with_world_setup")]
 use pabitell_lib::ItemState;
 use pabitell_lib::{
-    translations::get_available_locales, Character, Description, Id, Item, Named, Scene, World,
-    WorldBuilder,
+    translations::get_available_locales, Character, Description, Id, Item, Named, Scene, Tagged,
+    World, WorldBuilder,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -153,10 +153,9 @@ impl Id for CakeWorld {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-    fn roles(&self) -> Vec<&'static str> {
-        vec![]
-    }
 }
+
+impl Tagged for CakeWorld {}
 
 impl Named for CakeWorld {
     fn name(&self) -> &'static str {
@@ -224,11 +223,11 @@ impl World for CakeWorld {
                 "sand_cake" => ItemState::InScene("playground".into()),
                 "bad_dog" => ItemState::InScene("garden".into()),
                 _ => {
-                    if i.roles().contains(&"ingredient") {
+                    if i.get_tags().contains(&"ingredient".to_string()) {
                         ItemState::InScene("kitchen".into())
-                    } else if i.roles().contains(&"toy") {
+                    } else if i.get_tags().contains(&"toy".to_string()) {
                         ItemState::InScene("children_garden".into())
-                    } else if i.roles().contains(&"meal") {
+                    } else if i.get_tags().contains(&"meal".to_string()) {
                         ItemState::InScene("children_house".into())
                     } else {
                         ItemState::Unassigned
@@ -364,7 +363,7 @@ pub mod tests {
         let mut doggie = false;
         let mut events = narrator.available_events(&world);
         for event in narrator.available_events(&world).iter_mut() {
-            if event.roles().contains(&"pick") {
+            if event.get_tags().contains(&"pick".to_string()) {
                 // Put thinkgs to cake
                 let cevent = event
                     .as_any_mut()
@@ -374,7 +373,7 @@ pub mod tests {
                     assert!(cevent.can_be_triggered(&world));
                     assert!(cevent.perform(&mut world));
                 }
-            } else if event.roles().contains(&"void") {
+            } else if event.get_tags().contains(&"void".to_string()) {
                 // Put disliked thing to cake
                 let cevent = event
                     .as_any_mut()
@@ -386,7 +385,7 @@ pub mod tests {
         }
 
         for event in narrator.available_events(&world).iter_mut() {
-            if event.roles().contains(&"use_item") {
+            if event.get_tags().contains(&"use_item".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
             }
@@ -394,7 +393,7 @@ pub mod tests {
 
         // move both characters to children's garden
         for event in narrator.available_events(&world).iter_mut() {
-            if event.roles().contains(&"move") {
+            if event.get_tags().contains(&"move".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
             }

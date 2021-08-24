@@ -1,5 +1,5 @@
 use pabitell_lib::{
-    AsAny, Character, Description, Event, Id, Item, Named, Scene, World, WorldBuilder,
+    AsAny, Character, Description, Event, Id, Item, Named, Scene, Tagged, World, WorldBuilder,
 };
 use std::any::Any;
 use uuid::Uuid;
@@ -24,8 +24,11 @@ impl Id for Kitie {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-    fn roles(&self) -> Vec<&'static str> {
-        vec!["cat"]
+}
+
+impl Tagged for Kitie {
+    fn get_tags(&self) -> Vec<String> {
+        vec!["cat".to_string()]
     }
 }
 
@@ -96,8 +99,11 @@ impl Id for Doggie {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-    fn roles(&self) -> Vec<&'static str> {
-        vec!["dog"]
+}
+
+impl Tagged for Doggie {
+    fn get_tags(&self) -> Vec<String> {
+        vec!["cat".to_string()]
     }
 }
 

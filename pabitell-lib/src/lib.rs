@@ -27,10 +27,16 @@ impl Default for ItemState {
 }
 
 pub trait Id {
+    /// unique name within world
     fn id(&self) -> &Uuid;
     fn set_id(&mut self, id: Uuid);
-    /// unique name within world
-    fn roles(&self) -> Vec<&'static str>;
+}
+
+pub trait Tagged {
+    fn get_tags(&self) -> Vec<String> {
+        vec![]
+    }
+    fn set_tags(&mut self, tags: Vec<String>) {}
 }
 
 pub trait Named {
@@ -43,19 +49,19 @@ pub trait Description: Named {
     fn short(&self, world: &dyn World) -> String;
 }
 
-pub trait Item: Id + Named + AsAny + Description + fmt::Debug {
+pub trait Item: Id + Named + Tagged + AsAny + Description + fmt::Debug {
     fn state(&self) -> &ItemState;
     fn set_state(&mut self, state: ItemState);
 }
 
-pub trait Character: Id + Named + AsAny + Description + fmt::Debug {
+pub trait Character: Id + Named + Tagged + AsAny + Description + fmt::Debug {
     fn scene(&self) -> &Option<String>;
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Id + Named + AsAny + Description + fmt::Debug {}
+pub trait Scene: Id + Named + Tagged + AsAny + Description + fmt::Debug {}
 
-pub trait Event: Id + AsAny + fmt::Debug {
+pub trait Event: Id + Tagged + AsAny + fmt::Debug {
     fn kind(&self) -> &str {
         std::any::type_name::<Self>()
             .rsplitn(2, "::")
@@ -164,7 +170,7 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, World,
+        AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, Tagged, World,
         WorldBuilder,
     };
     use anyhow::Result;
@@ -184,10 +190,9 @@ pub mod test {
         fn set_id(&mut self, id: Uuid) {
             self.id = id
         }
-        fn roles(&self) -> Vec<&'static str> {
-            vec![]
-        }
     }
+
+    impl Tagged for TestCharacter {}
 
     impl Named for TestCharacter {
         fn name(&self) -> &'static str {
@@ -235,10 +240,9 @@ pub mod test {
         fn set_id(&mut self, id: Uuid) {
             self.id = id
         }
-        fn roles(&self) -> Vec<&'static str> {
-            vec![]
-        }
     }
+
+    impl Tagged for TestItem {}
 
     impl Named for TestItem {
         fn name(&self) -> &'static str {
@@ -285,10 +289,9 @@ pub mod test {
         fn set_id(&mut self, id: Uuid) {
             self.id = id
         }
-        fn roles(&self) -> Vec<&'static str> {
-            vec![]
-        }
     }
+
+    impl Tagged for TestScene {}
 
     impl Named for TestScene {
         fn name(&self) -> &'static str {
@@ -345,10 +348,8 @@ pub mod test {
         fn set_id(&mut self, id: Uuid) {
             self.id = id
         }
-        fn roles(&self) -> Vec<&'static str> {
-            vec![]
-        }
     }
+    impl Tagged for TestEvent {}
     impl Named for TestEvent {
         fn name(&self) -> &'static str {
             "test_event"
@@ -439,9 +440,6 @@ pub mod test {
         }
         fn set_id(&mut self, id: Uuid) {
             self.id = id
-        }
-        fn roles(&self) -> Vec<&'static str> {
-            vec![]
         }
     }
 
