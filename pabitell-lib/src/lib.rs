@@ -1,10 +1,12 @@
 pub mod conditions;
+pub mod data;
 pub mod events;
 #[cfg(feature = "with_translations")]
 pub mod translations;
 pub mod updates;
 
 use anyhow::Result;
+use serde::Serialize;
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
 
@@ -36,7 +38,7 @@ pub trait Tagged {
     fn get_tags(&self) -> Vec<String> {
         vec![]
     }
-    fn set_tags(&mut self, tags: Vec<String>) {}
+    fn set_tags(&mut self, _tags: Vec<String>) {}
 }
 
 pub trait Named {

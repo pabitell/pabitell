@@ -1,7 +1,8 @@
 use pabitell_lib::{
-    translations::get_available_locales, Character, Description, Event, Id, Item, ItemState, Named,
-    Narrator, Scene, World, WorldBuilder,
+    data, translations::get_available_locales, Character, Description, Event, Id, Item, ItemState,
+    Named, Narrator, Scene, World, WorldBuilder,
 };
+use uuid::Uuid;
 
 use crate::{characters, events, CakeWorld};
 
@@ -33,34 +34,63 @@ impl Narrator for Cake {
                 match sand_cake.state() {
                     ItemState::Unassigned => {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_kitchen("doggie"));
+                            Box::new(events::make_move_to_kitchen(data::MoveData::new(
+                                Uuid::default(),
+                                "move_to_kitchen".to_string(),
+                                "doggie".to_string(),
+                                "kitchen".to_string(),
+                            )));
                         res.push(event);
-                        let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("kitie"));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_move_to_kitchen(data::MoveData::new(
+                                Uuid::default(),
+                                "move_to_kitchen".to_string(),
+                                "kitie".to_string(),
+                                "kitchen".to_string(),
+                            )));
                         res.push(event);
                     }
                     ItemState::Owned(e) if e == "doggie" => {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_give_sand_cake("doggie".into(), "kitie".into()));
+                            Box::new(events::make_give_sand_cake(data::GiveData::new(
+                                Uuid::default(),
+                                "give_sand_cake".to_string(),
+                                "doggie".into(),
+                                "kitie".into(),
+                                "sand_cake".into(),
+                            )));
                         res.push(event);
                     }
                     ItemState::Owned(e) if e == "kitie" => {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_give_sand_cake("kitie".into(), "doggie".into()));
+                            Box::new(events::make_give_sand_cake(data::GiveData::new(
+                                Uuid::default(),
+                                "give_sand_cake".to_string(),
+                                "kitie".into(),
+                                "doggie".into(),
+                                "sand_cake".into(),
+                            )));
                         res.push(event);
                     }
                     ItemState::InScene(e) if e == "playground" => {
                         let event: Box<dyn Event> = Box::new(events::make_pick(
-                            "pick".into(),
-                            "kitie",
-                            "sand_cake",
+                            data::PickData::new(
+                                Uuid::default(),
+                                "pick_sand_cake".into(),
+                                "kitie".to_string(),
+                                "sand_cake".to_string(),
+                            ),
                             false,
                         ));
                         res.push(event);
 
                         let event: Box<dyn Event> = Box::new(events::make_pick(
-                            "pick".into(),
-                            "doggie",
-                            "sand_cake",
+                            data::PickData::new(
+                                Uuid::default(),
+                                "pick_sand_cake".into(),
+                                "doggie".to_string(),
+                                "sand_cake".to_string(),
+                            ),
                             false,
                         ));
                         res.push(event);
@@ -69,11 +99,23 @@ impl Narrator for Cake {
                 }
             }
             (Some(d), Some(k)) if d == "playground" && k == "kitchen" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("doggie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_kitchen(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_kitchen".to_string(),
+                        "doggie".to_string(),
+                        "kitchen".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "kitchen" && k == "playground" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen("kitie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_kitchen(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_kitchen".to_string(),
+                        "kitie".to_string(),
+                        "kitchen".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "kitchen" && k == "kitchen" => {
@@ -84,9 +126,12 @@ impl Narrator for Cake {
                             if e.get_tags().contains(&"accepted".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
-                                        "pick_ingredient".into(),
-                                        character,
-                                        e.name(),
+                                        data::PickData::new(
+                                            Uuid::default(),
+                                            "pick_ingredient".into(),
+                                            character.to_string(),
+                                            e.name().to_string(),
+                                        ),
                                         false,
                                     ));
                                     res.push(event);
@@ -94,11 +139,12 @@ impl Narrator for Cake {
                             } else if e.get_tags().contains(&"rejected".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> =
-                                        Box::new(events::make_disliked_pick(
+                                        Box::new(events::make_disliked_pick(data::VoidData::new(
+                                            Uuid::default(),
                                             "pick_disliked_ingredient".into(),
-                                            character,
-                                            e.name(),
-                                        ));
+                                            character.to_string(),
+                                            Some(e.name().to_string()),
+                                        )));
                                     res.push(event);
                                 }
                             }
@@ -106,9 +152,12 @@ impl Narrator for Cake {
                     }
                     ItemState::Owned(character) => {
                         let event = Box::new(events::make_use_item(
-                            "add_ingredient".into(),
-                            character,
-                            e.name(),
+                            data::UseItemData::new(
+                                Uuid::default(),
+                                "add_ingredient".into(),
+                                character.to_string(),
+                                e.name().to_string(),
+                            ),
                             true,
                         ));
                         res.push(event);
@@ -128,18 +177,34 @@ impl Narrator for Cake {
                 {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_children_garden(character));
+                            Box::new(events::make_move_to_children_garden(data::MoveData::new(
+                                Uuid::default(),
+                                "move_to_children_garden".to_string(),
+                                character.to_string(),
+                                "children_garden".to_string(),
+                            )));
                         res.push(event);
                     }
                 }
             }
             (Some(d), Some(k)) if d == "kitchen" && k == "children_garden" => {
                 let event: Box<dyn Event> =
-                    Box::new(events::make_move_to_children_garden("doggie"));
+                    Box::new(events::make_move_to_children_garden(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_children_garden".to_string(),
+                        "doggie".to_string(),
+                        "children_garden".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_garden" && k == "kitchen" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_children_garden("kitie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_children_garden(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_children_garden".to_string(),
+                        "kitie".to_string(),
+                        "children_garden".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_garden" && k == "children_garden" => {
@@ -154,9 +219,12 @@ impl Narrator for Cake {
                     .for_each(|e| {
                         for character in ["doggie", "kitie"] {
                             let event: Box<dyn Event> = Box::new(events::make_pick(
-                                "play".into(),
-                                character,
-                                e.name(),
+                                data::PickData::new(
+                                    Uuid::default(),
+                                    "play".into(),
+                                    character.to_string(),
+                                    e.name().to_string(),
+                                ),
                                 true,
                             ));
                             res.push(event);
@@ -172,17 +240,34 @@ impl Narrator for Cake {
                 {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_garden(character));
+                            Box::new(events::make_move_to_garden(data::MoveData::new(
+                                Uuid::default(),
+                                "move_to_garden".to_string(),
+                                character.to_string(),
+                                "garden".to_string(),
+                            )));
                         res.push(event);
                     }
                 }
             }
             (Some(d), Some(k)) if d == "children_garden" && k == "garden" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_garden("doggie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_garden(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_garden".to_string(),
+                        "doggie".to_string(),
+                        "garden".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "garden" && k == "children_garden" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_garden("kitie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_garden(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_garden".to_string(),
+                        "kitie".to_string(),
+                        "garden".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "garden" && k == "garden" => {
@@ -190,65 +275,128 @@ impl Narrator for Cake {
                     == &ItemState::InScene("garden".into())
                 {
                     for character in ["doggie", "kitie"] {
-                        let event: Box<dyn Event> = Box::new(events::make_find_bad_dog(character));
+                        let event: Box<dyn Event> =
+                            Box::new(events::make_find_bad_dog(data::PickData::new(
+                                Uuid::default(),
+                                "find".to_string(),
+                                character.to_string(),
+                                "bad_dog".to_string(),
+                            )));
                         res.push(event);
                     }
                 } else {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_children_house(character));
+                            Box::new(events::make_move_to_children_house(data::MoveData::new(
+                                Uuid::default(),
+                                "move_to_children_house".to_string(),
+                                character.to_string(),
+                                "children_house".to_string(),
+                            )));
                         res.push(event);
                     }
                 }
             }
             (Some(d), Some(k)) if d == "garden" && k == "children_house" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_children_house("doggie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_children_house(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_children_house".to_string(),
+                        "doggie".to_string(),
+                        "children_house".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_house" && k == "garden" => {
-                let event: Box<dyn Event> = Box::new(events::make_move_to_children_house("kitie"));
+                let event: Box<dyn Event> =
+                    Box::new(events::make_move_to_children_house(data::MoveData::new(
+                        Uuid::default(),
+                        "move_to_children_house".to_string(),
+                        "kitie".to_string(),
+                        "children_house".to_string(),
+                    )));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_house" && k == "children_house" => {
                 if !doggie.consumed_pie {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "doggie", "pie"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "doggie".into(),
+                            Some("pie".into()),
+                        )));
                     res.push(event);
                 }
                 if !doggie.consumed_soup {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "doggie", "soup"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "doggie".into(),
+                            Some("soup".into()),
+                        )));
                     res.push(event);
                 }
                 if !doggie.consumed_dumplings {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "doggie", "dumplings"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "doggie".into(),
+                            Some("dumplings".into()),
+                        )));
                     res.push(event);
                 }
                 if !doggie.consumed_meat {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "doggie", "meat"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "doggie".into(),
+                            Some("meat".into()),
+                        )));
                     res.push(event);
                 }
 
                 if !kitie.consumed_pie {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "kitie", "pie"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "kitie".into(),
+                            Some("pie".into()),
+                        )));
                     res.push(event);
                 }
                 if !kitie.consumed_soup {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "kitie", "soup"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "kitie".into(),
+                            Some("soup".into()),
+                        )));
                     res.push(event);
                 }
                 if !kitie.consumed_dumplings {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "kitie", "dumplings"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "kitie".into(),
+                            Some("dumplings".into()),
+                        )));
                     res.push(event);
                 }
                 if !kitie.consumed_meat {
                     let event: Box<dyn Event> =
-                        Box::new(events::make_eat_meal("eat".into(), "kitie", "meat"));
+                        Box::new(events::make_eat_meal(data::VoidData::new(
+                            Uuid::default(),
+                            "eat".into(),
+                            "kitie".into(),
+                            Some("meat".into()),
+                        )));
                     res.push(event);
                 }
             }
