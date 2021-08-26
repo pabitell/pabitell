@@ -332,7 +332,7 @@ pub mod tests {
         // pick sand cake
         let mut events = narrator.available_events(&world);
         assert_eq!(events.len(), 2);
-        assert!(events.iter().all(|e| e.name() == "pick_sand_cake"));
+        assert!(events.iter().all(|e| e.name() == "pick"));
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
         assert!(!events[1].can_be_triggered(&world));

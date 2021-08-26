@@ -35,7 +35,12 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_{}-action",
+                world.name(),
+                event.character(),
+                event.item()
+            ),
             world.lang(),
             None,
         )
@@ -44,7 +49,12 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_{}-success",
+                world.name(),
+                event.character(),
+                event.item()
+            ),
             world.lang(),
             None,
         )
@@ -53,7 +63,12 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_{}-fail",
+                world.name(),
+                event.character(),
+                event.item()
+            ),
             world.lang(),
             None,
         )
@@ -97,7 +112,13 @@ pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Give>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_give_{}_to_{}-action",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
             world.lang(),
             None,
         )
@@ -105,7 +126,13 @@ pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Give>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_give_{}_to_{}-success",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
             world.lang(),
             None,
         )
@@ -113,7 +140,13 @@ pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Give>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_give_{}_to_{}-fail",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
             world.lang(),
             None,
         )
@@ -146,7 +179,11 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_kitchen-action",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -154,7 +191,11 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_kitchen-success",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -162,7 +203,11 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_kitchen-fail",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -181,7 +226,12 @@ pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_disliked_ingredient_{}-action",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new),
+            ),
             world.lang(),
             None,
         )
@@ -189,7 +239,12 @@ pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_disliked_ingredient_{}-success",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new),
+            ),
             world.lang(),
             None,
         )
@@ -197,7 +252,12 @@ pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_pick_disliked_ingredient_{}-fail",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new),
+            ),
             world.lang(),
             None,
         )
@@ -235,7 +295,11 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_garden-action",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -243,7 +307,11 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_garden-success",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -251,7 +319,11 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_garden-fail",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -290,7 +362,12 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_use_{}-action",
+                world.name(),
+                event.character(),
+                event.item(),
+            ),
             world.lang(),
             None,
         )
@@ -298,7 +375,12 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_use_{}-success",
+                world.name(),
+                event.character(),
+                event.item(),
+            ),
             world.lang(),
             None,
         )
@@ -306,7 +388,12 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_use_{}-fail",
+                world.name(),
+                event.character(),
+                event.item(),
+            ),
             world.lang(),
             None,
         )
@@ -345,7 +432,11 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_garden-action",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -353,7 +444,11 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_garden-success",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -361,7 +456,7 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!("{}-{}_move_to_garden-fail", world.name(), event.character(),),
             world.lang(),
             None,
         )
@@ -394,7 +489,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!("{}-{}_find_bad_dog-action", world.name(), event.character(),),
             world.lang(),
             None,
         )
@@ -402,7 +497,11 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_find_bad_dog-success",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -410,7 +509,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!("{}-{}_find_bad_dog-fail", world.name(), event.character(),),
             world.lang(),
             None,
         )
@@ -440,7 +539,11 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_house-action",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -448,7 +551,11 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_house-success",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -456,7 +563,11 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_move_to_children_house-fail",
+                world.name(),
+                event.character(),
+            ),
             world.lang(),
             None,
         )
@@ -556,7 +667,12 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-action", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_eat_{}-action",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new)
+            ),
             world.lang(),
             None,
         )
@@ -564,7 +680,12 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-success", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_eat_{}-success",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new)
+            ),
             world.lang(),
             None,
         )
@@ -572,7 +693,12 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
         get_message(
-            &format!("{}-{}-fail", world.name(), event.translation_base(),),
+            &format!(
+                "{}-{}_eat_{}-fail",
+                world.name(),
+                event.character(),
+                event.item().clone().unwrap_or_else(String::new)
+            ),
             world.lang(),
             None,
         )

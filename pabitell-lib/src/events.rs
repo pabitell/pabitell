@@ -59,10 +59,6 @@ impl Event for Pick {
         &self.name
     }
 
-    fn translation_base(&self) -> String {
-        format!("{}_{}_{}", self.character, self.name, self.item)
-    }
-
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -184,13 +180,6 @@ impl AsAny for Give {
 impl Event for Give {
     fn name(&self) -> &str {
         &self.name
-    }
-
-    fn translation_base(&self) -> String {
-        format!(
-            "{}_{}_{}_to_{}",
-            self.from_character, self.name, self.item, self.to_character
-        )
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -321,10 +310,6 @@ impl Event for UseItem {
         &self.name
     }
 
-    fn translation_base(&self) -> String {
-        format!("{}_{}_{}", self.character, self.name, self.item)
-    }
-
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -446,10 +431,6 @@ impl Event for Move {
         &self.name
     }
 
-    fn translation_base(&self) -> String {
-        format!("{}_{}_to_{}", self.character, self.name, self.scene)
-    }
-
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -569,14 +550,6 @@ impl AsAny for Void {
 impl Event for Void {
     fn name(&self) -> &str {
         &self.name
-    }
-
-    fn translation_base(&self) -> String {
-        if let Some(item) = self.item.as_ref() {
-            format!("{}_{}_{}", self.character, self.name, item)
-        } else {
-            format!("{}_{}", self.character, self.name)
-        }
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {

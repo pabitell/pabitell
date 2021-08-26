@@ -6,7 +6,6 @@ pub mod translations;
 pub mod updates;
 
 use anyhow::Result;
-use serde::Serialize;
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
 
@@ -90,7 +89,6 @@ pub trait Event: Id + Tagged + AsAny + fmt::Debug {
             false
         }
     }
-    fn translation_base(&self) -> String;
     fn action_text(&self, world: &dyn World) -> String {
         self.get_make_action_text()
             .as_ref()
@@ -370,10 +368,6 @@ pub mod test {
 
         fn can_be_triggered(&self, _world: &dyn World) -> bool {
             true
-        }
-
-        fn translation_base(&self) -> String {
-            "test_event".into()
         }
 
         fn name(&self) -> &str {

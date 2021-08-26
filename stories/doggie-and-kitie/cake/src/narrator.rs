@@ -76,7 +76,7 @@ impl Narrator for Cake {
                         let event: Box<dyn Event> = Box::new(events::make_pick(
                             data::PickData::new(
                                 Uuid::default(),
-                                "pick_sand_cake".into(),
+                                "pick".into(),
                                 "kitie".to_string(),
                                 "sand_cake".to_string(),
                             ),
@@ -87,7 +87,7 @@ impl Narrator for Cake {
                         let event: Box<dyn Event> = Box::new(events::make_pick(
                             data::PickData::new(
                                 Uuid::default(),
-                                "pick_sand_cake".into(),
+                                "pick".into(),
                                 "doggie".to_string(),
                                 "sand_cake".to_string(),
                             ),
