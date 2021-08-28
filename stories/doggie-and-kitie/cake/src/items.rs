@@ -30,6 +30,7 @@ macro_rules! simple_item {
 
         impl Tagged for $class_name {
             fn get_tags(&self) -> Vec<String> {
+                #[allow(unused_mut)]
                 let mut res: Vec<String> = vec![];
                 $(
                     res.push($tag.into());
@@ -82,6 +83,7 @@ simple_item!(Flour, "flour", ["ingredient", "accepted"]);
 simple_item!(Milk, "milk", ["ingredient", "accepted"]);
 simple_item!(Egg, "egg", ["ingredient", "accepted"]);
 simple_item!(Suggar, "suggar", ["ingredient", "accepted"]);
+simple_item!(Butter, "butter", ["ingredient", "accepted"]);
 simple_item!(Salt, "salt", ["ingredient", "accepted"]);
 simple_item!(Jam, "jam", ["ingredient", "rejected"]);
 simple_item!(Cheese, "cheese", ["ingredient", "accepted"]);
