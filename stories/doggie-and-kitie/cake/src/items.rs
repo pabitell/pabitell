@@ -1,4 +1,6 @@
-use pabitell_lib::{AsAny, Description, Id, Item, ItemState, Named, Tagged, World};
+use anyhow::{anyhow, Result};
+use pabitell_lib::{AsAny, Description, Dumpable, Id, Item, ItemState, Named, Tagged, World};
+use serde_json::{json, Value};
 use std::any::Any;
 use uuid::Uuid;
 
@@ -75,6 +77,24 @@ macro_rules! simple_item {
                 self.state = state;
             }
         }
+
+        impl Dumpable for $class_name {
+            fn dump(&self) -> Value {
+                json!(
+                    {"state": self.state.dump(), "name": self.name()}
+                )
+            }
+            fn load(&mut self, data: Value) -> Result<()> {
+                if let Value::Object(mut object) = data {
+                    let state_json = object.remove("state").ok_or_else(|| anyhow!("Wrong format of item '{}'", self.name()))?;
+                    self.state.load(state_json)?;
+                    Ok(())
+                } else{
+                    Err(anyhow!("Wrong format of item '{}'", self.name()))
+                }
+            }
+        }
+
     };
 }
 

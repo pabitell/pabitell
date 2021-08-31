@@ -1,33 +1,74 @@
+use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, Tagged, World,
-    WorldBuilder,
+    AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Named, Scene, Tagged,
+    World, WorldBuilder,
 };
+use serde_json::{json, Value};
 use std::any::Any;
 use uuid::Uuid;
 
 use crate::{characters, translations::get_message};
 
-#[derive(Debug, Default)]
-pub struct PlayGround {
-    id: Uuid,
+macro_rules! scene_base {
+    ($class_name: ident, $name: literal, [$( $tag:expr ),* ]) => {
+        #[derive(Debug, Default)]
+        pub struct $class_name {
+            id: Uuid,
+        }
+
+        impl Id for $class_name {
+            fn id(&self) -> &Uuid {
+                &self.id
+            }
+
+            fn set_id(&mut self, id: Uuid) {
+                self.id = id;
+            }
+        }
+
+        impl Named for $class_name {
+            fn name(&self) -> &'static str {
+                $name
+            }
+        }
+
+        impl Tagged for $class_name {
+            fn get_tags(&self) -> Vec<String> {
+                #[allow(unused_mut)]
+                let mut res: Vec<String> = vec![];
+                $(
+                    res.push($tag.into());
+                )*
+                res
+            }
+        }
+
+        impl AsAny for $class_name {
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+            fn as_any_mut(&mut self) -> &mut dyn Any {
+                self
+            }
+        }
+
+
+        impl Dumpable for $class_name {
+            fn dump(&self) -> Value {
+                json!(
+                    {"name": self.name()}
+                )
+            }
+            fn load(&mut self, data: Value) -> Result<()> {
+                Ok(())  // Scenes doesn't cotain any extras here
+            }
+        }
+
+        impl Scene for $class_name {}
+    };
 }
 
-impl Id for PlayGround {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for PlayGround {}
-
-impl Named for PlayGround {
-    fn name(&self) -> &'static str {
-        "playground"
-    }
-}
+scene_base!(PlayGround, "playground", []);
 
 impl Description for PlayGround {
     fn long(&self, world: &dyn World) -> String {
@@ -97,38 +138,7 @@ impl Description for PlayGround {
     }
 }
 
-impl AsAny for PlayGround {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for PlayGround {}
-
-#[derive(Debug, Default)]
-pub struct Kitchen {
-    id: Uuid,
-}
-
-impl Id for Kitchen {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for Kitchen {}
-
-impl Named for Kitchen {
-    fn name(&self) -> &'static str {
-        "kitchen"
-    }
-}
+scene_base!(Kitchen, "kitchen", []);
 
 impl Description for Kitchen {
     fn long(&self, world: &dyn World) -> String {
@@ -161,39 +171,7 @@ impl Description for Kitchen {
     }
 }
 
-impl AsAny for Kitchen {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for Kitchen {}
-
-#[derive(Debug, Default)]
-pub struct Garden {
-    id: Uuid,
-}
-
-impl Id for Garden {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for Garden {}
-
-impl Named for Garden {
-    fn name(&self) -> &'static str {
-        "garden"
-    }
-}
-
+scene_base!(Garden, "garden", []);
 impl Description for Garden {
     fn long(&self, world: &dyn World) -> String {
         if world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned {
@@ -220,39 +198,7 @@ impl Description for Garden {
     }
 }
 
-impl AsAny for Garden {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for Garden {}
-
-#[derive(Debug, Default)]
-pub struct ChildrenHouse {
-    id: Uuid,
-}
-
-impl Id for ChildrenHouse {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for ChildrenHouse {}
-
-impl Named for ChildrenHouse {
-    fn name(&self) -> &'static str {
-        "children_house"
-    }
-}
-
+scene_base!(ChildrenHouse, "children_house", []);
 impl Description for ChildrenHouse {
     fn long(&self, world: &dyn World) -> String {
         get_message(
@@ -271,39 +217,7 @@ impl Description for ChildrenHouse {
     }
 }
 
-impl AsAny for ChildrenHouse {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for ChildrenHouse {}
-
-#[derive(Debug, Default)]
-pub struct ChildrenGarden {
-    id: Uuid,
-}
-
-impl Id for ChildrenGarden {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for ChildrenGarden {}
-
-impl Named for ChildrenGarden {
-    fn name(&self) -> &'static str {
-        "children_garden"
-    }
-}
-
+scene_base!(ChildrenGarden, "children_garden", []);
 impl Description for ChildrenGarden {
     fn long(&self, world: &dyn World) -> String {
         if world
@@ -335,39 +249,7 @@ impl Description for ChildrenGarden {
     }
 }
 
-impl AsAny for ChildrenGarden {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for ChildrenGarden {}
-
-#[derive(Debug, Default)]
-pub struct WayHome {
-    id: Uuid,
-}
-
-impl Id for WayHome {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
-impl Tagged for WayHome {}
-
-impl Named for WayHome {
-    fn name(&self) -> &'static str {
-        "way_home"
-    }
-}
-
+scene_base!(WayHome, "way_home", []);
 impl Description for WayHome {
     fn long(&self, world: &dyn World) -> String {
         get_message(
@@ -385,14 +267,3 @@ impl Description for WayHome {
         )
     }
 }
-
-impl AsAny for WayHome {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-impl Scene for WayHome {}

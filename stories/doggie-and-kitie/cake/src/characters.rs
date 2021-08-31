@@ -1,6 +1,9 @@
+use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    AsAny, Character, Description, Event, Id, Item, Named, Scene, Tagged, World, WorldBuilder,
+    AsAny, Character, Description, Dumpable, Event, Id, Item, Named, Scene, Tagged, World,
+    WorldBuilder,
 };
+use serde_json::{json, Value};
 use std::any::Any;
 use uuid::Uuid;
 
@@ -62,6 +65,62 @@ impl AsAny for Kitie {
     }
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+impl Dumpable for Kitie {
+    fn dump(&self) -> Value {
+        json!(
+            {
+                "name": self.name(),
+                "scene": self.scene,
+                "sand_cake_last": self.sand_cake_last, // last character to eat the sand cake
+                "consumed_pie": self.consumed_pie,
+                "consumed_soup": self.consumed_soup,
+                "consumed_dumplings": self.consumed_dumplings,
+                "consumed_meat": self.consumed_meat,
+            }
+        )
+    }
+
+    fn load(&mut self, data: Value) -> anyhow::Result<()> {
+        match &data["scene"] {
+            Value::Null => self.scene = None,
+            Value::String(scene) => self.scene = Some(scene.to_string()),
+            _ => return Err(anyhow!("Wrong format of character '{}'", self.name())),
+        }
+
+        if let Value::Bool(value) = data["sand_cake_last"] {
+            self.sand_cake_last = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_pie"] {
+            self.consumed_pie = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_soup"] {
+            self.consumed_soup = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_dumplings"] {
+            self.consumed_dumplings = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_meat"] {
+            self.consumed_meat = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        Ok(())
     }
 }
 
@@ -137,6 +196,62 @@ impl AsAny for Doggie {
     }
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+impl Dumpable for Doggie {
+    fn dump(&self) -> Value {
+        json!(
+            {
+                "name": self.name(),
+                "scene": self.scene,
+                "sand_cake_last": self.sand_cake_last, // last character to eat the sand cake
+                "consumed_pie": self.consumed_pie,
+                "consumed_soup": self.consumed_soup,
+                "consumed_dumplings": self.consumed_dumplings,
+                "consumed_meat": self.consumed_meat,
+            }
+        )
+    }
+
+    fn load(&mut self, data: Value) -> anyhow::Result<()> {
+        match &data["scene"] {
+            Value::Null => self.scene = None,
+            Value::String(scene) => self.scene = Some(scene.to_string()),
+            _ => return Err(anyhow!("Wrong format of character '{}'", self.name())),
+        }
+
+        if let Value::Bool(value) = data["sand_cake_last"] {
+            self.sand_cake_last = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_pie"] {
+            self.consumed_pie = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_soup"] {
+            self.consumed_soup = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_dumplings"] {
+            self.consumed_dumplings = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        if let Value::Bool(value) = data["consumed_meat"] {
+            self.consumed_meat = value;
+        } else {
+            return Err(anyhow!("Wrong format of character '{}'", self.name()));
+        }
+
+        Ok(())
     }
 }
 

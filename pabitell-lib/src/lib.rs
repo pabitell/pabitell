@@ -5,7 +5,8 @@ pub mod events;
 pub mod translations;
 pub mod updates;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
 
@@ -14,7 +15,7 @@ pub trait AsAny: Any {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum ItemState {
     Owned(String),
     InScene(String),
@@ -24,6 +25,43 @@ pub enum ItemState {
 impl Default for ItemState {
     fn default() -> Self {
         Self::Unassigned
+    }
+}
+
+impl Dumpable for ItemState {
+    fn dump(&self) -> serde_json::Value {
+        match self {
+            Self::Owned(character) => serde_json::json!({"kind": "character", "value": character}),
+            Self::InScene(scene) => serde_json::json!({"kind": "scene", "value": scene}),
+            Self::Unassigned => serde_json::Value::Null,
+        }
+    }
+    fn load(&mut self, data: serde_json::Value) -> Result<()> {
+        let new = match data {
+            serde_json::Value::Null => Self::Unassigned,
+            serde_json::Value::Object(mut inner) => {
+                let value = if let serde_json::Value::String(value) = inner
+                    .remove("value")
+                    .ok_or_else(|| anyhow!("missing value while parsing ItemState"))?
+                {
+                    value
+                } else {
+                    return Err(anyhow!("Mismatched type in ItemValue"));
+                };
+                match inner
+                    .remove("kind")
+                    .ok_or_else(|| anyhow!("missing kind while parsing ItemState"))?
+                {
+                    serde_json::Value::String(kind) if kind == "character" => Self::Owned(value),
+                    serde_json::Value::String(kind) if kind == "scene" => Self::InScene(value),
+                    e => return Err(anyhow!("Unknown kind `{}`", e)),
+                }
+            }
+            _ => return Err(anyhow!("Failed to deserialize ItemState")),
+        };
+        *self = new;
+
+        Ok(())
     }
 }
 
@@ -50,17 +88,22 @@ pub trait Description: Named {
     fn short(&self, world: &dyn World) -> String;
 }
 
-pub trait Item: Id + Named + Tagged + AsAny + Description + fmt::Debug {
+pub trait Dumpable {
+    fn dump(&self) -> serde_json::Value;
+    fn load(&mut self, data: serde_json::Value) -> Result<()>;
+}
+
+pub trait Item: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
     fn state(&self) -> &ItemState;
     fn set_state(&mut self, state: ItemState);
 }
 
-pub trait Character: Id + Named + Tagged + AsAny + Description + fmt::Debug {
+pub trait Character: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
     fn scene(&self) -> &Option<String>;
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Id + Named + Tagged + AsAny + Description + fmt::Debug {}
+pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {}
 
 pub trait Event: Id + Tagged + AsAny + fmt::Debug {
     fn kind(&self) -> &str {
@@ -131,7 +174,7 @@ where
     fn make_world() -> Result<S>;
 }
 
-pub trait World: Id + Named {
+pub trait World: Id + Named + Dumpable {
     fn available_languages(&self) -> Vec<&str>;
     fn lang(&self) -> &str;
     fn set_lang(&mut self, lang: &str) -> bool;
@@ -170,10 +213,10 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        AsAny, Character, Description, Event, Id, Item, ItemState, Named, Scene, Tagged, World,
-        WorldBuilder,
+        AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Named, Scene, Tagged,
+        World, WorldBuilder,
     };
-    use anyhow::Result;
+    use anyhow::{anyhow, Result};
     use std::{any::Any, collections::HashMap};
     use uuid::Uuid;
 
@@ -227,6 +270,20 @@ pub mod test {
         }
     }
 
+    impl Dumpable for TestCharacter {
+        fn dump(&self) -> serde_json::Value {
+            serde_json::json!(
+                {
+                    "name": self.name(),
+                }
+            )
+        }
+
+        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+            Ok(())
+        }
+    }
+
     #[derive(Debug, Default)]
     struct TestItem {
         id: uuid::Uuid,
@@ -265,6 +322,20 @@ pub mod test {
         }
         fn as_any_mut(&mut self) -> &mut dyn Any {
             self
+        }
+    }
+
+    impl Dumpable for TestItem {
+        fn dump(&self) -> serde_json::Value {
+            serde_json::json!(
+                {
+                    "name": self.name(),
+                }
+            )
+        }
+
+        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+            Ok(())
         }
     }
 
@@ -314,6 +385,20 @@ pub mod test {
         }
         fn as_any_mut(&mut self) -> &mut dyn Any {
             self
+        }
+    }
+
+    impl Dumpable for TestScene {
+        fn dump(&self) -> serde_json::Value {
+            serde_json::json!(
+                {
+                    "name": self.name(),
+                }
+            )
+        }
+
+        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+            Ok(())
         }
     }
 
@@ -492,6 +577,70 @@ pub mod test {
 
         fn finished(&self) -> bool {
             true
+        }
+    }
+
+    impl Dumpable for TestWorld {
+        fn dump(&self) -> serde_json::Value {
+            serde_json::json!({
+                "characters": self.characters.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+                "items": self.items.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+                "scenes": self.scenes.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+            })
+        }
+        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+            match data {
+                // TODO it might be required to check whether all characters, itemsand scenes exist
+                // before loading data
+                serde_json::Value::Object(root) => {
+                    for item in root {
+                        match item {
+                            (k, v) if k == "characters" => {
+                                if let serde_json::Value::Object(characters) = v {
+                                    for (name, data) in characters.into_iter() {
+                                        let mut character = self
+                                            .characters_mut()
+                                            .get_mut(&name)
+                                            .ok_or_else(|| anyhow!(""))?;
+                                        character.load(data)?;
+                                    }
+                                } else {
+                                    return Err(anyhow!(""));
+                                }
+                            }
+                            (k, v) if k == "items" => {
+                                if let serde_json::Value::Object(items) = v {
+                                    for (name, data) in items.into_iter() {
+                                        let mut item = self
+                                            .characters_mut()
+                                            .get_mut(&name)
+                                            .ok_or_else(|| anyhow!(""))?;
+                                        item.load(data)?;
+                                    }
+                                } else {
+                                    return Err(anyhow!(""));
+                                }
+                            }
+                            (k, v) if k == "scenes" => {
+                                if let serde_json::Value::Object(scenes) = v {
+                                    for (name, data) in scenes.into_iter() {
+                                        let mut scene = self
+                                            .characters_mut()
+                                            .get_mut(&name)
+                                            .ok_or_else(|| anyhow!(""))?;
+                                        scene.load(data)?;
+                                    }
+                                } else {
+                                    return Err(anyhow!(""));
+                                }
+                            }
+                            _ => return Err(anyhow!("")),
+                        }
+                    }
+                }
+                _ => return Err(anyhow!("")),
+            }
+            Ok(())
         }
     }
 

@@ -5,14 +5,14 @@ pub mod narrator;
 pub mod scenes;
 pub mod translations;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 #[cfg(feature = "with_world_setup")]
 use pabitell_lib::ItemState;
 use pabitell_lib::{
-    translations::get_available_locales, Character, Description, Id, Item, Named, Scene, Tagged,
-    World, WorldBuilder,
+    translations::get_available_locales, Character, Description, Dumpable, Id, Item, Named, Scene,
+    Tagged, World, WorldBuilder,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, convert::TryFrom};
 use uuid::Uuid;
 
 use crate::translations::{get_message, RESOURCES};
@@ -105,6 +105,7 @@ impl WorldBuilder<CakeWorld> for CakeWorldBuilder {
             .item(Box::new(items::Flour::default()))
             .item(Box::new(items::Milk::default()))
             .item(Box::new(items::Egg::default()))
+            .item(Box::new(items::Butter::default()))
             .item(Box::new(items::Suggar::default()))
             .item(Box::new(items::Salt::default()))
             .item(Box::new(items::Jam::default()))
@@ -260,10 +261,75 @@ impl World for CakeWorld {
     }
 }
 
+impl Dumpable for CakeWorld {
+    fn dump(&self) -> serde_json::Value {
+        serde_json::json!({
+            "characters": self.characters.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+            "items": self.items.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+            "scenes": self.scenes.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+        })
+    }
+    fn load(&mut self, data: serde_json::Value) -> Result<()> {
+        match data {
+            // TODO it might be required to check whether all characters, itemsand scenes exist
+            // before loading data
+            serde_json::Value::Object(root) => {
+                for item in root {
+                    match item {
+                        (k, v) if k == "characters" => {
+                            if let serde_json::Value::Object(characters) = v {
+                                for (name, data) in characters.into_iter() {
+                                    let character = self
+                                        .characters_mut()
+                                        .get_mut(&name)
+                                        .ok_or_else(|| anyhow!("missing character '{}'", name))?;
+                                    character.load(data)?;
+                                }
+                            } else {
+                                return Err(anyhow!(""));
+                            }
+                        }
+                        (k, v) if k == "items" => {
+                            if let serde_json::Value::Object(items) = v {
+                                for (name, data) in items.into_iter() {
+                                    let item = self
+                                        .items_mut()
+                                        .get_mut(&name)
+                                        .ok_or_else(|| anyhow!("missing item '{}'", name))?;
+                                    item.load(data)?;
+                                }
+                            } else {
+                                return Err(anyhow!(""));
+                            }
+                        }
+                        (k, v) if k == "scenes" => {
+                            if let serde_json::Value::Object(scenes) = v {
+                                for (name, data) in scenes.into_iter() {
+                                    let scene = self
+                                        .scenes_mut()
+                                        .get_mut(&name)
+                                        .ok_or_else(|| anyhow!("missing scene '{}'", name))?;
+                                    scene.load(data)?;
+                                }
+                            } else {
+                                return Err(anyhow!(""));
+                            }
+                        }
+                        _ => return Err(anyhow!("")),
+                    }
+                }
+            }
+            _ => return Err(anyhow!("")),
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use pabitell_lib::{
-        events as lib_events, Description, Event, Id, ItemState, Narrator, World, WorldBuilder,
+        events as lib_events, Description, Dumpable, Event, Id, ItemState, Narrator, World,
+        WorldBuilder,
     };
     use uuid::Uuid;
 
@@ -324,9 +390,20 @@ pub mod tests {
     }
 
     #[cfg(feature = "with_world_setup")]
+    fn reload_world(world: CakeWorld) -> CakeWorld {
+        let dump = world.dump();
+        let mut new_world = CakeWorldBuilder::make_world().unwrap();
+        dbg!(new_world.load(dump)).unwrap();
+        assert_eq!(new_world.dump(), world.dump());
+        new_world
+    }
+
+    #[cfg(feature = "with_world_setup")]
     #[test]
     fn workflow() {
         let mut world = prepare_world();
+        world = reload_world(world);
+
         let narrator = narrator::Cake::default();
 
         // pick sand cake
@@ -337,6 +414,7 @@ pub mod tests {
         assert!(events[0].perform(&mut world));
         assert!(!events[1].can_be_triggered(&world));
         assert!(!events[1].perform(&mut world));
+        world = reload_world(world);
 
         // give and consume sand cake
         let mut events = narrator.available_events(&world);
@@ -345,16 +423,19 @@ pub mod tests {
         assert!(events.iter().all(|e| e.name() == "give_sand_cake"));
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
+        world = reload_world(world);
 
         // move both characters to kitchen
         let mut events = narrator.available_events(&world);
         assert_eq!(events.len(), 2);
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
+        world = reload_world(world);
         let mut events = narrator.available_events(&world);
         assert_eq!(events.len(), 1);
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
+        world = reload_world(world);
 
         let mut doggie = false;
         let mut events = narrator.available_events(&world);
@@ -368,6 +449,7 @@ pub mod tests {
                 if cevent.character() == "kitie" {
                     assert!(cevent.can_be_triggered(&world));
                     assert!(cevent.perform(&mut world));
+                    world = reload_world(world);
                 }
             } else if event.get_tags().contains(&"void".to_string()) {
                 // Put disliked thing to cake
@@ -377,6 +459,7 @@ pub mod tests {
                     .unwrap();
                 assert!(cevent.can_be_triggered(&world));
                 assert!(cevent.perform(&mut world));
+                world = reload_world(world);
             }
         }
 
@@ -384,6 +467,7 @@ pub mod tests {
             if event.get_tags().contains(&"use_item".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
+                world = reload_world(world);
             }
         }
 
@@ -392,6 +476,7 @@ pub mod tests {
             if event.get_tags().contains(&"move".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
+                world = reload_world(world);
             }
         }
 
@@ -404,6 +489,7 @@ pub mod tests {
             if cevent.character() == "doggie" {
                 assert!(cevent.can_be_triggered(&world));
                 assert!(cevent.perform(&mut world));
+                world = reload_world(world);
             }
         }
 
@@ -411,6 +497,7 @@ pub mod tests {
         for event in narrator.available_events(&world).iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
+            world = reload_world(world);
         }
 
         // find big bad dog
@@ -419,6 +506,7 @@ pub mod tests {
         let mut event = events.remove(0);
         assert!(event.can_be_triggered(&world));
         assert!(event.perform(&mut world));
+        world = reload_world(world);
 
         // go to children house
         let mut events = narrator.available_events(&world);
@@ -426,6 +514,7 @@ pub mod tests {
         for event in narrator.available_events(&world).iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
+            world = reload_world(world);
         }
 
         let mut events = narrator.available_events(&world);
@@ -433,6 +522,7 @@ pub mod tests {
         for event in events.iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
+            world = reload_world(world);
         }
 
         // Make sure that doggie and kitie reached final destination
