@@ -1,5 +1,10 @@
+pub mod backend;
+
+use anyhow::Result;
 use pabitell_lib::{Description, Named, Narrator, World, WorldBuilder};
 use skim::prelude::*;
+use sled::Db;
+use uuid::Uuid;
 
 #[cfg(feature = "with_doggie_and_kitie_cake")]
 fn make_story_doggie_and_kitie_cake() -> Option<(Box<dyn World>, Box<dyn Narrator>)> {
@@ -102,6 +107,11 @@ enum View {
     CHARACTERS,
     SCENES,
     EVENTS,
+    CONTROLS,
+    RESET,
+    LOAD,
+    DELETE,
+    BACK,
     EXIT,
 }
 
@@ -113,7 +123,12 @@ impl SkimItem for View {
             Self::CHARACTERS => Cow::Borrowed("characters"),
             Self::SCENES => Cow::Borrowed("scenes"),
             Self::EVENTS => Cow::Borrowed("events"),
+            Self::CONTROLS => Cow::Borrowed("controls"),
             Self::EXIT => Cow::Borrowed("exit"),
+            Self::RESET => Cow::Borrowed("reset"),
+            Self::LOAD => Cow::Borrowed("load"),
+            Self::DELETE => Cow::Borrowed("delete"),
+            Self::BACK => Cow::Borrowed("back"),
         }
     }
 }
@@ -132,6 +147,7 @@ fn main_menu(world: &dyn World) -> Option<View> {
         View::CHARACTERS,
         View::SCENES,
         View::EVENTS,
+        View::CONTROLS,
         View::EXIT,
     ] {
         let _ = tx_item.send(Arc::new(item));
@@ -319,6 +335,82 @@ fn select_event(world: &dyn World, narrator: &dyn Narrator) -> Option<Vec<EventI
     )
 }
 
+fn controls_menu() -> Option<View> {
+    let options = SkimOptionsBuilder::default()
+        .height(Some("50%"))
+        .build()
+        .unwrap();
+
+    let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
+    for item in [View::RESET, View::LOAD, View::DELETE, View::BACK] {
+        let _ = tx_item.send(Arc::new(item));
+    }
+    drop(tx_item); // so that skim could know when to stop waiting for more items.
+
+    let selected_items = Skim::run_with(&options, Some(rx_item)).map(|out| out.selected_items)?;
+    if selected_items.is_empty() {
+        None
+    } else {
+        Some(
+            (*selected_items[0])
+                .as_any()
+                .downcast_ref::<View>()?
+                .clone(),
+        )
+    }
+}
+
+#[derive(Clone)]
+struct WorldItem {
+    uuid: String,
+}
+
+impl SkimItem for WorldItem {
+    fn text(&self) -> Cow<str> {
+        Cow::Borrowed(&self.uuid)
+    }
+
+    fn display<'a>(&'a self, context: DisplayContext<'a>) -> AnsiString<'a> {
+        AnsiString::new_string(self.uuid.to_string(), vec![])
+    }
+    fn preview(&self, _context: PreviewContext) -> ItemPreview {
+        ItemPreview::AnsiText(String::new())
+    }
+}
+
+fn select_stored_world(db: &Db, story: &str) -> Result<Option<Uuid>> {
+    let options = SkimOptionsBuilder::default()
+        .height(Some("50%"))
+        .build()
+        .unwrap();
+
+    let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
+    for item in backend::list_stored(db, story)? {
+        let _ = tx_item.send(Arc::new(WorldItem {
+            uuid: item.to_string(),
+        }));
+    }
+    drop(tx_item); // so that skim could know when to stop waiting for more items.
+
+    let selected_items = Skim::run_with(&options, Some(rx_item))
+        .map(|out| out.selected_items)
+        .unwrap();
+    if selected_items.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(
+            Uuid::parse_str(
+                &(*selected_items[0])
+                    .as_any()
+                    .downcast_ref::<WorldItem>()
+                    .unwrap()
+                    .uuid,
+            )
+            .unwrap(),
+        ))
+    }
+}
+
 pub fn main() {
     let story = select_story("en-US").unwrap();
     println!("story: {}", story.short);
@@ -336,6 +428,8 @@ pub fn main() {
     .unwrap();
     println!("lang: {}", lang);
 
+    let mut db = sled::open("/tmp/database").unwrap();
+
     let mut state = View::MENU;
     let mut selected_characters: Vec<PabitellItem> = vec![];
     let mut selected_items: Vec<PabitellItem> = vec![];
@@ -347,6 +441,7 @@ pub fn main() {
                 Some(View::CHARACTERS) => state = View::CHARACTERS,
                 Some(View::SCENES) => state = View::SCENES,
                 Some(View::EVENTS) => state = View::EVENTS,
+                Some(View::CONTROLS) => state = View::CONTROLS,
                 Some(View::EXIT) => break,
                 _ => break,
             },
@@ -390,12 +485,50 @@ pub fn main() {
                             println!("{}", events[idx].fail_text(world.as_ref()));
                         }
                         events[idx].trigger(world.as_mut());
+                        backend::store(&mut db, &story.code, world.as_ref()).unwrap();
                         continue;
                     }
                 }
                 state = View::MENU;
             }
+            View::CONTROLS => {
+                if let Some(new_state) = controls_menu() {
+                    state = new_state;
+                }
+            }
+            View::BACK => match state {
+                _ => state = View::MENU,
+            },
             View::EXIT => break,
+            View::RESET => {
+                world.clean();
+                world.setup();
+                state = View::MENU;
+            }
+            View::DELETE => {
+                println!("Deleting world");
+                if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
+                    backend::delete(&mut db, &story.code, &uuid).unwrap();
+                    println!("World '{}' was deleted", uuid);
+                } else {
+                    println!("No world selected");
+                }
+                state = View::CONTROLS;
+            }
+            View::LOAD => {
+                println!("Loading world");
+                if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
+                    if let Err(error) = backend::load(&mut db, &story.code, &uuid, world.as_mut()) {
+                        println!("Failed to load world '{}': {}", uuid, error);
+                    } else {
+                        println!("World '{}' was loaded", uuid);
+                    }
+                    state = View::MENU;
+                } else {
+                    println!("No world selected");
+                    state = View::CONTROLS;
+                }
+            }
         }
         println!(
             "Selected Character: {}",

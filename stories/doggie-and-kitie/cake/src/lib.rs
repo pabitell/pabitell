@@ -6,7 +6,6 @@ pub mod scenes;
 pub mod translations;
 
 use anyhow::{anyhow, Result};
-#[cfg(feature = "with_world_setup")]
 use pabitell_lib::ItemState;
 use pabitell_lib::{
     translations::get_available_locales, Character, Description, Dumpable, Id, Item, Named, Scene,
@@ -211,7 +210,6 @@ impl World for CakeWorld {
         vec!["cs", "en-US"]
     }
 
-    #[cfg(feature = "with_world_setup")]
     fn setup(&mut self) {
         self.randomize_ids();
 
@@ -336,7 +334,6 @@ pub mod tests {
     use super::events;
     use crate::{characters, narrator, CakeWorld, CakeWorldBuilder};
 
-    #[cfg(feature = "with_world_setup")]
     pub fn prepare_world() -> CakeWorld {
         let mut world = CakeWorldBuilder::make_world().unwrap();
         world.setup();
@@ -344,7 +341,6 @@ pub mod tests {
     }
 
     #[test]
-    #[cfg(feature = "with_world_setup")]
     fn setup() {
         let world = prepare_world();
         assert_eq!(
@@ -389,7 +385,6 @@ pub mod tests {
         );
     }
 
-    #[cfg(feature = "with_world_setup")]
     fn reload_world(world: CakeWorld) -> CakeWorld {
         let dump = world.dump();
         let mut new_world = CakeWorldBuilder::make_world().unwrap();
@@ -398,7 +393,6 @@ pub mod tests {
         new_world
     }
 
-    #[cfg(feature = "with_world_setup")]
     #[test]
     fn workflow() {
         let mut world = prepare_world();

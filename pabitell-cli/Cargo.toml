@@ -5,9 +5,17 @@ edition = "2018"
 
 [features]
 default = []
+with_doggie_and_kitie = [
+	"with_doggie_and_kitie_cake"
+]
 with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
 
 [dependencies]
+anyhow = "1"
 pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
+uuid = { version = "0.8", features = ["serde"]}
 skim = "0.9"
-doggie_and_kitie_cake = { path = "../stories/doggie-and-kitie/cake/", features = ["with_world_setup"], optional = true }
+sled = "0.34"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+doggie_and_kitie_cake = { path = "../stories/doggie-and-kitie/cake/", optional = true }

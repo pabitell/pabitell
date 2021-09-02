@@ -185,9 +185,17 @@ pub trait World: Id + Named + Dumpable {
     fn characters_mut(&mut self) -> &mut HashMap<String, Box<dyn Character>>;
     fn items(&self) -> &HashMap<String, Box<dyn Item>>;
     fn items_mut(&mut self) -> &mut HashMap<String, Box<dyn Item>>;
-    #[cfg(feature = "with_world_setup")]
     fn setup(&mut self);
-    #[cfg(feature = "with_world_setup")]
+    fn extra_clean(&mut self) {}
+    fn clean(&mut self) {
+        self.extra_clean();
+        self.characters_mut()
+            .values_mut()
+            .for_each(|e| e.set_scene(None));
+        self.items_mut()
+            .values_mut()
+            .for_each(|e| e.set_state(ItemState::Unassigned));
+    }
     fn randomize_ids(&mut self) {
         self.set_id(Uuid::new_v4());
 
@@ -572,7 +580,6 @@ pub mod test {
             vec!["en-US"]
         }
 
-        #[cfg(feature = "with_world_setup")]
         fn setup(&mut self) {}
 
         fn finished(&self) -> bool {

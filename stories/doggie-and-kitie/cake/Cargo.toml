@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2018"
 
 [features]
-with_world_setup = ["uuid/v4", "pabitell-lib/with_world_setup"]
 
 [dependencies]
 anyhow = "1"
