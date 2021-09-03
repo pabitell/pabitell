@@ -4,7 +4,7 @@ use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemStat
 use crate::translations::get_message;
 
 pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
-    let mut event: events::Pick = pick_data.into();
+    let mut event = events::Pick::new(pick_data);
 
     event.set_tags(vec!["pick".to_string()]);
 
@@ -77,7 +77,7 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
 }
 
 pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
-    let mut event: events::Give = give_data.into();
+    let mut event = events::Give::new(give_data);
     event.set_tags(vec!["give".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -155,7 +155,7 @@ pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
 }
 
 pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
-    let mut event: events::Move = move_data.into();
+    let mut event = events::Move::new(move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -216,7 +216,7 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
-    let mut event: events::Void = void_data.into();
+    let mut event = events::Void::new(void_data);
     event.set_tags(vec!["disliked_pick".to_string()]);
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
@@ -266,7 +266,7 @@ pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
 }
 
 pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
-    let mut event: events::Move = move_data.into();
+    let mut event = events::Move::new(move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -332,7 +332,7 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events::UseItem {
-    let mut event: events::UseItem = use_item_data.into();
+    let mut event = events::UseItem::new(use_item_data);
     event.set_tags(vec!["use_item".to_string()]);
     event.set_world_update(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
@@ -402,7 +402,7 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
 }
 
 pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
-    let mut event: events::Move = move_data.into();
+    let mut event = events::Move::new(move_data);
     event.set_tags(vec!["move".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -465,7 +465,7 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
-    let mut event: events::Pick = pick_data.into();
+    let mut event = events::Pick::new(pick_data);
     event.set_tags(vec!["find".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -518,7 +518,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
 }
 
 pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
-    let mut event: events::Move = move_data.into();
+    let mut event = events::Move::new(move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -576,7 +576,7 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
-    let mut event: events::Void = void_data.into();
+    let mut event = events::Void::new(void_data);
     event.set_tags(vec!["eat".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {

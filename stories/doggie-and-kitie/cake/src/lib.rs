@@ -388,7 +388,6 @@ pub mod tests {
     fn reload_world(world: CakeWorld) -> CakeWorld {
         let dump = world.dump();
         let mut new_world = CakeWorldBuilder::make_world().unwrap();
-        dbg!(new_world.load(dump)).unwrap();
         assert_eq!(new_world.dump(), world.dump());
         new_world
     }
@@ -412,7 +411,6 @@ pub mod tests {
 
         // give and consume sand cake
         let mut events = narrator.available_events(&world);
-        dbg!(&events);
         assert_eq!(events.len(), 1);
         assert!(events.iter().all(|e| e.name() == "give_sand_cake"));
         assert!(events[0].can_be_triggered(&world));

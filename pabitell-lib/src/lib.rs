@@ -105,7 +105,7 @@ pub trait Character: Id + Named + Tagged + AsAny + Description + Dumpable + fmt:
 
 pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {}
 
-pub trait Event: Id + Tagged + AsAny + fmt::Debug {
+pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn kind(&self) -> &str {
         std::any::type_name::<Self>()
             .rsplitn(2, "::")
@@ -434,14 +434,6 @@ pub mod test {
         id: Uuid,
         description: TestDescription,
     }
-    impl Id for TestEvent {
-        fn id(&self) -> &Uuid {
-            &self.id
-        }
-        fn set_id(&mut self, id: Uuid) {
-            self.id = id
-        }
-    }
     impl Tagged for TestEvent {}
     impl Named for TestEvent {
         fn name(&self) -> &'static str {
@@ -454,6 +446,11 @@ pub mod test {
         }
         fn as_any_mut(&mut self) -> &mut dyn Any {
             self
+        }
+    }
+    impl PartialEq<[u8]> for TestEvent {
+        fn eq(&self, other: &[u8]) -> bool {
+            false
         }
     }
     impl Event for TestEvent {

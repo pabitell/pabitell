@@ -1,13 +1,9 @@
-use crate::{AsAny, Event, Id, Tagged, World};
+use crate::{data, AsAny, Event, Tagged, World};
 use std::{any::Any, fmt};
-use uuid::Uuid;
 
 #[derive(Default)]
 pub struct Pick {
-    id: Uuid,
-    name: String,
-    character: String,
-    item: String,
+    data: data::PickData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
@@ -19,19 +15,9 @@ pub struct Pick {
 impl fmt::Debug for Pick {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("Pick({})", self.name()))
-            .field("character", &self.character)
-            .field("item", &self.item)
+            .field("character", &self.data.character)
+            .field("item", &self.data.item)
             .finish()
-    }
-}
-
-impl Id for Pick {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
     }
 }
 
@@ -54,9 +40,19 @@ impl AsAny for Pick {
     }
 }
 
+impl PartialEq<[u8]> for Pick {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::PickData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
 impl Event for Pick {
     fn name(&self) -> &str {
-        &self.name
+        &self.data.name
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -100,36 +96,25 @@ impl Event for Pick {
 }
 
 impl Pick {
-    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI) -> Self
-    where
-        SN: ToString,
-        SC: ToString,
-        SI: ToString,
-    {
+    pub fn new(data: data::PickData) -> Self {
         Self {
-            name: name.to_string(),
-            character: character.to_string(),
-            item: item.to_string(),
+            data,
             ..Default::default()
         }
     }
 
     pub fn character(&self) -> &str {
-        &self.character
+        &self.data.character
     }
 
     pub fn item(&self) -> &str {
-        &self.item
+        &self.data.item
     }
 }
 
 #[derive(Default)]
 pub struct Give {
-    id: Uuid,
-    name: String,
-    from_character: String,
-    to_character: String,
-    item: String,
+    data: data::GiveData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
@@ -141,20 +126,10 @@ pub struct Give {
 impl fmt::Debug for Give {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("Give({})", self.name()))
-            .field("from_character", &self.from_character)
-            .field("to_character", &self.to_character)
-            .field("item", &self.item)
+            .field("from_character", &self.data.from_character)
+            .field("to_character", &self.data.to_character)
+            .field("item", &self.data.item)
             .finish()
-    }
-}
-
-impl Id for Give {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
     }
 }
 
@@ -177,9 +152,19 @@ impl AsAny for Give {
     }
 }
 
+impl PartialEq<[u8]> for Give {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::GiveData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
 impl Event for Give {
     fn name(&self) -> &str {
-        &self.name
+        &self.data.name
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -224,41 +209,29 @@ impl Event for Give {
 }
 
 impl Give {
-    pub fn new<SN, SFC, STC, SI>(name: SN, from_character: SFC, to_character: STC, item: SI) -> Self
-    where
-        SN: ToString,
-        SFC: ToString,
-        STC: ToString,
-        SI: ToString,
-    {
+    pub fn new(data: data::GiveData) -> Self {
         Self {
-            name: name.to_string(),
-            from_character: from_character.to_string(),
-            to_character: to_character.to_string(),
-            item: item.to_string(),
+            data,
             ..Default::default()
         }
     }
 
     pub fn from_character(&self) -> &str {
-        &self.from_character
+        &self.data.from_character
     }
 
     pub fn to_character(&self) -> &str {
-        &self.to_character
+        &self.data.to_character
     }
 
     pub fn item(&self) -> &str {
-        &self.item
+        &self.data.item
     }
 }
 
 #[derive(Default)]
 pub struct UseItem {
-    id: Uuid,
-    name: String,
-    character: String,
-    item: String,
+    data: data::UseItemData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
@@ -270,19 +243,9 @@ pub struct UseItem {
 impl fmt::Debug for UseItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("UseItem({})", self.name()))
-            .field("character", &self.character)
-            .field("item", &self.item)
+            .field("character", &self.data.character)
+            .field("item", &self.data.item)
             .finish()
-    }
-}
-
-impl Id for UseItem {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
     }
 }
 
@@ -305,9 +268,19 @@ impl AsAny for UseItem {
     }
 }
 
+impl PartialEq<[u8]> for UseItem {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::UseItemData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
 impl Event for UseItem {
     fn name(&self) -> &str {
-        &self.name
+        &self.data.name
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -351,35 +324,25 @@ impl Event for UseItem {
 }
 
 impl UseItem {
-    pub fn new<SN, SC, SI>(name: SN, character: SC, item: SI) -> Self
-    where
-        SN: ToString,
-        SC: ToString,
-        SI: ToString,
-    {
+    pub fn new(data: data::UseItemData) -> Self {
         Self {
-            name: name.to_string(),
-            character: character.to_string(),
-            item: item.to_string(),
+            data,
             ..Default::default()
         }
     }
 
     pub fn character(&self) -> &str {
-        &self.character
+        &self.data.character
     }
 
     pub fn item(&self) -> &str {
-        &self.item
+        &self.data.item
     }
 }
 
 #[derive(Default)]
 pub struct Move {
-    id: Uuid,
-    name: String,
-    character: String,
-    scene: String,
+    data: data::MoveData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
@@ -391,19 +354,9 @@ pub struct Move {
 impl fmt::Debug for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("Move({})", self.name()))
-            .field("character", &self.character)
-            .field("to_scene", &self.scene)
+            .field("character", &self.data.character)
+            .field("to_scene", &self.data.scene)
             .finish()
-    }
-}
-
-impl Id for Move {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
     }
 }
 
@@ -426,9 +379,19 @@ impl AsAny for Move {
     }
 }
 
+impl PartialEq<[u8]> for Move {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::MoveData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
 impl Event for Move {
     fn name(&self) -> &str {
-        &self.name
+        &self.data.name
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -472,35 +435,25 @@ impl Event for Move {
 }
 
 impl Move {
-    pub fn new<SN, SC, SS>(name: SN, character: SC, scene: SS) -> Self
-    where
-        SN: ToString,
-        SC: ToString,
-        SS: ToString,
-    {
+    pub fn new(data: data::MoveData) -> Self {
         Self {
-            name: name.to_string(),
-            character: character.to_string(),
-            scene: scene.to_string(),
+            data,
             ..Default::default()
         }
     }
 
     pub fn character(&self) -> &str {
-        &self.character
+        &self.data.character
     }
 
     pub fn scene(&self) -> &str {
-        &self.scene
+        &self.data.scene
     }
 }
 
 #[derive(Default)]
 pub struct Void {
-    id: Uuid,
-    name: String,
-    character: String,
-    item: Option<String>,
+    data: data::VoidData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
     condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
@@ -512,19 +465,9 @@ pub struct Void {
 impl fmt::Debug for Void {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(&format!("Void({})", self.name()))
-            .field("character", &self.character)
-            .field("item", &self.item)
+            .field("character", &self.data.character)
+            .field("item", &self.data.item)
             .finish()
-    }
-}
-
-impl Id for Void {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
     }
 }
 
@@ -547,9 +490,19 @@ impl AsAny for Void {
     }
 }
 
+impl PartialEq<[u8]> for Void {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::VoidData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
 impl Event for Void {
     fn name(&self) -> &str {
-        &self.name
+        &self.data.name
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -593,49 +546,51 @@ impl Event for Void {
 }
 
 impl Void {
-    pub fn new<SN, SC, SI>(name: SN, character: SC, item: Option<SI>) -> Self
-    where
-        SN: ToString,
-        SI: ToString,
-        SC: ToString,
-    {
+    pub fn new(data: data::VoidData) -> Self {
         Self {
-            name: name.to_string(),
-            character: character.to_string(),
-            item: item.map(|e| e.to_string()),
+            data,
             ..Default::default()
         }
     }
 
     pub fn character(&self) -> &str {
-        &self.character
+        &self.data.character
     }
 
     pub fn item(&self) -> &Option<String> {
-        &self.item
+        &self.data.item
     }
 }
 
 #[cfg(test)]
 pub mod test {
     use super::{Give, Move, Pick, UseItem, Void};
-    use crate::Event;
+    use crate::{data, Event};
 
     #[test]
     fn kinds() {
-        let pick = Pick::new("pick", "character", "item");
+        let pick = Pick::new(data::PickData::new("pick", "character", "item"));
         assert_eq!(pick.kind(), "Pick");
 
-        let give = Give::new("give", "from_character", "to_character", "item");
+        let give = Give::new(data::GiveData::new(
+            "give",
+            "from_character",
+            "to_character",
+            "item",
+        ));
         assert_eq!(give.kind(), "Give");
 
-        let move_event = Move::new("move", "character", "to_scene");
+        let move_event = Move::new(data::MoveData::new("move", "character", "to_scene"));
         assert_eq!(move_event.kind(), "Move");
 
-        let use_item = UseItem::new("use_item", "character", "item");
+        let use_item = UseItem::new(data::UseItemData::new("use_item", "character", "item"));
         assert_eq!(use_item.kind(), "UseItem");
 
-        let void = Void::new("void", "character", None as Option<String>);
+        let void = Void::new(data::VoidData::new(
+            "void",
+            "character",
+            None as Option<String>,
+        ));
         assert_eq!(void.kind(), "Void");
     }
 }

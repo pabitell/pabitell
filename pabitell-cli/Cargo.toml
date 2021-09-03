@@ -11,13 +11,16 @@ with_doggie_and_kitie = [
 with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
 
 [dependencies]
+actix-web = "4.0.0-beta.8"
 anyhow = "1"
 clap = "3.0.0-beta.2"
+futures = "0.3"
 pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
 skim = "0.9"
 sled = "0.34"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio = { version = "1", features = ["sync", "rt", "rt-multi-thread"]}
 uuid = { version = "0.8", features = ["serde"] }
 
 # Stories
