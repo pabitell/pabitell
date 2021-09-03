@@ -1,25 +1,28 @@
 pub mod backend;
 
-use anyhow::Result;
-use pabitell_lib::{Description, Named, Narrator, World, WorldBuilder};
+use anyhow::{anyhow, Result};
+use clap::{
+    crate_authors, crate_description, crate_name, crate_version, App, Arg, ArgMatches, Values,
+};
+use pabitell_lib::{Narrator, World, WorldBuilder};
 use skim::prelude::*;
 use sled::Db;
 use uuid::Uuid;
 
 #[cfg(feature = "with_doggie_and_kitie_cake")]
-fn make_story_doggie_and_kitie_cake() -> Option<(Box<dyn World>, Box<dyn Narrator>)> {
+fn make_story_doggie_and_kitie_cake() -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
     let mut world: Box<dyn World> =
-        Box::new(doggie_and_kitie_cake::CakeWorldBuilder::make_world().unwrap());
+        Box::new(doggie_and_kitie_cake::CakeWorldBuilder::make_world()?);
     world.setup();
     let mut narrator: Box<dyn Narrator> =
         Box::new(doggie_and_kitie_cake::narrator::Cake::default());
 
-    Some((world, narrator))
+    Ok(Some((world, narrator)))
 }
 
 #[cfg(not(feature = "with_doggie_and_kitie_cake"))]
-fn make_story_doggie_and_kitie_cake() -> Option<(Box<dyn World>, Box<dyn Narrator>)> {
-    None
+fn make_story_doggie_and_kitie_cake() -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
+    Ok(None)
 }
 
 #[derive(Clone)]
@@ -34,7 +37,7 @@ impl SkimItem for PabitellItem {
         Cow::Borrowed(&self.code)
     }
 
-    fn display<'a>(&'a self, context: DisplayContext<'a>) -> AnsiString<'a> {
+    fn display<'a>(&'a self, _context: DisplayContext<'a>) -> AnsiString<'a> {
         AnsiString::new_string(self.short.clone(), vec![])
     }
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
@@ -42,10 +45,10 @@ impl SkimItem for PabitellItem {
     }
 }
 
-fn select_story(lang: &str) -> Option<PabitellItem> {
+fn select_story(lang: &str) -> Result<Option<PabitellItem>> {
     let mut stories = vec![];
     if cfg!(feature = "with_doggie_and_kitie_cake") {
-        let (mut world, _) = make_story_doggie_and_kitie_cake().unwrap();
+        let (mut world, _) = make_story_doggie_and_kitie_cake()?.unwrap();
         world.set_lang(lang);
         let description = world.description();
         stories.push(PabitellItem {
@@ -66,16 +69,19 @@ fn select_story(lang: &str) -> Option<PabitellItem> {
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
 
-    let selected_items = Skim::run_with(&options, Some(rx_item)).map(|out| out.selected_items)?;
+    let selected_items = Skim::run_with(&options, Some(rx_item))
+        .map(|out| out.selected_items)
+        .ok_or_else(|| anyhow!("Failed to choose"))?;
     if selected_items.is_empty() {
-        None
+        Ok(None)
     } else {
-        Some(
+        Ok(Some(
             (*selected_items[0])
                 .as_any()
-                .downcast_ref::<PabitellItem>()?
+                .downcast_ref::<PabitellItem>()
+                .unwrap()
                 .clone(),
-        )
+        ))
     }
 }
 
@@ -412,10 +418,41 @@ fn select_stored_world(db: &Db, story: &str) -> Result<Option<Uuid>> {
 }
 
 pub fn main() {
-    let story = select_story("en-US").unwrap();
+    let app = App::new(crate_name!())
+        .author(crate_authors!())
+        .version(crate_version!())
+        .about(crate_description!())
+        .arg(
+            Arg::new("db-path")
+                .short('P')
+                .long("db-path")
+                .value_name("PATH")
+                .takes_value(true)
+                .required(true)
+                .env("PABITELL_DB_PATH"),
+        )
+        .arg(
+            Arg::new("default-lang")
+                .short('L')
+                .long("default-lang")
+                .value_name("LANG")
+                .takes_value(true)
+                .default_value("en-US")
+                .env("PABITELL_DEFAULT_LANG"),
+        );
+
+    let matches = app.get_matches();
+    let default_lang = matches.value_of("default-lang").unwrap();
+    let db_path = matches.value_of("db-path").unwrap();
+
+    start_cli_app(default_lang, db_path).expect("Something went wrong");
+}
+
+pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
+    let story = select_story(default_lang)?.ok_or_else(|| anyhow!("No story picked"))?;
     println!("story: {}", story.short);
     let (mut world, narrator) = match story.code.as_str() {
-        "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake().unwrap(),
+        "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake()?.unwrap(),
         _ => unreachable!(),
     };
     let lang = select_language(
@@ -425,10 +462,10 @@ pub fn main() {
             .map(|e| e.to_string())
             .collect(),
     )
-    .unwrap();
+    .ok_or_else(|| anyhow!("no language selected"))?;
     println!("lang: {}", lang);
 
-    let mut db = sled::open("/tmp/database").unwrap();
+    let mut db = sled::open(db_path).unwrap();
 
     let mut state = View::MENU;
     let mut selected_characters: Vec<PabitellItem> = vec![];
@@ -468,10 +505,18 @@ pub fn main() {
                     if let Some(scene) = world
                         .characters()
                         .get(&selected_characters[0].code)
-                        .unwrap()
+                        .ok_or_else(|| {
+                            anyhow!(
+                                "Failed to found character '{}'",
+                                &selected_characters[0].code
+                            )
+                        })?
                         .scene()
                     {
-                        let scene = world.scenes().get(scene).unwrap();
+                        let scene = world
+                            .scenes()
+                            .get(scene)
+                            .ok_or_else(|| anyhow!("Failed to find a scene {}", scene))?;
                         println!("\n{}\n\n", scene.long(world.as_ref()));
                     }
                 }
@@ -555,4 +600,6 @@ pub fn main() {
                 .join(", ")
         );
     }
+
+    Ok(())
 }

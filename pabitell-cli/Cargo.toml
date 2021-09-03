@@ -12,10 +12,13 @@ with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
 
 [dependencies]
 anyhow = "1"
+clap = "3.0.0-beta.2"
 pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
-uuid = { version = "0.8", features = ["serde"]}
 skim = "0.9"
 sled = "0.34"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+uuid = { version = "0.8", features = ["serde"] }
+
+# Stories
 doggie_and_kitie_cake = { path = "../stories/doggie-and-kitie/cake/", optional = true }
