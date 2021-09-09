@@ -3,7 +3,7 @@ use pabitell_lib::{
     Named, Narrator, Scene, World, WorldBuilder,
 };
 
-use crate::{characters, events, CakeWorld};
+use crate::{characters, events, world::CakeWorld};
 
 #[derive(Default, Debug)]
 pub struct Cake;

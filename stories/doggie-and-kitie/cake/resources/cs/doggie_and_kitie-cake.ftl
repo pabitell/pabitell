@@ -1,3 +1,10 @@
+# General
+narrator = Vypravěč
+use = Použij
+give = Dej
+qr_code = QR kód
+hint = Tip
+
 # Description
 doggie_and_kitie-cake-short = Jak si pejsek s kočičkou dělali k svátku dort
 doggie_and_kitie-cake-long =
