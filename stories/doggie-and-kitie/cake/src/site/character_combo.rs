@@ -4,20 +4,20 @@ use yew::prelude::*;
 
 use crate::{translations::get_message, world::CakeWorld};
 
-pub type ComboItem = (Option<String>, String);
+use super::characters;
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
 pub struct Props {
-    pub available_characters: Vec<ComboItem>,
-    pub set_character: Callback<ComboItem>,
+    pub available_characters: Vec<characters::Character>,
+    pub set_character: Callback<Option<String>>,
 }
 
 pub struct CharacterCombo {
-    pub selected_character: ComboItem,
+    pub selected_character: characters::Character,
 }
 
 pub enum Msg {
-    UpdateSelectedCharacter(ComboItem),
+    UpdateSelectedCharacter(characters::Character),
 }
 
 impl Component for CharacterCombo {
@@ -34,7 +34,7 @@ impl Component for CharacterCombo {
         match msg {
             Msg::UpdateSelectedCharacter(selected_character) => {
                 self.selected_character = selected_character.clone();
-                ctx.props().set_character.emit(selected_character);
+                ctx.props().set_character.emit(selected_character.code);
             }
         }
         true
@@ -42,26 +42,43 @@ impl Component for CharacterCombo {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
-
-        let render_character = move |item: ComboItem| {
-            if self.selected_character.0 == item.0 {
+        let render_icon = |icon: String, name: String| {
+            if !icon.is_empty() {
                 html! {
-                    <a class="navbar-item is-active">{ item.1 }</a>
+                    <span class="icon-text">
+                        <span class="icon">
+                        <i class={ icon }></i>
+                        </span>
+                        <span>{name}</span>
+                    </span>
+                }
+            } else {
+                html! {<span>{name}</span>}
+            }
+        };
+
+        let render_character = move |item: characters::Character| {
+            if self.selected_character.code == item.code {
+                html! {
+                    <a class="navbar-item is-active">{ item.short.clone() }</a>
                 }
             } else {
                 let cloned = item.clone();
                 let cb = link.callback(move |_| Msg::UpdateSelectedCharacter(cloned.clone()));
                 html! {
-                    <a class="navbar-item" onclick={ cb }>{ item.1 }</a>
+                    <a class="navbar-item" onclick={ cb }>{ item.short.clone() }</a>
                 }
             }
         };
 
+        let inner = render_icon(
+            self.selected_character.icon.clone(),
+            self.selected_character.short.clone(),
+        );
+
         html! {
           <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link">{
-                self.selected_character.1.clone()
-            }</a>
+            <a class="navbar-link">{ inner }</a>
 
             <div class="navbar-dropdown">
             { for ctx.props().available_characters.clone().into_iter().map(render_character) }

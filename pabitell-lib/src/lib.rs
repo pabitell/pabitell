@@ -161,6 +161,8 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
     fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+
+    fn initiator(&self) -> String;
 }
 
 pub trait WorldBuilder<S>
@@ -508,6 +510,10 @@ pub mod test {
         }
         fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
             &None
+        }
+
+        fn initiator(&self) -> String {
+            "test_character".into()
         }
     }
 

@@ -55,6 +55,10 @@ impl Event for Pick {
         &self.data.name
     }
 
+    fn initiator(&self) -> String {
+        self.data.character.clone()
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -165,6 +169,10 @@ impl PartialEq<[u8]> for Give {
 impl Event for Give {
     fn name(&self) -> &str {
         &self.data.name
+    }
+
+    fn initiator(&self) -> String {
+        self.data.to_character.clone()
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -283,6 +291,10 @@ impl Event for UseItem {
         &self.data.name
     }
 
+    fn initiator(&self) -> String {
+        self.data.character.clone()
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -394,6 +406,10 @@ impl Event for Move {
         &self.data.name
     }
 
+    fn initiator(&self) -> String {
+        self.data.character.clone()
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -503,6 +519,10 @@ impl PartialEq<[u8]> for Void {
 impl Event for Void {
     fn name(&self) -> &str {
         &self.data.name
+    }
+
+    fn initiator(&self) -> String {
+        self.data.character.clone()
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {

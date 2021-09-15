@@ -13,7 +13,7 @@ fn make_story_doggie_and_kitie_cake(
     initial: bool,
 ) -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
     let mut world: Box<dyn World> =
-        Box::new(doggie_and_kitie_cake::CakeWorldBuilder::make_world()?);
+        Box::new(doggie_and_kitie_cake::world::CakeWorldBuilder::make_world()?);
     if initial {
         world.setup();
     }

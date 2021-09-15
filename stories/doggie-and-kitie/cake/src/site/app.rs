@@ -1,10 +1,14 @@
 use pabitell_lib::{Description, Narrator, World, WorldBuilder};
-use std::sync::Arc;
+use std::collections::HashMap;
 use yew::prelude::*;
 
 use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
 
-use super::{actions::Actions, character_combo::CharacterCombo};
+use super::{
+    actions::{Actions, EventItem},
+    character_combo::CharacterCombo,
+    characters::{self, make_characters},
+};
 
 pub enum Msg {
     ToggleNavbar,
@@ -70,6 +74,25 @@ impl Component for App {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let narrator = narrator::Cake::default();
         let events = narrator.available_events(&self.world);
+        let mut characters_map: HashMap<String, characters::Character> =
+            make_characters(&self.world)
+                .into_iter()
+                .map(|c| (c.name.clone(), c))
+                .collect();
+
+        let events: Vec<EventItem> = events
+            .into_iter()
+            .enumerate()
+            .map(|(idx, e)| {
+                EventItem::new(
+                    idx,
+                    e.action_text(&self.world),
+                    characters_map.get(&e.initiator()).unwrap().clone(),
+                    None,
+                    None,
+                )
+            })
+            .collect();
 
         let link = ctx.link();
         let trigger_event_callback = link.callback(|idx| Msg::TriggerEvent(idx));
@@ -87,7 +110,7 @@ impl Component for App {
                 <main>
                     { self.view_scene(ctx) }
                     <Actions
-                      events={ events.iter().enumerate().map(|(idx, e)| (idx, e.action_text(&self.world))).collect::<Vec<(usize, String)>>() }
+                      events={ events }
                       trigger_event={ trigger_event_callback }
                     />
                 </main>
@@ -125,15 +148,9 @@ impl App {
         let Self { world, .. } = self;
         let link = ctx.link();
 
-        let mut available_characters = vec![(
-            None,
-            translations::get_message("narrator", world.lang(), None),
-        )];
-        let set_character_callback = link
-            .callback(|(selected_character, _)| Msg::UpdateSelectedCharacter(selected_character));
-        world.characters().iter().for_each(|(key, character)| {
-            available_characters.push((Some(key.to_string()), character.short(world)))
-        });
+        let available_characters = make_characters(world);
+        let set_character_callback =
+            link.callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
 
         let active_class = if self.navbar_active { "is-active" } else { "" };
 

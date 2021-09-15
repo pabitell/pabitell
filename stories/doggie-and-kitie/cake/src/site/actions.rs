@@ -5,7 +5,34 @@ use yew::prelude::*;
 
 use crate::{translations::get_message, world::CakeWorld};
 
-pub type EventItem = (usize, String);
+use super::characters;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EventItem {
+    idx: usize,
+    description: String,
+    character: characters::Character,
+    action_url: Option<String>,
+    image_url: Option<String>,
+}
+
+impl EventItem {
+    pub fn new(
+        idx: usize,
+        description: String,
+        character: characters::Character,
+        action_url: Option<String>,
+        image_url: Option<String>,
+    ) -> Self {
+        Self {
+            idx,
+            description,
+            character,
+            action_url,
+            image_url,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
 pub struct Props {
@@ -40,21 +67,49 @@ impl Component for Actions {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
-        let render_action = move |(idx, item): (usize, String)| {
+        let scan_cb = link.callback(move |_| Msg::QRCodeScan);
+        let render_action = move |item: EventItem| {
+            let EventItem {
+                idx,
+                description,
+                character,
+                action_url,
+                image_url,
+            } = item;
             let cb = link.callback(move |_| Msg::TriggerEvent(idx));
             html! {
-                <div class="tile is-4">
-                    <div class="card m-2">
-                        <div class="card-image">
-                            <figure class="image">
-                                <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
-                            </figure>
+                <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <figure class="image is-48x48">
+                                    <img src={ character.character_url } alt="Character"/>
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{ character.short }</p>
+                                <p class="subtitle is-6">{"TODO QR code ETC"}</p>
+                            </div>
                         </div>
+                        <div class="content">{description}</div>
+                    </div>
+                    <div class="card-image has-text-centered">
+                        <figure onclick={ cb } class="image w-75 is-square is-clickable is-inline-block">
+                            <img class="box" src={ image_url.unwrap_or_else(|| "svgs/solid/cog.svg".to_string()) } alt="Action image"/>
+                        </figure>
+                    </div>
+                </div>
+            }
+        };
+        html! {
+            <section class="section is-flex">
+                <div class="columns is-flex-wrap-wrap w-100">
+                    <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
                         <div class="card-content">
                             <div class="media">
                                 <div class="media-left">
                                     <figure class="image is-48x48">
-                                        <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                        <img src="svgs/solid/dog.svg" alt="Doggie"/>
                                     </figure>
                                 </div>
                                 <div class="media-content">
@@ -62,42 +117,12 @@ impl Component for Actions {
                                     <p class="subtitle is-6">{"TODO QR code ETC"}</p>
                                 </div>
                             </div>
-                            <div class="content">{item}</div>
-                            <div class="content">
-                                <button onclick={ cb } class="button is-success is-fullwidth">{"Perform"}</button>
-                            </div>
+                            <div class="content">{"Scan QR Code"}</div>
                         </div>
-                    </div>
-                </div>
-            }
-        };
-        html! {
-            <section class="section is-flex">
-                <div class="tile is-ancestor is-flex-wrap-wrap">
-                    <div class="tile is-4">
-                        <div class="card m-2">
-                            <div class="card-image">
-                                <figure class="image">
-                                    <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
-                                </figure>
-                            </div>
-                            <div class="card-content">
-                                <div class="media">
-                                    <div class="media-left">
-                                        <figure class="image is-48x48">
-                                            <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                                        </figure>
-                                    </div>
-                                    <div class="media-content">
-                                        <p class="title is-4">{"Doggie"}</p>
-                                        <p class="subtitle is-6">{"TODO QR code ETC"}</p>
-                                    </div>
-                                </div>
-                                <div class="content">{"Scan QR Code"}</div>
-                                <div class="content">
-                                    <a href="#" class="button is-success is-fullwidth">{"Scan"}</a>
-                                </div>
-                            </div>
+                        <div class="card-image has-text-centered">
+                            <figure onclick={ scan_cb } class="image is-clickable is-square w-75 is-inline-block box">
+                                <img class="box" src="https://publicdomainvectors.org/download.php?file=Share-the-Openclipart-QR-Code.svg" alt="QR code"/>
+                            </figure>
                         </div>
                     </div>
                     { for ctx.props().events.clone().into_iter().map(render_action) }
