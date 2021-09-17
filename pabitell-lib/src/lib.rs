@@ -163,6 +163,7 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
 
     fn initiator(&self) -> String;
+    fn dump(&self) -> serde_json::Value;
 }
 
 pub trait WorldBuilder<S>
@@ -514,6 +515,10 @@ pub mod test {
 
         fn initiator(&self) -> String {
             "test_character".into()
+        }
+
+        fn dump(&self) -> serde_json::Value {
+            serde_json::json!({})
         }
     }
 

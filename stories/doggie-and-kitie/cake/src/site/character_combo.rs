@@ -1,5 +1,5 @@
 use pabitell_lib::{Character, Description, World, WorldBuilder};
-use std::sync::Arc;
+use std::rc::Rc;
 use yew::prelude::*;
 
 use crate::{translations::get_message, world::CakeWorld};
@@ -8,16 +8,16 @@ use super::characters;
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
 pub struct Props {
-    pub available_characters: Vec<characters::Character>,
-    pub set_character: Callback<Option<String>>,
+    pub available_characters: Vec<Rc<characters::Character>>,
+    pub set_character: Callback<Rc<Option<String>>>,
 }
 
 pub struct CharacterCombo {
-    pub selected_character: characters::Character,
+    pub selected_character: Rc<characters::Character>,
 }
 
 pub enum Msg {
-    UpdateSelectedCharacter(characters::Character),
+    UpdateSelectedCharacter(Rc<characters::Character>),
 }
 
 impl Component for CharacterCombo {
@@ -34,7 +34,9 @@ impl Component for CharacterCombo {
         match msg {
             Msg::UpdateSelectedCharacter(selected_character) => {
                 self.selected_character = selected_character.clone();
-                ctx.props().set_character.emit(selected_character.code);
+                ctx.props()
+                    .set_character
+                    .emit(selected_character.code.clone());
             }
         }
         true
@@ -42,14 +44,14 @@ impl Component for CharacterCombo {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
-        let render_icon = |icon: String, name: String| {
+        let render_icon = |icon: Rc<String>, name: Rc<String>| {
             if !icon.is_empty() {
                 html! {
                     <span class="icon-text">
                         <span class="icon">
-                        <i class={ icon }></i>
+                        <i class={ icon.to_string() }></i>
                         </span>
-                        <span>{name}</span>
+                        <span>{ name.to_string() }</span>
                     </span>
                 }
             } else {
@@ -57,7 +59,7 @@ impl Component for CharacterCombo {
             }
         };
 
-        let render_character = move |item: characters::Character| {
+        let render_character = move |item: Rc<characters::Character>| {
             if self.selected_character.code == item.code {
                 html! {
                     <a class="navbar-item is-active">{ item.short.clone() }</a>

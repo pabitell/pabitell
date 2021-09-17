@@ -97,6 +97,10 @@ impl Event for Pick {
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
         &self.make_fail_text
     }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
+    }
 }
 
 impl Pick {
@@ -213,6 +217,10 @@ impl Event for Give {
 
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
         &self.make_fail_text
+    }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
     }
 }
 
@@ -333,6 +341,10 @@ impl Event for UseItem {
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
         &self.make_fail_text
     }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
+    }
 }
 
 impl UseItem {
@@ -448,6 +460,10 @@ impl Event for Move {
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
         &self.make_fail_text
     }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
+    }
 }
 
 impl Move {
@@ -562,6 +578,10 @@ impl Event for Void {
 
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
         &self.make_fail_text
+    }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
     }
 }
 

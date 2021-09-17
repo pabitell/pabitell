@@ -1,18 +1,19 @@
 use pabitell_lib::{Description, Narrator, World, WorldBuilder};
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 use yew::prelude::*;
 
 use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
 
 use super::{
-    actions::{Actions, EventItem},
+    action::EventActionItem,
+    actions::Actions,
     character_combo::CharacterCombo,
     characters::{self, make_characters},
 };
 
 pub enum Msg {
     ToggleNavbar,
-    UpdateSelectedCharacter(Option<String>),
+    UpdateSelectedCharacter(Rc<Option<String>>),
     TriggerEvent(usize),
 }
 
@@ -27,7 +28,7 @@ pub enum Page {
 
 pub struct App {
     world: CakeWorld,
-    selected_character: Option<String>,
+    selected_character: Rc<Option<String>>,
     page: Page,
     navbar_active: bool,
 }
@@ -46,8 +47,8 @@ impl Component for App {
         world.set_lang("cs");
 
         Self {
-            world: world,
-            selected_character: None,
+            world,
+            selected_character: Rc::new(None),
             page: Page::Void,
             navbar_active: false,
         }
@@ -57,40 +58,43 @@ impl Component for App {
         match msg {
             Msg::UpdateSelectedCharacter(selected_character) => {
                 self.selected_character = selected_character;
+                true
             }
             Msg::ToggleNavbar => {
                 self.navbar_active = !self.navbar_active;
+                true
             }
             Msg::TriggerEvent(idx) => {
                 let narrator = narrator::Cake::default();
                 let mut events = narrator.available_events(&self.world);
                 let event = &mut events[idx];
                 event.trigger(&mut self.world);
+                true
             }
         }
-        true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let narrator = narrator::Cake::default();
         let events = narrator.available_events(&self.world);
-        let mut characters_map: HashMap<String, characters::Character> =
+        let mut characters_map: HashMap<String, Rc<characters::Character>> =
             make_characters(&self.world)
                 .into_iter()
-                .map(|c| (c.name.clone(), c))
+                .map(|c| (c.name.to_string(), c))
                 .collect();
 
-        let events: Vec<EventItem> = events
+        let events: Vec<Rc<EventActionItem>> = events
             .into_iter()
             .enumerate()
             .map(|(idx, e)| {
-                EventItem::new(
+                Rc::new(EventActionItem::new(
                     idx,
                     e.action_text(&self.world),
                     characters_map.get(&e.initiator()).unwrap().clone(),
                     None,
                     None,
-                )
+                    serde_json::to_vec(&e.dump()).unwrap(),
+                ))
             })
             .collect();
 

@@ -26,6 +26,7 @@ getrandom = { version = "0.2", features = ["js"] }  # add optional once https://
 lazy_static = { version = "~1.4.0" }
 log = "~0.4.14"
 pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
+qrcode = { version = "0.11", features = ["svg"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "0.8", features = [ 'v4', 'stdweb' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
