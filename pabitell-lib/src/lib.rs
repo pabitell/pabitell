@@ -164,6 +164,7 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
 
     fn initiator(&self) -> String;
     fn dump(&self) -> serde_json::Value;
+    fn matches(&self, value: &serde_json::Value) -> bool;
 }
 
 pub trait WorldBuilder<S>
@@ -519,6 +520,10 @@ pub mod test {
 
         fn dump(&self) -> serde_json::Value {
             serde_json::json!({})
+        }
+
+        fn matches(&self, value: &serde_json::Value) -> bool {
+            false
         }
     }
 

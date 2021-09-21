@@ -108,7 +108,7 @@ impl Component for Action {
                                 <button class="button" onclick={ show_qr_cb } >
                                     <i class="fas fa-qrcode"></i>
                                 </button>
-                                <qrcode::QRCode data={data} shared_scope={self.qr_scope.clone()} />
+                                <qrcode::QRCode {data} shared_scope={self.qr_scope.clone()} />
                             </p>
                         </div>
                     </div>

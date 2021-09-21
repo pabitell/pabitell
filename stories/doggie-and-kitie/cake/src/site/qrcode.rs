@@ -71,9 +71,11 @@ impl Component for QRCode {
     }
 
     fn rendered(&mut self, ctx: &Context<Self>, _first_render: bool) {
-        let qrcode =
-            //QrCode::with_version(ctx.props().data.clone(), Version::Micro(2), EcLevel::L).unwrap();
-            QrCode::new(ctx.props().data.clone().as_ref()).unwrap();
+        let qr_data = format!(
+            "data:application/json;base64,{}",
+            base64::encode(&ctx.props().data.as_ref())
+        );
+        let qrcode = QrCode::new(qr_data).unwrap();
         let img = qrcode
             .render()
             .min_dimensions(200, 200)

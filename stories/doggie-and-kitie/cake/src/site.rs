@@ -4,3 +4,4 @@ pub mod app;
 pub mod character_combo;
 pub mod characters;
 pub mod qrcode;
+pub mod qrscanner;

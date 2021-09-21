@@ -101,6 +101,10 @@ impl Event for Pick {
     fn dump(&self) -> serde_json::Value {
         serde_json::to_value(self.data.clone()).unwrap()
     }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
+    }
 }
 
 impl Pick {
@@ -221,6 +225,10 @@ impl Event for Give {
 
     fn dump(&self) -> serde_json::Value {
         serde_json::to_value(self.data.clone()).unwrap()
+    }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
     }
 }
 
@@ -345,6 +353,10 @@ impl Event for UseItem {
     fn dump(&self) -> serde_json::Value {
         serde_json::to_value(self.data.clone()).unwrap()
     }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
+    }
 }
 
 impl UseItem {
@@ -464,6 +476,10 @@ impl Event for Move {
     fn dump(&self) -> serde_json::Value {
         serde_json::to_value(self.data.clone()).unwrap()
     }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
+    }
 }
 
 impl Move {
@@ -582,6 +598,10 @@ impl Event for Void {
 
     fn dump(&self) -> serde_json::Value {
         serde_json::to_value(self.data.clone()).unwrap()
+    }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
     }
 }
 

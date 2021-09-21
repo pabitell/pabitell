@@ -7,22 +7,39 @@ edition = "2018"
 [features]
 default = [ 'with_webapp' ]
 with_webapp = [
+	'base64',
 	'console_error_panic_hook',
+	'data-url',
+	'image',
 	'getrandom/js',
+	'gloo',
+	'js-sys',
 	'uuid/v4',
 	'uuid/stdweb',
+	'web-sys/MediaDevices',
+	'web-sys/MediaStreamConstraints',
 	'wasm-logger',
+	'wasm-bindgen/serde-serialize',
+	'wasm-bindgen-futures',
 	'wee_alloc',
 	'yew',
+	'bardecoder',
 ]	
 
 [dependencies]
 anyhow = "1"
+bardecoder = { path =  "../../../../bardecoder/", optional = true }
+base64 = { version = "0.13", optional = true }
+data-url = { version = "0.1", optional = true }
+futures = "0.3"
 fluent-bundle = { version = "~0.15.0" }
 console_error_panic_hook = { version = "~0.1.6", optional = true }
+image = { version = "0.23", optional = true, features = ["png"] }
 include_dir = { version = "~0.6.1" }
 intl-memoizer = { version = "~0.5.1" }
 getrandom = { version = "0.2", features = ["js"] }  # add optional once https://github.com/thedodd/trunk/pull/183 is merged
+gloo = { version = "0.3", features = ["futures"], optional = true }
+js-sys = { version = "0.3", optional = true }
 lazy_static = { version = "~1.4.0" }
 log = "~0.4.14"
 pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
@@ -31,8 +48,29 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "0.8", features = [ 'v4', 'stdweb' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
 wee_alloc = { version = "~0.4.5", optional = true }
+wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
+wasm-bindgen-futures  = { version = "0.4", optional = true}
 wasm-logger = { version = "0.2", optional = true }
 yew = { git = "https://github.com/yewstack/yew.git", branch = "master", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+	"Blob",
+	"CanvasRenderingContext2d",
+	"MediaDevices",
+	"MediaStream",
+	"MediaStreamConstraints",
+	"Window",
+	"Navigator",
+	"Element",
+	"EventTarget",
+	"HtmlMediaElement",
+	"HtmlCanvasElement",
+	"HtmlVideoElement",
+]
+optional = true
+
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }

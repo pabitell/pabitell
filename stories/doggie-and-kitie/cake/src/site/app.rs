@@ -1,4 +1,5 @@
 use pabitell_lib::{Description, Narrator, World, WorldBuilder};
+use serde_json::Value;
 use std::{collections::HashMap, rc::Rc};
 use yew::prelude::*;
 
@@ -15,6 +16,7 @@ pub enum Msg {
     ToggleNavbar,
     UpdateSelectedCharacter(Rc<Option<String>>),
     TriggerEvent(usize),
+    TriggerScannedEvent(Value),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -71,6 +73,18 @@ impl Component for App {
                 event.trigger(&mut self.world);
                 true
             }
+            Msg::TriggerScannedEvent(json_value) => {
+                let narrator = narrator::Cake::default();
+                let mut events = narrator.available_events(&self.world);
+                for mut event in events {
+                    if event.matches(&json_value) {
+                        event.trigger(&mut self.world);
+                        return true;
+                    }
+                }
+                // TODO render event not found
+                false
+            }
         }
     }
 
@@ -100,6 +114,8 @@ impl Component for App {
 
         let link = ctx.link();
         let trigger_event_callback = link.callback(|idx| Msg::TriggerEvent(idx));
+        let trigger_scanned_event_callback =
+            link.callback(|json_value| Msg::TriggerScannedEvent(json_value));
 
         html! {
             <>
@@ -116,6 +132,7 @@ impl Component for App {
                     <Actions
                       events={ events }
                       trigger_event={ trigger_event_callback }
+                      trigger_scanned_event={ trigger_scanned_event_callback }
                     />
                 </main>
                 <footer class="footer">
