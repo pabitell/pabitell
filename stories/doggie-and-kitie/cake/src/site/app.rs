@@ -1,6 +1,6 @@
 use pabitell_lib::{Description, Narrator, World, WorldBuilder};
 use serde_json::Value;
-use std::{collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use yew::prelude::*;
 
 use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
@@ -10,6 +10,8 @@ use super::{
     actions::Actions,
     character_combo::CharacterCombo,
     characters::{self, make_characters},
+    message::{Kind as MessageKind, MessageItem},
+    messages::{Messages, Msg as MessagesMsg},
 };
 
 pub enum Msg {
@@ -33,6 +35,7 @@ pub struct App {
     selected_character: Rc<Option<String>>,
     page: Page,
     navbar_active: bool,
+    messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
@@ -53,6 +56,7 @@ impl Component for App {
             selected_character: Rc::new(None),
             page: Page::Void,
             navbar_active: false,
+            messages_scope: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -70,6 +74,18 @@ impl Component for App {
                 let narrator = narrator::Cake::default();
                 let mut events = narrator.available_events(&self.world);
                 let event = &mut events[idx];
+                let message = MessageItem::new(
+                    translations::get_message("event", self.world.lang(), None),
+                    event.success_text(&self.world),
+                    MessageKind::Success,
+                    Some("fas fa-cogs".to_string()),
+                );
+                self.messages_scope
+                    .as_ref()
+                    .borrow()
+                    .clone()
+                    .unwrap()
+                    .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                 event.trigger(&mut self.world);
                 true
             }
@@ -78,6 +94,18 @@ impl Component for App {
                 let mut events = narrator.available_events(&self.world);
                 for mut event in events {
                     if event.matches(&json_value) {
+                        let message = MessageItem::new(
+                            translations::get_message("event", self.world.lang(), None),
+                            event.success_text(&self.world),
+                            MessageKind::Success,
+                            None,
+                        );
+                        self.messages_scope
+                            .as_ref()
+                            .borrow()
+                            .clone()
+                            .unwrap()
+                            .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                         event.trigger(&mut self.world);
                         return true;
                     }
@@ -128,6 +156,7 @@ impl Component for App {
                 </section>
                 { self.view_nav(ctx) }
                 <main>
+                    <Messages shared_scope = { self.messages_scope.clone() }/>
                     { self.view_scene(ctx) }
                     <Actions
                       events={ events }

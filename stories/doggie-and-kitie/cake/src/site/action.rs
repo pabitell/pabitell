@@ -124,7 +124,6 @@ impl Component for Action {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        log::debug!("QR A");
         // Update when component is reused
         true
     }

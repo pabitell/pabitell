@@ -4,6 +4,7 @@ use = Použij
 give = Dej
 qr_code = QR kód
 hint = Tip
+event = Událost
 
 # Description
 doggie_and_kitie-cake-short = Jak si pejsek s kočičkou dělali k svátku dort
