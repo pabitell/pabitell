@@ -47,17 +47,29 @@ impl Component for Actions {
             Msg::QRCodeScanned(content) => {
                 log::debug!("{}", content);
                 match DataUrl::process(&content) {
-                    Ok(data_url) => {
-                        let (json_str, _) = data_url.decode_to_vec().unwrap(); // TODO invalid base64 errors
-                        match serde_json::from_slice(&json_str[..]) {
+                    Ok(data_url) => match data_url.decode_to_vec() {
+                        Ok((json_str, _)) => match serde_json::from_slice(&json_str[..]) {
                             Ok(json) => {
                                 ctx.props().trigger_scanned_event.emit(json);
                             }
                             Err(err) => {
                                 log::warn!("Can't decode scanned data to json: {:?}", err);
                             }
+                        },
+                        Err(err) => {
+                            log::warn!("Failed to parse base64 {:?}", err);
+                            // Retry to scan the image
+                            // note that bardecoder doesn't to
+                            // error correction quire well
+                            // So an invalid data may be loaded
+                            self.qr_scanner_callback
+                                .as_ref()
+                                .borrow()
+                                .clone()
+                                .unwrap()
+                                .send_message(QRScannerMsg::Active(true));
                         }
-                    }
+                    },
                     Err(err) => {
                         log::warn!("Can't process scanned data: {:?}", err);
                     }
