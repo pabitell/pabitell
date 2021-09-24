@@ -183,7 +183,13 @@ impl App {
             html! {
                 <section class="section">
                     <h1 class="title">{ scene.short(&self.world) }</h1>
-                    <p class="subtitle">{ scene.long(&self.world) }</p>
+                    <p class="subtitle">
+                        <article class="message">
+                            <div class="message-body">
+                                { scene.long(&self.world) }
+                            </div>
+                        </article>
+                    </p>
                 </section>
             }
         } else {

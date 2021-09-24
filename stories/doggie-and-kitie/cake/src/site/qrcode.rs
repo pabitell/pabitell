@@ -75,7 +75,7 @@ impl Component for QRCode {
             "data:application/json;base64,{}",
             base64::encode(&ctx.props().data.as_ref())
         );
-        let qrcode = QrCode::new(qr_data).unwrap();
+        let qrcode = QrCode::with_error_correction_level(qr_data, EcLevel::H).unwrap();
         let img = qrcode
             .render()
             .min_dimensions(200, 200)
