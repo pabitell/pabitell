@@ -5,7 +5,11 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use gloo::{dialogs, timers};
+use gloo::{
+    dialogs,
+    storage::{self, Storage},
+    timers,
+};
 use js_sys::{ArrayBuffer, Function, Uint8Array};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -83,8 +87,21 @@ impl Component for QRScanner {
                 self.cameras = cameras;
                 if !self.cameras.is_empty() {
                     self.cameras_loaded = true;
-                    // Pick first camera
-                    let device_id = self.cameras[0].device_id.clone();
+
+                    let device_id = if let Ok(device_id) = storage::SessionStorage::get("device_id")
+                    {
+                        // Check whether stored id is in list
+                        if self.cameras.iter().any(|e| e.device_id == device_id) {
+                            device_id
+                        } else {
+                            // Existing device id is missing -> pick first
+                            self.cameras[0].device_id.clone()
+                        }
+                    } else {
+                        // Pick first camera
+                        self.cameras[0].device_id.clone()
+                    };
+
                     // Send message to start streaming
                     ctx.link().send_message(Msg::SwitchCamera(Some(device_id)));
                 }
@@ -109,6 +126,13 @@ impl Component for QRScanner {
                 }
             }
             Msg::SwitchCamera(device_id) => {
+                // Store device in local storage
+                if let Some(device_id) = device_id.as_ref() {
+                    storage::SessionStorage::set(&"device_id", device_id).unwrap();
+                } else {
+                    storage::SessionStorage::delete(&"device_id");
+                }
+
                 let window = web_sys::window().unwrap();
                 // prepare js instances
                 let navigator = window.navigator();
@@ -150,14 +174,6 @@ impl Component for QRScanner {
 
                         media.set_src_object(Some(&media_stream));
                         JsFuture::from(media.play().unwrap()).await.unwrap();
-
-                        // Detect video width
-                        /*
-                        let tracks = media_stream.get_video_tracks();
-                        let mut tracks: Vec<_> = tracks.iter().collect();
-                        let track: MediaStreamTrack = tracks.pop().unwrap().try_into().unwrap();
-                        let settings = track.get_settings();
-                        */
 
                         canvas.set_width(video.video_width());
                         canvas.set_height(video.video_height());
