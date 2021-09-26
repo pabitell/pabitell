@@ -76,23 +76,21 @@ async fn event_world(
     }
 
     // Test whether it matches available_events
-    let mut events = narrator
-        .available_events(world.as_ref())
-        .into_iter()
-        .filter(|e| e.as_ref() == &body[..])
-        .collect::<Vec<_>>();
-
-    match events.len() {
-        0 => return Err(error::ErrorNotFound("event can't be used")),
-        1 => {
-            let mut event = events.pop().unwrap();
-            event.trigger(world.as_mut());
-            backend::store(&mut data.as_ref().clone(), &story, world.as_ref()).unwrap();
+    if let Ok(value) = serde_json::from_slice(&body) {
+        if let Some(mut event) = narrator.parse_event(value) {
+            if event.can_be_triggered(world.as_ref()) {
+                event.trigger(world.as_mut());
+                backend::store(&mut data.as_ref().clone(), &story, world.as_ref()).unwrap();
+                Ok(HttpResponse::Ok().finish())
+            } else {
+                Err(error::ErrorBadRequest("Event can't be triggered"))
+            }
+        } else {
+            Err(error::ErrorBadRequest("Wrong event data"))
         }
-        _ => return Err(error::ErrorBadRequest("multiple events matches")),
+    } else {
+        Err(error::ErrorBadRequest("Expected JSON"))
     }
-
-    Ok(HttpResponse::Ok().finish())
 }
 
 async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {

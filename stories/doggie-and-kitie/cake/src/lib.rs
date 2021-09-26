@@ -25,7 +25,10 @@ pub mod tests {
     use uuid::Uuid;
 
     use super::events;
-    use crate::{characters, narrator, CakeWorld, CakeWorldBuilder};
+    use crate::{
+        characters, narrator,
+        world::{CakeWorld, CakeWorldBuilder},
+    };
 
     pub fn prepare_world() -> CakeWorld {
         let mut world = CakeWorldBuilder::make_world().unwrap();
@@ -79,10 +82,29 @@ pub mod tests {
     }
 
     fn reload_world(world: CakeWorld) -> CakeWorld {
-        let dump = world.dump();
         let mut new_world = CakeWorldBuilder::make_world().unwrap();
+        new_world.load(world.dump()).unwrap();
         assert_eq!(new_world.dump(), world.dump());
         new_world
+    }
+
+    fn reload_events(
+        world: &dyn World,
+        narrator: &dyn Narrator,
+        events: Vec<Box<dyn Event>>,
+    ) -> Vec<Box<dyn Event>> {
+        assert!(events.iter().all(|e| e.can_be_triggered(world)));
+        let res = events
+            .iter()
+            .map(|e| {
+                narrator
+                    .parse_event(e.dump())
+                    .ok_or_else(|| anyhow::anyhow!("parse_failed"))
+            })
+            .collect::<Result<Vec<Box<dyn Event>>, _>>()
+            .unwrap();
+        assert!(res.iter().all(|e| e.can_be_triggered(world)));
+        res
     }
 
     #[test]
@@ -93,7 +115,8 @@ pub mod tests {
         let narrator = narrator::Cake::default();
 
         // pick sand cake
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
         assert!(events.iter().all(|e| e.name() == "pick"));
         assert!(events[0].can_be_triggered(&world));
@@ -103,7 +126,8 @@ pub mod tests {
         world = reload_world(world);
 
         // give and consume sand cake
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 1);
         assert!(events.iter().all(|e| e.name() == "give_sand_cake"));
         assert!(events[0].can_be_triggered(&world));
@@ -111,20 +135,22 @@ pub mod tests {
         world = reload_world(world);
 
         // move both characters to kitchen
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
         world = reload_world(world);
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 1);
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
         world = reload_world(world);
 
-        let mut doggie = false;
-        let mut events = narrator.available_events(&world);
-        for event in narrator.available_events(&world).iter_mut() {
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        for event in events.iter_mut() {
             if event.get_tags().contains(&"pick".to_string()) {
                 // Put thinkgs to cake
                 let cevent = event
@@ -148,7 +174,9 @@ pub mod tests {
             }
         }
 
-        for event in narrator.available_events(&world).iter_mut() {
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        for event in events.iter_mut() {
             if event.get_tags().contains(&"use_item".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
@@ -157,7 +185,9 @@ pub mod tests {
         }
 
         // move both characters to children's garden
-        for event in narrator.available_events(&world).iter_mut() {
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        for event in events.iter_mut() {
             if event.get_tags().contains(&"move".to_string()) {
                 assert!(event.can_be_triggered(&world));
                 assert!(event.perform(&mut world));
@@ -166,7 +196,9 @@ pub mod tests {
         }
 
         // play with children
-        for event in narrator.available_events(&world).iter_mut() {
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        for event in events.iter_mut() {
             let cevent = event
                 .as_any_mut()
                 .downcast_mut::<lib_events::Pick>()
@@ -179,14 +211,17 @@ pub mod tests {
         }
 
         // move to garden
-        for event in narrator.available_events(&world).iter_mut() {
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        for event in events.iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
             world = reload_world(world);
         }
 
         // find big bad dog
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
         let mut event = events.remove(0);
         assert!(event.can_be_triggered(&world));
@@ -194,7 +229,8 @@ pub mod tests {
         world = reload_world(world);
 
         // go to children house
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
         for event in narrator.available_events(&world).iter_mut() {
             assert!(event.can_be_triggered(&world));
@@ -202,7 +238,8 @@ pub mod tests {
             world = reload_world(world);
         }
 
-        let mut events = narrator.available_events(&world);
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 8);
         for event in events.iter_mut() {
             assert!(event.can_be_triggered(&world));

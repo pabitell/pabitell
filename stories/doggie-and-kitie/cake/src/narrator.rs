@@ -2,6 +2,7 @@ use pabitell_lib::{
     data, translations::get_available_locales, Character, Description, Event, Id, Item, ItemState,
     Named, Narrator, Scene, World, WorldBuilder,
 };
+use serde_json::Value;
 
 use crate::{characters, events, world::CakeWorld};
 
@@ -286,5 +287,132 @@ impl Narrator for Cake {
         }
 
         res
+    }
+
+    fn parse_event(&self, value: Value) -> Option<Box<dyn Event>> {
+        // TODO validate characters, items, scenes
+        match &value["name"] {
+            Value::String(name) if name == "move_to_kitchen" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = data::MoveData::new(name, character, "kitchen");
+                    Some(Box::new(events::make_move_to_kitchen(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "move_to_children_garden" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = data::MoveData::new(name, character, "children_garden");
+                    Some(Box::new(events::make_move_to_children_garden(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "move_to_garden" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = data::MoveData::new(name, character, "garden");
+                    Some(Box::new(events::make_move_to_garden(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "move_to_children_house" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = data::MoveData::new(name, character, "children_house");
+                    Some(Box::new(events::make_move_to_children_house(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "pick" => {
+                if let Value::String(character) = &value["character"] {
+                    if let Value::String(item) = &value["item"] {
+                        let data = data::PickData::new(name, character, item);
+                        Some(Box::new(events::make_pick(data, false)))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "give_sand_cake" => {
+                if let Value::String(item) = &value["item"] {
+                    if let Value::String(from_character) = &value["from_character"] {
+                        if let Value::String(to_character) = &value["to_character"] {
+                            let data =
+                                data::GiveData::new(name, from_character, to_character, item);
+                            Some(Box::new(events::make_give_sand_cake(data)))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if ["pick_ingredient", "play"].contains(&name.as_str()) => {
+                if let Value::String(item) = &value["item"] {
+                    if let Value::String(character) = &value["character"] {
+                        let data = data::PickData::new(name, character, item);
+                        Some(Box::new(events::make_pick(data, true)))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "find" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = data::PickData::new(name, character, "bad_dog");
+                    Some(Box::new(events::make_find_bad_dog(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "eat" => {
+                if let Value::String(item) = &value["item"] {
+                    if let Value::String(character) = &value["character"] {
+                        Some(Box::new(events::make_eat_meal(data::VoidData::new(
+                            name,
+                            character,
+                            Some(item),
+                        ))))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "pick_disliked_ingredient" => {
+                if let Value::String(character) = &value["character"] {
+                    let data = if let Value::String(item) = &value["item"] {
+                        data::VoidData::new(name, character, Some(item))
+                    } else {
+                        data::VoidData::new(name, character, None as Option<String>)
+                    };
+                    Some(Box::new(events::make_disliked_pick(data)))
+                } else {
+                    None
+                }
+            }
+            Value::String(name) if name == "add_ingredient" => {
+                if let Value::String(character) = &value["character"] {
+                    if let Value::String(item) = &value["item"] {
+                        let data = data::UseItemData::new(name, character, item);
+                        Some(Box::new(events::make_use_item(data, true)))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }

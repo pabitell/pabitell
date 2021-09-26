@@ -275,7 +275,7 @@ impl Doggie {
 mod tests {
     use pabitell_lib::{World, WorldBuilder};
 
-    use crate::CakeWorldBuilder;
+    use crate::world::CakeWorldBuilder;
 
     #[test]
     fn kitie() {

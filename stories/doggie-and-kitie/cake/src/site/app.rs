@@ -91,9 +91,8 @@ impl Component for App {
             }
             Msg::TriggerScannedEvent(json_value) => {
                 let narrator = narrator::Cake::default();
-                let mut events = narrator.available_events(&self.world);
-                for mut event in events {
-                    if event.matches(&json_value) {
+                if let Some(mut event) = narrator.parse_event(json_value) {
+                    if event.can_be_triggered(&self.world) {
                         let message = MessageItem::new(
                             translations::get_message("event", self.world.lang(), None),
                             event.success_text(&self.world),
@@ -107,11 +106,26 @@ impl Component for App {
                             .unwrap()
                             .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                         event.trigger(&mut self.world);
-                        return true;
+                    } else {
+                        let message = MessageItem::new(
+                            translations::get_message("event", self.world.lang(), None),
+                            event.fail_text(&self.world),
+                            MessageKind::Warning,
+                            None,
+                        );
+                        self.messages_scope
+                            .as_ref()
+                            .borrow()
+                            .clone()
+                            .unwrap()
+                            .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                     }
+                    true
+                } else {
+                    // Can't construct event based on given data
+                    // TODO some error message
+                    false
                 }
-                // TODO render event not found
-                false
             }
         }
     }
