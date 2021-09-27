@@ -38,7 +38,6 @@ impl Component for Messages {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        log::debug!("CREATE");
         *ctx.props().shared_scope.borrow_mut() = Some(ctx.link().clone());
         Self {
             messages: HashMap::new(),
@@ -47,20 +46,17 @@ impl Component for Messages {
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        log::debug!("UPDATE");
         match msg {
             Msg::Close(idx) => self.messages.remove(&idx).is_some(),
             Msg::AddMessage(message) => {
                 self.idx += 1;
                 self.messages.insert(self.idx, message);
-                log::info!("INSERTED");
                 true
             }
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        log::debug!("VIEW");
         let link = ctx.link().clone();
         let messages = self.messages.clone();
 
@@ -87,7 +83,6 @@ impl Component for Messages {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        log::debug!("CHNG");
         // Update when component is reused
         *ctx.props().shared_scope.borrow_mut() = Some(ctx.link().clone());
         true

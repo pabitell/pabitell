@@ -74,6 +74,9 @@ features = [
 	"HtmlMediaElement",
 	"HtmlCanvasElement",
 	"HtmlVideoElement",
+	"SpeechSynthesis",
+	"SpeechSynthesisUtterance",
+	"SpeechSynthesisVoice",
 ]
 optional = true
 

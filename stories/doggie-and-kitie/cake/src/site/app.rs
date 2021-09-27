@@ -12,6 +12,7 @@ use super::{
     characters::{self, make_characters},
     message::{Kind as MessageKind, MessageItem},
     messages::{Messages, Msg as MessagesMsg},
+    speech::{Msg as SpeechMsg, Speech},
 };
 
 pub enum Msg {
@@ -19,6 +20,7 @@ pub enum Msg {
     UpdateSelectedCharacter(Rc<Option<String>>),
     TriggerEvent(usize),
     TriggerScannedEvent(Value),
+    PlayText(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,6 +38,7 @@ pub struct App {
     page: Page,
     navbar_active: bool,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
+    speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
@@ -57,6 +60,7 @@ impl Component for App {
             page: Page::Void,
             navbar_active: false,
             messages_scope: Rc::new(RefCell::new(None)),
+            speech_scope: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -64,6 +68,13 @@ impl Component for App {
         match msg {
             Msg::UpdateSelectedCharacter(selected_character) => {
                 self.selected_character = selected_character;
+                if let Some(character) = self.selected_character.as_ref() {
+                    let character = self.world.characters().get(character).unwrap();
+                    let scene_name = character.scene().as_ref().unwrap();
+                    let scene = self.world.scenes().get(scene_name).unwrap();
+                    ctx.link()
+                        .send_message(Msg::PlayText(scene.long(&self.world)));
+                }
                 true
             }
             Msg::ToggleNavbar => {
@@ -80,52 +91,71 @@ impl Component for App {
                     MessageKind::Success,
                     Some("fas fa-cogs".to_string()),
                 );
+                let text = message.text.clone();
                 self.messages_scope
                     .as_ref()
                     .borrow()
                     .clone()
                     .unwrap()
                     .send_message(MessagesMsg::AddMessage(Rc::new(message)));
+                let old_screen_text = self.screen_text();
                 event.trigger(&mut self.world);
+                ctx.link().send_message(Msg::PlayText(text.to_string()));
+                if old_screen_text != self.screen_text() {
+                    if let Some(text) = self.screen_text() {
+                        ctx.link().send_message(Msg::PlayText(text));
+                    }
+                }
                 true
             }
             Msg::TriggerScannedEvent(json_value) => {
                 let narrator = narrator::Cake::default();
                 if let Some(mut event) = narrator.parse_event(json_value) {
-                    if event.can_be_triggered(&self.world) {
-                        let message = MessageItem::new(
+                    let message = if event.can_be_triggered(&self.world) {
+                        let old_screen_text = self.screen_text();
+                        event.trigger(&mut self.world);
+                        if old_screen_text != self.screen_text() {
+                            if let Some(text) = self.screen_text() {
+                                ctx.link().send_message(Msg::PlayText(text));
+                            }
+                        }
+                        MessageItem::new(
                             translations::get_message("event", self.world.lang(), None),
                             event.success_text(&self.world),
                             MessageKind::Success,
                             Some("fas fa-cogs".to_string()),
-                        );
-                        self.messages_scope
-                            .as_ref()
-                            .borrow()
-                            .clone()
-                            .unwrap()
-                            .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                        event.trigger(&mut self.world);
+                        )
                     } else {
-                        let message = MessageItem::new(
+                        MessageItem::new(
                             translations::get_message("event", self.world.lang(), None),
                             event.fail_text(&self.world),
                             MessageKind::Warning,
                             Some("fas fa-cogs".to_string()),
-                        );
-                        self.messages_scope
-                            .as_ref()
-                            .borrow()
-                            .clone()
-                            .unwrap()
-                            .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                    }
+                        )
+                    };
+                    let text = message.text.clone();
+                    self.messages_scope
+                        .as_ref()
+                        .borrow()
+                        .clone()
+                        .unwrap()
+                        .send_message(MessagesMsg::AddMessage(Rc::new(message)));
+                    ctx.link().send_message(Msg::PlayText(text.to_string()));
                     true
                 } else {
                     // Can't construct event based on given data
                     // TODO some error message
                     false
                 }
+            }
+            Msg::PlayText(text) => {
+                self.speech_scope
+                    .as_ref()
+                    .borrow()
+                    .clone()
+                    .unwrap()
+                    .send_message(SpeechMsg::Play(text));
+                false
             }
         }
     }
@@ -159,6 +189,8 @@ impl Component for App {
         let trigger_scanned_event_callback =
             link.callback(|json_value| Msg::TriggerScannedEvent(json_value));
 
+        let lang = self.world.lang().to_string();
+
         html! {
             <>
                 <section class="hero is-small is-light">
@@ -166,11 +198,18 @@ impl Component for App {
                         <p class="title">
                             {self.world.description().short(&self.world)}
                         </p>
+                        <p class="subtitle">
+                            <Speech
+                              lang={lang}
+                              start_text={self.world.description().short(&self.world)}
+                              shared_scope={self.speech_scope.clone()}
+                            />
+                        </p>
                     </div>
                 </section>
                 { self.view_nav(ctx) }
                 <main>
-                    <Messages shared_scope = { self.messages_scope.clone() }/>
+                    <Messages shared_scope={ self.messages_scope.clone() }/>
                     { self.view_scene(ctx) }
                     <Actions
                       events={ events }
@@ -189,6 +228,17 @@ impl Component for App {
 }
 
 impl App {
+    fn screen_text(&self) -> Option<String> {
+        if let Some(character) = self.selected_character.as_ref() {
+            let character = self.world.characters().get(character).unwrap();
+            let scene_name = character.scene().as_ref().unwrap();
+            let scene = self.world.scenes().get(scene_name).unwrap();
+            Some(scene.long(&self.world))
+        } else {
+            None
+        }
+    }
+
     fn view_scene(&self, ctx: &Context<Self>) -> Html {
         if let Some(character) = self.selected_character.as_ref() {
             let character = self.world.characters().get(character).unwrap();
