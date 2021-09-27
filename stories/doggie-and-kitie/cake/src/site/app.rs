@@ -97,7 +97,7 @@ impl Component for App {
                             translations::get_message("event", self.world.lang(), None),
                             event.success_text(&self.world),
                             MessageKind::Success,
-                            None,
+                            Some("fas fa-cogs".to_string()),
                         );
                         self.messages_scope
                             .as_ref()
@@ -111,7 +111,7 @@ impl Component for App {
                             translations::get_message("event", self.world.lang(), None),
                             event.fail_text(&self.world),
                             MessageKind::Warning,
-                            None,
+                            Some("fas fa-cogs".to_string()),
                         );
                         self.messages_scope
                             .as_ref()
