@@ -13,8 +13,8 @@ pub struct Character {
     pub icon: Rc<String>,
 }
 
-pub fn make_characters(world: &CakeWorld) -> Vec<Rc<Character>> {
-    vec![
+pub fn make_characters(world: &CakeWorld) -> Rc<Vec<Rc<Character>>> {
+    Rc::new(vec![
         Rc::new(Character {
             code: Rc::new(None),
             name: Rc::new("narrator".to_string()),
@@ -39,5 +39,5 @@ pub fn make_characters(world: &CakeWorld) -> Vec<Rc<Character>> {
             long: Rc::new(world.characters().get("kitie").unwrap().long(world)),
             icon: Rc::new("fas fa-cat".to_string()),
         }),
-    ]
+    ])
 }

@@ -14,6 +14,9 @@ use super::{
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
 pub struct Props {
+    pub lang: String,
+    pub available_characters: Rc<Vec<Rc<characters::Character>>>,
+    pub selected_character: Rc<Option<String>>,
     pub events: Vec<Rc<action::EventActionItem>>,
     pub trigger_event: Callback<usize>,
     pub trigger_scanned_event: Callback<Value>,
@@ -45,7 +48,6 @@ impl Component for Actions {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::QRCodeScanned(content) => {
-                log::debug!("{}", content);
                 match DataUrl::process(&content) {
                     Ok(data_url) => match data_url.decode_to_vec() {
                         Ok((json_str, _)) => match serde_json::from_slice(&json_str[..]) {
@@ -107,43 +109,64 @@ impl Component for Actions {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
-        let scan_cb = link.callback(move |_| Msg::QRCodeScanShow);
         let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
         let render_action = move |item: Rc<action::EventActionItem>| {
             let idx = item.idx;
-            let cb = link.callback(move |_| Msg::TriggerEvent(idx));
+            let cb = link.clone().callback(move |_| Msg::TriggerEvent(idx));
 
             html! {
                 <action::Action {item} trigger_event_cb={cb} />
             }
         };
+        let cloned_link = ctx.link().clone();
+        let qr_scans = move |character: Rc<characters::Character>| {
+            let scan_cb = cloned_link.callback(move |_| Msg::QRCodeScanShow);
+            let qr_code_text = get_message("qr_code", &ctx.props().lang, None);
+            let qr_code_scan_text = get_message("qr_code_scan", &ctx.props().lang, None);
+            html! {
+                <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <figure class="image is-48x48">
+                                    <img src={ character.character_url.to_string() } alt={character.long.to_string()}/>
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{character.short.clone()}</p>
+                                <p class="subtitle is-6">{qr_code_text}</p>
+                            </div>
+                        </div>
+                        <div class="content">{qr_code_scan_text}</div>
+                    </div>
+                    <div class="card-image has-text-centered">
+                        <figure onclick={ scan_cb } class="image is-clickable is-square w-75 is-inline-block box">
+                            <img class="box" src="images/qrcode.svg" alt="QR code"/>
+                        </figure>
+                    </div>
+                </div>
+            }
+        };
+        let characters: Vec<_> = ctx
+            .props()
+            .available_characters
+            .iter()
+            .filter(|e| e.code.is_some() && (ctx.props().selected_character == e.code))
+            .collect();
+
+        let events: Vec<_> = if ctx.props().selected_character.is_none() {
+            ctx.props().events.clone().into_iter().collect()
+        } else {
+            vec![]
+        };
+
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
-                    <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
-                        <div class="card-content">
-                            <div class="media">
-                                <div class="media-left">
-                                    <figure class="image is-48x48">
-                                        <img src="svgs/solid/dog.svg" alt="Doggie"/>
-                                    </figure>
-                                </div>
-                                <div class="media-content">
-                                    <p class="title is-4">{"Doggie"}</p>
-                                    <p class="subtitle is-6">{"TODO QR code ETC"}</p>
-                                </div>
-                            </div>
-                            <div class="content">{"Scan QR Code"}</div>
-                        </div>
-                        <div class="card-image has-text-centered">
-                            <figure onclick={ scan_cb } class="image is-clickable is-square w-75 is-inline-block box">
-                                <img class="box" src="https://publicdomainvectors.org/download.php?file=Share-the-Openclipart-QR-Code.svg" alt="QR code"/>
-                            </figure>
-                            <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()}>
-                            </QRScanner>
-                        </div>
-                    </div>
-                    { for ctx.props().events.clone().into_iter().map(render_action) }
+                    { for characters.into_iter().map(|e| qr_scans(e.clone())) }
+                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()}>
+                    </QRScanner>
+                    { for events.into_iter().map(render_action) }
                 </div>
             </section>
         }

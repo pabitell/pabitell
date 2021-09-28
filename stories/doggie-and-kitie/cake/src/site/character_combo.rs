@@ -8,7 +8,7 @@ use super::characters;
 
 #[derive(Clone, Debug, PartialEq, Default, Properties)]
 pub struct Props {
-    pub available_characters: Vec<Rc<characters::Character>>,
+    pub available_characters: Rc<Vec<Rc<characters::Character>>>,
     pub set_character: Callback<Rc<Option<String>>>,
 }
 
@@ -83,7 +83,7 @@ impl Component for CharacterCombo {
             <a class="navbar-link">{ inner }</a>
 
             <div class="navbar-dropdown">
-            { for ctx.props().available_characters.clone().into_iter().map(render_character) }
+            { for ctx.props().available_characters.iter().cloned().map(render_character) }
             </div>
           </div>
         }

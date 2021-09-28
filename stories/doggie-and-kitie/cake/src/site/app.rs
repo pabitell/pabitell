@@ -163,10 +163,10 @@ impl Component for App {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let narrator = narrator::Cake::default();
         let events = narrator.available_events(&self.world);
-        let mut characters_map: HashMap<String, Rc<characters::Character>> =
+        let characters_map: HashMap<String, Rc<characters::Character>> =
             make_characters(&self.world)
-                .into_iter()
-                .map(|c| (c.name.to_string(), c))
+                .iter()
+                .map(|c| (c.name.to_string(), c.clone()))
                 .collect();
 
         let events: Vec<Rc<EventActionItem>> = events
@@ -200,9 +200,9 @@ impl Component for App {
                         </p>
                         <p class="subtitle">
                             <Speech
-                              lang={lang}
-                              start_text={self.world.description().short(&self.world)}
-                              shared_scope={self.speech_scope.clone()}
+                              lang={ lang.clone() }
+                              start_text={ self.world.description().short(&self.world) }
+                              shared_scope={ self.speech_scope.clone() }
                             />
                         </p>
                     </div>
@@ -212,6 +212,9 @@ impl Component for App {
                     <Messages shared_scope={ self.messages_scope.clone() }/>
                     { self.view_scene(ctx) }
                     <Actions
+                      lang={ lang }
+                      available_characters={ make_characters(&self.world) }
+                      selected_character={ self.selected_character.clone() }
                       events={ events }
                       trigger_event={ trigger_event_callback }
                       trigger_scanned_event={ trigger_scanned_event_callback }
