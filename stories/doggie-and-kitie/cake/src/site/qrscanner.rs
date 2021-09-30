@@ -110,7 +110,9 @@ impl Component for QRScanner {
             Msg::Picture(data) => {
                 // Try to found QR code in the picture
                 let image = image::load_from_memory(&data).unwrap();
-                let decoder = bardecoder::default_decoder();
+                let mut builder = bardecoder::default_builder();
+                builder.prepare(Box::new(bardecoder::prepare::BlockedMean::new(8, 57)));
+                let decoder = builder.build();
                 let results = decoder.decode(&image);
                 let mut results: Vec<_> = results.into_iter().filter_map(|e| e.ok()).collect();
                 if results.len() > 0 {
@@ -282,8 +284,21 @@ impl QRScanner {
         if self.active {
             html! {
                 <div class="section">
-                    <video width="auto" height="auto" id="video" ref={self.video_ref.clone()} style="max-width:80%;max-height:80%"></video>
-                    <canvas id="canvas" style="display: none;" ref={self.canvas_ref.clone()}></canvas>
+                    <video
+                      width="auto"
+                      height="auto"
+                      id="video"
+                      ref={self.video_ref.clone()}
+                      style="max-width:80%;max-height:80%"
+                      poster="images/qrcode.svg"
+                    ></video>
+                    <canvas
+                      width=640
+                      height=480
+                      id="canvas"
+                      style="display: none;"
+                      ref={self.canvas_ref.clone()}>
+                    </canvas>
                 </div>
             }
         } else {
@@ -354,9 +369,14 @@ impl QRScanner {
         let canvas = self.canvas_ref.cast::<HtmlCanvasElement>().unwrap();
         let context_js: JsValue = canvas.get_context("2d").unwrap().unwrap().into();
         let context: CanvasRenderingContext2d = context_js.into();
-        let interval = gloo::timers::callback::Interval::new(1_000, move || {
+        let (width, height) = if video.video_width() > video.video_height() {
+            (640.0, 480.0)
+        } else {
+            (480.0, 640.0)
+        };
+        let interval = gloo::timers::callback::Interval::new(100, move || {
             context
-                .draw_image_with_html_video_element(&video, 0.0, 0.0)
+                .draw_image_with_html_video_element_and_dw_and_dh(&video, 0.0, 0.0, width, height)
                 .unwrap();
             canvas.to_blob(closure.as_ref().unchecked_ref()).unwrap();
         });
