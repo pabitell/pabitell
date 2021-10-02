@@ -7,7 +7,7 @@ use yew::prelude::*;
 use crate::{translations::get_message, world::CakeWorld};
 
 use super::{
-    action, characters,
+    action_event, action_item, characters, items,
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
@@ -16,8 +16,9 @@ use super::{
 pub struct Props {
     pub lang: String,
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
+    pub owned_items: Rc<Vec<Rc<items::Item>>>,
     pub selected_character: Rc<Option<String>>,
-    pub events: Vec<Rc<action::EventActionItem>>,
+    pub events: Vec<Rc<action_event::ActionEventItem>>,
     pub trigger_event: Callback<usize>,
     pub trigger_scanned_event: Callback<Value>,
 }
@@ -25,12 +26,12 @@ pub struct Props {
 pub enum Msg {
     QRCodeScanShow,
     TriggerEvent(usize),
-    QRCodeShow(usize),
+    QRCodeShow(String),
     QRCodeScanned(String),
 }
 
 pub struct Actions {
-    qr_callabacks: RefCell<HashMap<usize, Rc<RefCell<Option<html::Scope<QRCode>>>>>>,
+    qr_callabacks: RefCell<HashMap<String, Rc<RefCell<Option<html::Scope<QRCode>>>>>>,
     qr_scanner_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
 }
 
@@ -82,11 +83,11 @@ impl Component for Actions {
                 ctx.props().trigger_event.emit(idx);
                 true
             }
-            Msg::QRCodeShow(idx) => {
+            Msg::QRCodeShow(data) => {
                 self.qr_callabacks
                     .clone()
                     .borrow()
-                    .get(&idx)
+                    .get(&data)
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -110,12 +111,12 @@ impl Component for Actions {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
         let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
-        let render_action = move |item: Rc<action::EventActionItem>| {
+        let render_action = move |item: Rc<action_event::ActionEventItem>| {
             let idx = item.idx;
             let cb = link.clone().callback(move |_| Msg::TriggerEvent(idx));
 
             html! {
-                <action::Action {item} trigger_event_cb={cb} />
+                <action_event::ActionEvent {item} trigger_event_cb={cb} />
             }
         };
         let cloned_link = ctx.link().clone();
@@ -129,7 +130,7 @@ impl Component for Actions {
                         <div class="media">
                             <div class="media-left">
                                 <figure class="image is-48x48">
-                                    <img src={ character.character_url.to_string() } alt={character.long.to_string()}/>
+                                    <img src="svgs/solid/search.svg"/>
                                 </figure>
                             </div>
                             <div class="media-content">
@@ -137,12 +138,12 @@ impl Component for Actions {
                                 <p class="subtitle is-6">{qr_code_text}</p>
                             </div>
                         </div>
-                        <div class="content">{qr_code_scan_text}</div>
                     </div>
                     <div class="card-image has-text-centered">
                         <figure onclick={ scan_cb } class="image is-clickable is-square w-75 is-inline-block box">
                             <img class="box" src="images/qrcode.svg" alt="QR code"/>
                         </figure>
+                        <div class="content">{qr_code_scan_text}</div>
                     </div>
                 </div>
             }
@@ -160,10 +161,19 @@ impl Component for Actions {
             vec![]
         };
 
+        let render_item = |item: &Rc<items::Item>| {
+            html! {
+                <action_item::ActionItem item={item.clone()}/>
+            }
+        };
+
+        let items = ctx.props().owned_items.clone();
+
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
                     { for characters.into_iter().map(|e| qr_scans(e.clone())) }
+                    { for items.iter().map(render_item) }
                     <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()}>
                     </QRScanner>
                     { for events.into_iter().map(render_action) }

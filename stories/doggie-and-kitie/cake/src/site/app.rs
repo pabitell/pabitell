@@ -6,10 +6,11 @@ use yew::prelude::*;
 use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
 
 use super::{
-    action::EventActionItem,
+    action_event::ActionEventItem,
     actions::Actions,
     character_combo::CharacterCombo,
     characters::{self, make_characters},
+    items::{self, make_give_items},
     message::{Kind as MessageKind, MessageItem},
     messages::{Messages, Msg as MessagesMsg},
     speech::{Msg as SpeechMsg, Speech},
@@ -111,6 +112,11 @@ impl Component for App {
             Msg::TriggerScannedEvent(json_value) => {
                 let narrator = narrator::Cake::default();
                 if let Some(mut event) = narrator.parse_event(json_value) {
+                    // Update initiator
+                    if let Some(character) = self.selected_character.clone().as_ref() {
+                        event.set_initiator(character.to_string());
+                    }
+
                     let message = if event.can_be_triggered(&self.world) {
                         let old_screen_text = self.screen_text();
                         event.trigger(&mut self.world);
@@ -169,11 +175,11 @@ impl Component for App {
                 .map(|c| (c.name.to_string(), c.clone()))
                 .collect();
 
-        let events: Vec<Rc<EventActionItem>> = events
+        let events: Vec<Rc<ActionEventItem>> = events
             .into_iter()
             .enumerate()
             .map(|(idx, e)| {
-                Rc::new(EventActionItem::new(
+                Rc::new(ActionEventItem::new(
                     idx,
                     e.action_text(&self.world),
                     characters_map.get(&e.initiator()).unwrap().clone(),
@@ -195,17 +201,17 @@ impl Component for App {
             <>
                 <section class="hero is-small is-light">
                   <div class="hero-body">
-                        <p class="title">
-                            {self.world.description().short(&self.world)}
-                        </p>
-                        <p class="subtitle">
-                            <Speech
-                              lang={ lang.clone() }
-                              start_text={ self.world.description().short(&self.world) }
-                              shared_scope={ self.speech_scope.clone() }
-                            />
-                        </p>
-                    </div>
+                      <p class="title">
+                        {self.world.description().short(&self.world)}
+                      </p>
+                      <p class="subtitle">
+                          <Speech
+                            lang={ lang.clone() }
+                            start_text={ self.world.description().short(&self.world) }
+                            shared_scope={ self.speech_scope.clone() }
+                          />
+                      </p>
+                  </div>
                 </section>
                 { self.view_nav(ctx) }
                 <main>
@@ -214,6 +220,7 @@ impl Component for App {
                     <Actions
                       lang={ lang }
                       available_characters={ make_characters(&self.world) }
+                      owned_items={ make_give_items(&self.world, self.selected_character.as_ref()) }
                       selected_character={ self.selected_character.clone() }
                       events={ events }
                       trigger_event={ trigger_event_callback }

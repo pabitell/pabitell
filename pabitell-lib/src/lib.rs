@@ -163,6 +163,7 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
 
     fn initiator(&self) -> String;
+    fn set_initiator(&mut self, initiator: String);
     fn dump(&self) -> serde_json::Value;
     fn matches(&self, value: &serde_json::Value) -> bool;
 }
@@ -518,6 +519,8 @@ pub mod test {
         fn initiator(&self) -> String {
             "test_character".into()
         }
+
+        fn set_initiator(&mut self, initiator: String) {}
 
         fn dump(&self) -> serde_json::Value {
             serde_json::json!({})

@@ -59,6 +59,10 @@ impl Event for Pick {
         self.data.character.clone()
     }
 
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.character = initiator;
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -181,6 +185,10 @@ impl Event for Give {
 
     fn initiator(&self) -> String {
         self.data.to_character.clone()
+    }
+
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.to_character = initiator;
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -311,6 +319,10 @@ impl Event for UseItem {
         self.data.character.clone()
     }
 
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.character = initiator;
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -434,6 +446,10 @@ impl Event for Move {
         self.data.character.clone()
     }
 
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.character = initiator;
+    }
+
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
         self.world_update = update;
     }
@@ -555,6 +571,10 @@ impl Event for Void {
 
     fn initiator(&self) -> String {
         self.data.character.clone()
+    }
+
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.character = initiator;
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {

@@ -4,7 +4,7 @@ use yew::{html, prelude::*, web_sys::Element};
 use super::{characters, qrcode};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct EventActionItem {
+pub struct ActionEventItem {
     pub idx: usize,
     pub description: Rc<String>,
     pub character: Rc<characters::Character>,
@@ -13,7 +13,7 @@ pub struct EventActionItem {
     pub data: Rc<Vec<u8>>,
 }
 
-impl EventActionItem {
+impl ActionEventItem {
     pub fn new(
         idx: usize,
         description: String,
@@ -35,11 +35,11 @@ impl EventActionItem {
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
-    pub item: Rc<EventActionItem>,
+    pub item: Rc<ActionEventItem>,
     pub trigger_event_cb: Callback<()>,
 }
 
-pub struct Action {
+pub struct ActionEvent {
     pub qr_scope: Rc<RefCell<Option<html::Scope<qrcode::QRCode>>>>,
 }
 
@@ -48,7 +48,7 @@ pub enum Msg {
     TriggerEvent,
 }
 
-impl Component for Action {
+impl Component for ActionEvent {
     type Message = Msg;
     type Properties = Props;
 
@@ -112,12 +112,12 @@ impl Component for Action {
                             </p>
                         </div>
                     </div>
-                    <div class="content">{description}</div>
                 </div>
                 <div class="card-image has-text-centered">
                     <figure onclick={ trigger_event_cb } class="image w-75 is-square is-clickable is-inline-block">
                         <img class="box" src={ image_url } alt="Action image"/>
                     </figure>
+                    <div class="content">{description}</div>
                 </div>
             </div>
         }
