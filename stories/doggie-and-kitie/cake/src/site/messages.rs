@@ -26,6 +26,7 @@ impl PartialEq<Self> for Props {
 pub enum Msg {
     Close(usize),
     AddMessage(Rc<message::MessageItem>),
+    Clear,
 }
 
 pub struct Messages {
@@ -51,6 +52,10 @@ impl Component for Messages {
             Msg::AddMessage(message) => {
                 self.idx += 1;
                 self.messages.insert(self.idx, message);
+                true
+            }
+            Msg::Clear => {
+                self.messages.clear();
                 true
             }
         }

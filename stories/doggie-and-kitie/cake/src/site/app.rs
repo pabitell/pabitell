@@ -22,6 +22,7 @@ pub enum Msg {
     TriggerEvent(usize),
     TriggerScannedEvent(Value),
     PlayText(String),
+    ResetWorld,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,12 +52,9 @@ impl Component for App {
 
     fn create(_ctx: &Context<Self>) -> Self {
         log::info!("Creating new world");
-        let mut world = CakeWorldBuilder::make_world().unwrap();
-        world.setup();
-        world.set_lang("cs");
 
         Self {
-            world,
+            world: App::make_world(),
             selected_character: Rc::new(None),
             page: Page::Void,
             navbar_active: false,
@@ -163,6 +161,16 @@ impl Component for App {
                     .send_message(SpeechMsg::Play(text));
                 false
             }
+            Msg::ResetWorld => {
+                self.world = App::make_world();
+                self.messages_scope
+                    .as_ref()
+                    .borrow()
+                    .clone()
+                    .unwrap()
+                    .send_message(MessagesMsg::Clear);
+                true
+            }
         }
     }
 
@@ -250,12 +258,37 @@ impl App {
     }
 
     fn view_scene(&self, ctx: &Context<Self>) -> Html {
-        if let Some(character) = self.selected_character.as_ref() {
+        let onclick = ctx.link().callback(|_| Msg::ResetWorld);
+        let restart_text = translations::get_message("restart", self.world.lang(), None);
+        let end_text = translations::get_message("end", self.world.lang(), None);
+        let restart = html! {
+            <article class="message is-info">
+                <div class="message-header">
+                    <span class="icon-text">
+                      <span class="icon">
+                        <i class="fas fa-thumbs-up"></i>
+                      </span>
+                      <span>{ end_text }</span>
+                    </span>
+                </div>
+                <div class="message-body">
+                    <div class="buttons">
+                        <button {onclick} class="button is-outlined is-info">
+                            <span class="icon"><i class="fas fa-redo-alt"></i></span>
+                            <span>{ restart_text }</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        };
+
+        let scene_description = if let Some(character) = self.selected_character.as_ref() {
             let character = self.world.characters().get(character).unwrap();
             let scene_name = character.scene().as_ref().unwrap();
             let scene = self.world.scenes().get(scene_name).unwrap();
+
             html! {
-                <section class="section">
+                <>
                     <h1 class="title">{ scene.short(&self.world) }</h1>
                     <p class="subtitle">
                         <article class="message">
@@ -264,13 +297,17 @@ impl App {
                             </div>
                         </article>
                     </p>
-                </section>
+                </>
             }
         } else {
-            html! {
-                <section class="section">
-                </section>
-            }
+            html! {}
+        };
+
+        html! {
+            <section class="section">
+            { scene_description }
+            { if self.world.finished() { restart } else { html! {} } }
+            </section>
         }
     }
 
@@ -328,5 +365,12 @@ impl App {
               </div>
             </nav>
         }
+    }
+
+    fn make_world() -> CakeWorld {
+        let mut world = CakeWorldBuilder::make_world().unwrap();
+        world.setup();
+        world.set_lang("cs");
+        world
     }
 }
