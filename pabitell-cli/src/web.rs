@@ -40,14 +40,20 @@ async fn create_world(data: web::Data<Db>, path: web::Path<(String, String)>) ->
 async fn get_world(data: web::Data<Db>, path: web::Path<(String, String, Uuid)>) -> impl Responder {
     let (namespace, story, world_id) = path.into_inner();
     if let Some((mut world, _)) = make_world(&namespace, &story) {
-        backend::load(
+        if backend::load(
             &mut data.as_ref().clone(),
             &story,
             &world_id,
             world.as_mut(),
         )
-        .unwrap();
-        HttpResponse::Ok().json(world.dump())
+        .is_ok()
+        {
+            HttpResponse::Ok().json(world.dump())
+        } else {
+            HttpResponse::NotFound().json(serde_json::json!({
+                "msg": format!("world not found (id={})", world_id)
+            }))
+        }
     } else {
         HttpResponse::NotFound().json(serde_json::json!({"msg": "story not found"}))
     }
@@ -62,13 +68,18 @@ async fn event_world(
     let (namespace, story, world_id) = path.into_inner();
 
     if let Some((mut world, narrator)) = make_world(&namespace, &story) {
-        backend::load(
+        if backend::load(
             &mut data.as_ref().clone(),
             &story,
             &world_id,
             world.as_mut(),
         )
-        .unwrap();
+        .is_err()
+        {
+            return Ok(HttpResponse::NotFound().json(serde_json::json!({
+                "msg": format!("world not found (id={})", world_id)
+            })));
+        }
 
         // read payload
         let mut body = web::BytesMut::new();
@@ -86,7 +97,8 @@ async fn event_world(
                 if event.can_be_triggered(world.as_ref()) {
                     event.trigger(world.as_mut());
                     backend::store(&mut data.as_ref().clone(), &story, world.as_ref()).unwrap();
-                    Ok(HttpResponse::Ok().finish())
+                    // TODO think of some reasonable retval
+                    Ok(HttpResponse::Ok().json(serde_json::json!({})))
                 } else {
                     Err(error::ErrorBadRequest("Event can't be triggered"))
                 }

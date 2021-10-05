@@ -1,9 +1,11 @@
 pub mod action_event;
 pub mod action_item;
+pub mod action_join;
 pub mod actions;
 pub mod app;
 pub mod character_combo;
 pub mod characters;
+pub mod intro;
 pub mod items;
 pub mod jsQR;
 pub mod message;

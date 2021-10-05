@@ -324,7 +324,7 @@ impl Narrator for Cake {
                     None
                 }
             }
-            Value::String(name) if name == "pick" => {
+            Value::String(name) if ["pick_ingredient", "pick"].contains(&name.as_str()) => {
                 if let Value::String(character) = &value["character"] {
                     if let Value::String(item) = &value["item"] {
                         let data = data::PickData::new(name, character, item);
@@ -353,7 +353,7 @@ impl Narrator for Cake {
                     None
                 }
             }
-            Value::String(name) if ["pick_ingredient", "play"].contains(&name.as_str()) => {
+            Value::String(name) if name == "play" => {
                 if let Value::String(item) = &value["item"] {
                     if let Value::String(character) = &value["character"] {
                         let data = data::PickData::new(name, character, item);

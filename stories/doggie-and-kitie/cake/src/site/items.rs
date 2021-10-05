@@ -1,5 +1,9 @@
 use anyhow::Result;
-use pabitell_lib::{data::GiveData, events::Give, ItemState, World};
+use pabitell_lib::{
+    data::{GiveData, UseItemData},
+    events::{Give, UseItem},
+    ItemState, World,
+};
 use serde_json::Value;
 use std::rc::Rc;
 
@@ -11,10 +15,10 @@ pub struct Item {
     pub short: String,
     pub long: String,
     pub image_url: String,
-    pub data: Rc<Vec<u8>>,
+    pub data: Rc<Vec<u8>>, // to generate give item
 }
 
-pub fn make_give_items(world: &CakeWorld, character: &Option<String>) -> Rc<Vec<Rc<Item>>> {
+pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec<Rc<Item>>> {
     let res = if let Some(character) = character {
         let owned_state = ItemState::Owned(character.to_string());
         world

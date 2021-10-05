@@ -2,12 +2,13 @@ use data_url::{mime, DataUrl};
 use pabitell_lib::{Character, Description, World, WorldBuilder};
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use uuid::Uuid;
 use yew::prelude::*;
 
 use crate::{translations::get_message, world::CakeWorld};
 
 use super::{
-    action_event, action_item, characters, items,
+    action_event, action_item, action_join, characters, items,
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
@@ -21,6 +22,7 @@ pub struct Props {
     pub events: Vec<Rc<action_event::ActionEventItem>>,
     pub trigger_event: Callback<usize>,
     pub trigger_scanned_event: Callback<Value>,
+    pub world_id: Uuid,
 }
 
 pub enum Msg {
@@ -28,6 +30,7 @@ pub enum Msg {
     TriggerEvent(usize),
     QRCodeShow(String),
     QRCodeScanned(String),
+    QRCodeUseItemScanned(String, String),
 }
 
 pub struct Actions {
@@ -48,6 +51,29 @@ impl Component for Actions {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::QRCodeUseItemScanned(item, content) => {
+                match DataUrl::process(&content) {
+                    Ok(data_url) => match data_url.decode_to_vec() {
+                        Ok((json_str, _)) => match serde_json::from_slice(&json_str[..]) {
+                            Ok(json) => {
+                                let mut value: Value = json;
+                                value["item"] = Value::String(item);
+                                ctx.props().trigger_scanned_event.emit(value);
+                            }
+                            Err(err) => {
+                                log::warn!("Can't decode scanned data to json: {:?}", err);
+                            }
+                        },
+                        Err(err) => {
+                            log::warn!("Failed to parse base64 {:?}", err);
+                        }
+                    },
+                    Err(err) => {
+                        log::warn!("Can't process scanned data: {:?}", err);
+                    }
+                }
+                false
+            }
             Msg::QRCodeScanned(content) => {
                 match DataUrl::process(&content) {
                     Ok(data_url) => match data_url.decode_to_vec() {
@@ -61,16 +87,6 @@ impl Component for Actions {
                         },
                         Err(err) => {
                             log::warn!("Failed to parse base64 {:?}", err);
-                            // Retry to scan the image
-                            // note that bardecoder doesn't to
-                            // error correction quire well
-                            // So an invalid data may be loaded
-                            self.qr_scanner_callback
-                                .as_ref()
-                                .borrow()
-                                .clone()
-                                .unwrap()
-                                .send_message(QRScannerMsg::Active(true));
                         }
                     },
                     Err(err) => {
@@ -155,15 +171,38 @@ impl Component for Actions {
             .filter(|e| e.code.is_some() && (ctx.props().selected_character == e.code))
             .collect();
 
+        let joinable_characters: Vec<_> = if ctx.props().selected_character.is_none() {
+            ctx.props()
+                .available_characters
+                .iter()
+                .filter(|e| e.code.is_some())
+                .collect()
+        } else {
+            vec![]
+        };
+
         let events: Vec<_> = if ctx.props().selected_character.is_none() {
             ctx.props().events.clone().into_iter().collect()
         } else {
             vec![]
         };
 
-        let render_item = |item: &Rc<items::Item>| {
+        let link = ctx.link().clone();
+        let render_item = move |item: &Rc<items::Item>| {
+            let use_item_scanned_cb =
+                link.callback(|(item, data)| Msg::QRCodeUseItemScanned(item, data));
             html! {
-                <action_item::ActionItem item={item.clone()}/>
+                <action_item::ActionItem
+                  item={item.clone()}
+                  item_used_event={use_item_scanned_cb}
+                />
+            }
+        };
+
+        let render_join = |character: &Rc<characters::Character>| {
+            let world_id = ctx.props().world_id.clone();
+            html! {
+                <action_join::ActionJoin character={character.clone()} world_id={world_id}/>
             }
         };
 
@@ -172,10 +211,10 @@ impl Component for Actions {
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
-                    { for characters.into_iter().map(|e| qr_scans(e.clone())) }
+                    { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
+                    { for joinable_characters.iter().map(|e| render_join(e.clone())) }
                     { for items.iter().map(render_item) }
-                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()}>
-                    </QRScanner>
+                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()} />
                     { for events.into_iter().map(render_action) }
                 </div>
             </section>
