@@ -5,6 +5,7 @@ pub mod app;
 pub mod character_combo;
 pub mod characters;
 pub mod items;
+pub mod jsQR;
 pub mod message;
 pub mod messages;
 pub mod qrcode;

@@ -60,6 +60,7 @@ features = [
 	"CanvasRenderingContext2d",
 	"ConstrainBooleanParameters",
 	"DisplayMediaStreamConstraints",
+	"ImageData",
 	"MediaDevices",
 	"MediaDeviceKind",
 	"MediaDeviceInfo",

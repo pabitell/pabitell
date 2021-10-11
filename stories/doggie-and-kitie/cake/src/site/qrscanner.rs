@@ -10,7 +10,7 @@ use gloo::{
     storage::{self, Storage},
     timers,
 };
-use js_sys::{ArrayBuffer, Function, Uint8Array};
+use js_sys::{ArrayBuffer, Function, Uint8Array, Uint8ClampedArray};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use yew::{
@@ -18,11 +18,13 @@ use yew::{
     prelude::*,
     web_sys::{
         Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-        Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlVideoElement,
+        Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlVideoElement, ImageData,
         MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
         MediaStreamTrack,
     },
 };
+
+use super::jsQR::js_qr;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -57,7 +59,7 @@ pub struct QRScanner {
 pub enum Msg {
     Active(bool),
     CamerasLoaded(Vec<Camera>),
-    Picture(Vec<u8>),
+    Picture(ImageData),
     SwitchCamera(Option<String>),
     CameraSwitched,
 }
@@ -108,16 +110,18 @@ impl Component for QRScanner {
                 true
             }
             Msg::Picture(data) => {
-                // Try to found QR code in the picture
-                let image = image::load_from_memory(&data).unwrap();
-                let mut builder = bardecoder::default_builder();
-                builder.prepare(Box::new(bardecoder::prepare::BlockedMean::new(8, 57)));
-                let decoder = builder.build();
-                let results = decoder.decode(&image);
-                let mut results: Vec<_> = results.into_iter().filter_map(|e| e.ok()).collect();
-                if results.len() > 0 {
-                    // use last found QR
-                    ctx.props().qr_found.emit(results.pop().unwrap());
+                let width = data.width();
+                let height = data.height();
+                let input = data.data();
+
+                let res = js_qr(
+                    input,
+                    width,
+                    height,
+                    JsValue::from_serde(&serde_json::json!({})).unwrap(),
+                );
+                if let Some(qr_data) = res {
+                    ctx.props().qr_found.emit(qr_data);
                     if let Some(interval) = self.interval.take() {
                         interval.cancel();
                     }
@@ -347,23 +351,6 @@ impl QRScanner {
         }
 
         let link = ctx.link().clone();
-        // Plan new interval and start rendering
-        let closure = Closure::wrap(Box::new(move |blob: Blob| {
-            link.send_future(async move {
-                // Reading entire file to an array and export it
-                let array_buffer: ArrayBuffer =
-                    JsFuture::from(blob.array_buffer()).await.unwrap().into();
-
-                // TODO implement Read over wrapped array
-                let array = Uint8Array::new(&array_buffer);
-
-                let new_len: usize = array_buffer.byte_length() as usize;
-                let mut data: Vec<u8> = vec![0; new_len];
-                array.copy_to(&mut data);
-
-                Msg::Picture(data)
-            })
-        }) as Box<dyn Fn(Blob)>);
 
         let video = self.video_ref.cast::<HtmlVideoElement>().unwrap();
         let canvas = self.canvas_ref.cast::<HtmlCanvasElement>().unwrap();
@@ -374,11 +361,18 @@ impl QRScanner {
         } else {
             (480.0, 640.0)
         };
+
+        // Plan new interval and start rendering
         let interval = gloo::timers::callback::Interval::new(100, move || {
             context
                 .draw_image_with_html_video_element_and_dw_and_dh(&video, 0.0, 0.0, width, height)
                 .unwrap();
-            canvas.to_blob(closure.as_ref().unchecked_ref()).unwrap();
+            if let Ok(data) =
+                context.get_image_data(0.0, 0.0, canvas.width() as f64, canvas.height() as f64)
+            {
+                // Try to extract QR code from the picture
+                link.send_message(Msg::Picture(data));
+            }
         });
 
         self.interval = Some(interval);
