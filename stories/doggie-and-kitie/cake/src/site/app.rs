@@ -23,7 +23,6 @@ use super::{
 };
 
 pub enum Msg {
-    ToggleNavbar,
     UpdateSelectedCharacter(Rc<Option<String>>),
     TriggerEvent(usize),
     TriggerScannedEvent(Value),
@@ -51,7 +50,6 @@ pub struct App {
     world: Option<CakeWorld>,
     selected_character: Rc<Option<String>>,
     page: Page,
-    navbar_active: bool,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
     speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
 }
@@ -104,7 +102,6 @@ impl Component for App {
             world: None,
             selected_character: Rc::new(None),
             page: Page::Void,
-            navbar_active: false,
             messages_scope: Rc::new(RefCell::new(None)),
             speech_scope: Rc::new(RefCell::new(None)),
         }
@@ -125,10 +122,6 @@ impl Component for App {
                 } else {
                     false
                 }
-            }
-            Msg::ToggleNavbar => {
-                self.navbar_active = !self.navbar_active;
-                true
             }
             Msg::TriggerEvent(idx) => {
                 let old_screen_text = self.screen_text();
@@ -284,8 +277,12 @@ impl Component for App {
 
         // TODO loading page when world_id is set, but world not
         // this means world was set, but wasn't loaded from the server yet
+        //
 
         if let Some(world) = &self.world {
+            let available_characters = make_characters(&world);
+            let set_character_callback = link
+                .callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
             let narrator = narrator::Cake::default();
             let events = narrator.available_events(world);
             let characters_map: HashMap<String, Rc<characters::Character>> =
@@ -331,13 +328,16 @@ impl Component for App {
                           </p>
                       </div>
                     </section>
-                    { self.view_nav(ctx) }
                     <main>
+                        <CharacterCombo
+                          available_characters={ available_characters.clone() }
+                          set_character={ set_character_callback }
+                        />
                         <Messages shared_scope={ self.messages_scope.clone() }/>
                         { self.view_scene(ctx) }
                         <Actions
                           lang={ lang }
-                          available_characters={ make_characters(world) }
+                          available_characters={ available_characters }
                           owned_items={ make_owned_items(world, self.selected_character.as_ref()) }
                           selected_character={ self.selected_character.clone() }
                           events={ events }
@@ -432,70 +432,17 @@ impl App {
                 html! {}
             };
 
+            let class = if world.finished() || self.selected_character.is_some() {
+                classes!("section")
+            } else {
+                classes!("section", "is-hidden")
+            };
+
             html! {
-                <section class="section">
+                <section {class}>
                 { scene_description }
                 { if world.finished() { restart } else { html! {} } }
                 </section>
-            }
-        } else {
-            html! {}
-        }
-    }
-
-    fn view_nav(&self, ctx: &Context<Self>) -> Html {
-        if let Some(world) = &self.world {
-            let link = ctx.link();
-
-            let available_characters = make_characters(&world);
-            let set_character_callback = link
-                .callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
-
-            let active_class = if self.navbar_active { "is-active" } else { "" };
-
-            let use_text = translations::get_message("use", world.lang(), None);
-            let hint_text = translations::get_message("hint", world.lang(), None);
-            let qr_code_text = translations::get_message("qr_code", world.lang(), None);
-            let give_text = translations::get_message("give", world.lang(), None);
-
-            html! {
-                <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
-                  <div class="navbar-brand">
-                    <a class="navbar-item" href="">
-                    </a>
-
-                    <a
-                      role="button"
-                      class={classes!("navbar-burger", "burger", active_class)}
-                      aria-label="menu"
-                      aria-expanded="false"
-                      data-target="pabitell-navbar"
-                      onclick={link.callback(|_| Msg::ToggleNavbar)}
-                    >
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
-                    </a>
-                  </div>
-
-                  <div id="pabitell-navbar" class={classes!("navbar-menu", active_class)}>
-                    <div class="navbar-start">
-                      <a class="navbar-item">{ qr_code_text }</a>
-                      <a class="navbar-item">{ use_text }</a>
-                      <a class="navbar-item">{ give_text }</a>
-                      <a class="navbar-item">{ hint_text }</a>
-                    </div>
-
-                    <div class="navbar-end">
-                      <div class="navbar-item">
-                        <CharacterCombo
-                          available_characters={ available_characters }
-                          set_character={ set_character_callback }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </nav>
             }
         } else {
             html! {}

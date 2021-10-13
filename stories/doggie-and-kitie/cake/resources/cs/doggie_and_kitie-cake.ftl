@@ -1,10 +1,7 @@
 # General
 narrator = Vypravěč
-use = Použij
-give = Dej
 qr_code = QR kód
 qr_code_scan = Naskenuj QR kód aby se mohla provést akce.
-hint = Tip
 event = Událost
 restart = Pustit znovu
 end = Konec.

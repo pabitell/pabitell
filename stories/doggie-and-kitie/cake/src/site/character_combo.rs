@@ -1,5 +1,7 @@
 use pabitell_lib::{Character, Description, World, WorldBuilder};
 use std::rc::Rc;
+use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+use web_sys::{EventTarget, HtmlSelectElement};
 use yew::prelude::*;
 
 use crate::{translations::get_message, world::CakeWorld};
@@ -18,6 +20,7 @@ pub struct CharacterCombo {
 
 pub enum Msg {
     UpdateSelectedCharacter(Rc<characters::Character>),
+    Void,
 }
 
 impl Component for CharacterCombo {
@@ -38,54 +41,44 @@ impl Component for CharacterCombo {
                     .set_character
                     .emit(selected_character.code.clone());
             }
+            Msg::Void => {}
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
-        let render_icon = |icon: Rc<String>, name: Rc<String>| {
-            if !icon.is_empty() {
-                html! {
-                    <span class="icon-text">
-                        <span class="icon">
-                        <i class={ icon.to_string() }></i>
-                        </span>
-                        <span>{ name.to_string() }</span>
+        let characters = ctx.props().available_characters.clone();
+        let selected_character_code = self.selected_character.code.clone();
+        let render_character = move |character: &Rc<characters::Character>| {
+            let cloned_character: Rc<characters::Character> = character.clone();
+            let onclick =
+                link.callback(move |_| Msg::UpdateSelectedCharacter(cloned_character.clone()));
+            html! {
+                <li class={ if selected_character_code == character.code { "is-active" } else { "" } }>
+                  <a {onclick}>
+                    <span class="icon is-small">
+                        <i class={ character.icon.to_string() }></i>
                     </span>
-                }
-            } else {
-                html! {<span>{name}</span>}
+                    <span>{ character.short.clone() }</span>
+                  </a>
+                </li>
             }
         };
-
-        let render_character = move |item: Rc<characters::Character>| {
-            if self.selected_character.code == item.code {
-                html! {
-                    <a class="navbar-item is-active">{ item.short.clone() }</a>
-                }
-            } else {
-                let cloned = item.clone();
-                let cb = link.callback(move |_| Msg::UpdateSelectedCharacter(cloned.clone()));
-                html! {
-                    <a class="navbar-item" onclick={ cb }>{ item.short.clone() }</a>
-                }
-            }
-        };
-
-        let inner = render_icon(
-            self.selected_character.icon.clone(),
-            self.selected_character.short.clone(),
-        );
 
         html! {
-          <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link">{ inner }</a>
-
-            <div class="navbar-dropdown">
-            { for ctx.props().available_characters.iter().cloned().map(render_character) }
-            </div>
-          </div>
+            <>
+                <div class="tabs is-toggle is-fullwidth is-small is-hidden-desktop">
+                    <ul>
+                        { for characters.iter().map(render_character.clone()) }
+                    </ul>
+                </div>
+                <div class="tabs is-toggle is-large is-centered is-hidden-touch">
+                    <ul>
+                        { for characters.iter().map(render_character) }
+                    </ul>
+                </div>
+            </>
         }
     }
 }
