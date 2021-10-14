@@ -332,6 +332,7 @@ impl Component for App {
                         <CharacterCombo
                           available_characters={ available_characters.clone() }
                           set_character={ set_character_callback }
+                          selected_character={ self.selected_character.clone() }
                         />
                         <Messages shared_scope={ self.messages_scope.clone() }/>
                         { self.view_scene(ctx) }
