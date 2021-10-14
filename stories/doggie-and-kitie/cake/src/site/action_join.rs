@@ -59,7 +59,7 @@ impl Component for ActionJoin {
                     <div class="media">
                         <div class="media-left">
                             <figure class="image is-48x48">
-                                <img src={character_url} />
+                                <img src={"svgs/solid/sign-in-alt.svg"} />
                             </figure>
                         </div>
                         <div class="media-content">
@@ -70,7 +70,7 @@ impl Component for ActionJoin {
                 </div>
                 <div class="card-image has-text-centered">
                     <figure class="image is-clickable is-square w-75 is-inline-block box" {onclick} >
-                        <img class="box" src={"svgs/solid/sign-in-alt.svg"}/>
+                        <img class="box" src={character_url}/>
                     </figure>
                     <qrcode::QRCode {data} shared_scope={self.qr_scope.clone()} />
                     <div class="content"></div>
