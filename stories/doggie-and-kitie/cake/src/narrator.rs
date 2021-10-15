@@ -1,6 +1,6 @@
 use pabitell_lib::{
-    data, translations::get_available_locales, Character, Description, Event, Id, Item, ItemState,
-    Named, Narrator, Scene, World, WorldBuilder,
+    conditions, data, translations::get_available_locales, Character, Description, Event, Id, Item,
+    ItemState, Named, Narrator, Scene, World, WorldBuilder,
 };
 use serde_json::Value;
 
@@ -87,6 +87,67 @@ impl Narrator for Cake {
                 world.items().values().for_each(|e| match e.state() {
                     ItemState::InScene(p) if p == "kitchen" => {
                         if e.get_tags().contains(&"ingredient".to_string()) {
+                            if e.get_tags().contains(&"batch2".to_string()) {
+                                // All batch1 items done
+                                if !conditions::all_items_with_tags_in_state(
+                                    world,
+                                    &["batch1".to_string()],
+                                    ItemState::Unassigned,
+                                ) {
+                                    return;
+                                }
+                            } else if e.get_tags().contains(&"batch3".to_string()) {
+                                // All batch1, batch2 items done
+                                if !conditions::all_items_with_tags_in_state(
+                                    world,
+                                    &["batch1".to_string(), "batch2".to_string()],
+                                    ItemState::Unassigned,
+                                ) {
+                                    return;
+                                }
+                            } else if e.get_tags().contains(&"batch4".to_string()) {
+                                // All batch1, batch2, batch3 items done
+                                if !conditions::all_items_with_tags_in_state(
+                                    world,
+                                    &[
+                                        "batch1".to_string(),
+                                        "batch2".to_string(),
+                                        "batch3".to_string(),
+                                    ],
+                                    ItemState::Unassigned,
+                                ) {
+                                    return;
+                                }
+                            } else if e.get_tags().contains(&"batch5".to_string()) {
+                                // All batch1, batch2, batch3, batch4 items done
+                                if !conditions::all_items_with_tags_in_state(
+                                    world,
+                                    &[
+                                        "batch1".to_string(),
+                                        "batch2".to_string(),
+                                        "batch3".to_string(),
+                                        "batch4".to_string(),
+                                    ],
+                                    ItemState::Unassigned,
+                                ) {
+                                    return;
+                                }
+                            } else if e.get_tags().contains(&"batch6".to_string()) {
+                                // All batch1, batch2, batch3, batch4, batch5 items done
+                                if !conditions::all_items_with_tags_in_state(
+                                    world,
+                                    &[
+                                        "batch1".to_string(),
+                                        "batch2".to_string(),
+                                        "batch3".to_string(),
+                                        "batch4".to_string(),
+                                        "batch5".to_string(),
+                                    ],
+                                    ItemState::Unassigned,
+                                ) {
+                                    return;
+                                }
+                            }
                             if e.get_tags().contains(&"accepted".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
@@ -97,12 +158,14 @@ impl Narrator for Cake {
                                 }
                             } else if e.get_tags().contains(&"rejected".to_string()) {
                                 for character in ["doggie", "kitie"] {
-                                    let event: Box<dyn Event> =
-                                        Box::new(events::make_disliked_pick(data::VoidData::new(
+                                    let event: Box<dyn Event> = Box::new(events::make_pick(
+                                        data::PickData::new(
                                             "pick_disliked_ingredient",
                                             character,
-                                            Some(e.name()),
-                                        )));
+                                            e.name(),
+                                        ),
+                                        true,
+                                    ));
                                     res.push(event);
                                 }
                             }
@@ -122,10 +185,7 @@ impl Narrator for Cake {
                 if world
                     .items()
                     .values()
-                    .filter(|e| {
-                        e.get_tags().contains(&"ingredient".to_string())
-                            && e.get_tags().contains(&"accepted".to_string())
-                    })
+                    .filter(|e| e.get_tags().contains(&"ingredient".to_string()))
                     .all(|e| e.state() == &ItemState::Unassigned)
                 {
                     for character in ["doggie", "kitie"] {
@@ -390,12 +450,12 @@ impl Narrator for Cake {
             }
             Value::String(name) if name == "pick_disliked_ingredient" => {
                 if let Value::String(character) = &value["character"] {
-                    let data = if let Value::String(item) = &value["item"] {
-                        data::VoidData::new(name, character, Some(item))
+                    if let Value::String(item) = &value["item"] {
+                        let data = data::PickData::new(name, character, item);
+                        Some(Box::new(events::make_pick(data, true)))
                     } else {
-                        data::VoidData::new(name, character, None as Option<String>)
-                    };
-                    Some(Box::new(events::make_disliked_pick(data)))
+                        None
+                    }
                 } else {
                     None
                 }

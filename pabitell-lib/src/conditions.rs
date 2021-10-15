@@ -66,3 +66,11 @@ pub fn can_give(
     Ok(has_item(world, from_character.clone(), item)?
         && same_scene(world, &vec![from_character, to_character], &vec![])?)
 }
+
+pub fn all_items_with_tags_in_state(world: &dyn World, tags: &[String], state: ItemState) -> bool {
+    world
+        .items()
+        .values()
+        .filter(|e| e.get_tags().iter().any(|t| tags.contains(t)))
+        .all(|e| e.state() == &state)
+}

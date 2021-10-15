@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Named, Scene, Tagged,
-    World, WorldBuilder,
+    conditions, AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Named, Scene,
+    Tagged, World, WorldBuilder,
 };
 use serde_json::{json, Value};
 use std::any::Any;
@@ -142,24 +142,76 @@ scene_base!(Kitchen, "kitchen", []);
 
 impl Description for Kitchen {
     fn long(&self, world: &dyn World) -> String {
-        if world
-            .items()
-            .values()
-            .filter(|e| e.get_tags().contains(&"accepted".to_string()))
-            .all(|e| e.state() == &ItemState::Unassigned)
-        {
-            get_message(
-                &format!("{}-{}-ready", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
+        let items = world.items().values().clone().collect::<Vec<_>>();
+
+        let batch1_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &["batch1".to_string()],
+            ItemState::Unassigned,
+        );
+        let batch2_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &["batch1".to_string(), "batch2".to_string()],
+            ItemState::Unassigned,
+        );
+        let batch3_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &[
+                "batch1".to_string(),
+                "batch2".to_string(),
+                "batch3".to_string(),
+            ],
+            ItemState::Unassigned,
+        );
+        let batch4_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &[
+                "batch1".to_string(),
+                "batch2".to_string(),
+                "batch3".to_string(),
+                "batch4".to_string(),
+            ],
+            ItemState::Unassigned,
+        );
+        let batch5_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &[
+                "batch1".to_string(),
+                "batch2".to_string(),
+                "batch3".to_string(),
+                "batch4".to_string(),
+                "batch5".to_string(),
+            ],
+            ItemState::Unassigned,
+        );
+        let batch6_ready = conditions::all_items_with_tags_in_state(
+            world,
+            &[
+                "batch1".to_string(),
+                "batch2".to_string(),
+                "batch3".to_string(),
+                "batch4".to_string(),
+                "batch5".to_string(),
+            ],
+            ItemState::Unassigned,
+        );
+
+        let message = if !batch1_ready {
+            format!("{}-{}-ingredients-batch1", world.name(), self.name())
+        } else if !batch2_ready {
+            format!("{}-{}-ingredients-batch2", world.name(), self.name())
+        } else if !batch3_ready {
+            format!("{}-{}-ingredients-batch3", world.name(), self.name())
+        } else if !batch4_ready {
+            format!("{}-{}-ingredients-batch4", world.name(), self.name())
+        } else if !batch5_ready {
+            format!("{}-{}-ingredients-batch5", world.name(), self.name())
+        } else if !batch6_ready {
+            format!("{}-{}-ingredients-batch6", world.name(), self.name())
         } else {
-            get_message(
-                &format!("{}-{}-ingredients", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
-        }
+            format!("{}-{}-ready", world.name(), self.name())
+        };
+        get_message(&message, world.lang(), None)
     }
 
     fn short(&self, world: &dyn World) -> String {

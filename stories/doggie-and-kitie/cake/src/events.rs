@@ -24,21 +24,83 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
 
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
-        conditions::same_scene(
-            world,
-            &vec![event.character().to_string()],
-            &vec![event.item().to_string()],
-        )
-        .unwrap()
+        let item = if let Some(item) = world.items().get(event.item()) {
+            item
+        } else {
+            return false;
+        };
+        let ingredient_cond = if item.get_tags().contains(&"batch2".to_string()) {
+            // All batch1 items done
+            conditions::all_items_with_tags_in_state(
+                world,
+                &["batch1".to_string()],
+                ItemState::Unassigned,
+            )
+        } else if item.get_tags().contains(&"batch3".to_string()) {
+            // All batch1, batch2 items done
+            conditions::all_items_with_tags_in_state(
+                world,
+                &["batch1".to_string(), "batch2".to_string()],
+                ItemState::Unassigned,
+            )
+        } else if item.get_tags().contains(&"batch4".to_string()) {
+            // All batch1, batch2, batch3 items done
+            conditions::all_items_with_tags_in_state(
+                world,
+                &[
+                    "batch1".to_string(),
+                    "batch2".to_string(),
+                    "batch3".to_string(),
+                ],
+                ItemState::Unassigned,
+            )
+        } else if item.get_tags().contains(&"batch5".to_string()) {
+            // All batch1, batch2, batch3, batch4 items done
+            conditions::all_items_with_tags_in_state(
+                world,
+                &[
+                    "batch1".to_string(),
+                    "batch2".to_string(),
+                    "batch3".to_string(),
+                    "batch4".to_string(),
+                ],
+                ItemState::Unassigned,
+            )
+        } else if item.get_tags().contains(&"batch6".to_string()) {
+            // All batch1, batch2, batch3, batch4, batch5 items done
+            conditions::all_items_with_tags_in_state(
+                world,
+                &[
+                    "batch1".to_string(),
+                    "batch2".to_string(),
+                    "batch3".to_string(),
+                    "batch4".to_string(),
+                    "batch5".to_string(),
+                ],
+                ItemState::Unassigned,
+            )
+        } else {
+            // not ingredient
+            true
+        };
+
+        ingredient_cond
+            && conditions::same_scene(
+                world,
+                &vec![event.character().to_string()],
+                &vec![event.item().to_string()],
+            )
+            .unwrap()
     })));
 
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
             &format!(
-                "{}-{}_pick_{}-action",
+                "{}-{}_{}_{}-action",
                 world.name(),
                 event.character(),
+                event.name(),
                 event.item()
             ),
             world.lang(),
@@ -50,9 +112,10 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
             &format!(
-                "{}-{}_pick_{}-success",
+                "{}-{}_{}_{}-success",
                 world.name(),
                 event.character(),
+                event.name(),
                 event.item()
             ),
             world.lang(),
@@ -64,9 +127,10 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         get_message(
             &format!(
-                "{}-{}_pick_{}-fail",
+                "{}-{}_{}_{}-fail",
                 world.name(),
                 event.character(),
+                event.name(),
                 event.item()
             ),
             world.lang(),
@@ -215,56 +279,6 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
     event
 }
 
-pub fn make_disliked_pick(void_data: data::VoidData) -> events::Void {
-    let mut event = events::Void::new(void_data);
-    event.set_tags(vec!["disliked_pick".to_string()]);
-    event.set_condition(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Void>().unwrap();
-        let character = world.characters().get(event.character()).unwrap();
-        character.scene() == &Some("kitchen".to_string())
-    })));
-    event.set_make_action_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Void>().unwrap();
-        get_message(
-            &format!(
-                "{}-{}_pick_disliked_ingredient_{}-action",
-                world.name(),
-                event.character(),
-                event.item().clone().unwrap_or_else(String::new),
-            ),
-            world.lang(),
-            None,
-        )
-    })));
-    event.set_make_success_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Void>().unwrap();
-        get_message(
-            &format!(
-                "{}-{}_pick_disliked_ingredient_{}-success",
-                world.name(),
-                event.character(),
-                event.item().clone().unwrap_or_else(String::new),
-            ),
-            world.lang(),
-            None,
-        )
-    })));
-    event.set_make_fail_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Void>().unwrap();
-        get_message(
-            &format!(
-                "{}-{}_pick_disliked_ingredient_{}-fail",
-                world.name(),
-                event.character(),
-                event.item().clone().unwrap_or_else(String::new),
-            ),
-            world.lang(),
-            None,
-        )
-    })));
-    event
-}
-
 pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
     let mut event = events::Move::new(move_data);
     event.set_tags(vec!["move".to_string()]);
@@ -283,7 +297,7 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
         world
             .items()
             .values()
-            .filter(|e| e.get_tags().contains(&"accepted".to_string()))
+            .filter(|e| e.get_tags().contains(&"ingredient".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
             && conditions::in_scenes(
                 world,

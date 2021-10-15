@@ -148,45 +148,40 @@ pub mod tests {
         assert!(events[0].perform(&mut world));
         world = reload_world(world);
 
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        for event in events.iter_mut() {
-            if event.get_tags().contains(&"pick".to_string()) {
-                // Put thinkgs to cake
-                let cevent = event
-                    .as_any_mut()
-                    .downcast_mut::<lib_events::Pick>()
-                    .unwrap();
-                if cevent.character() == "kitie" {
-                    assert!(cevent.can_be_triggered(&world));
-                    assert!(cevent.perform(&mut world));
+        // 6 batches of ingredient pick
+        for _ in 1..=6 {
+            let events = narrator.available_events(&world);
+            let mut events = reload_events(&world, &narrator, events);
+            for event in events.iter_mut() {
+                if event.get_tags().contains(&"pick".to_string()) {
+                    // Put thinkgs to cake
+                    let cevent = event
+                        .as_any_mut()
+                        .downcast_mut::<lib_events::Pick>()
+                        .unwrap();
+                    if cevent.character() == "kitie" {
+                        assert!(cevent.can_be_triggered(&world));
+                        assert!(cevent.perform(&mut world));
+                        world = reload_world(world);
+                    }
+                }
+            }
+
+            let events = narrator.available_events(&world);
+            let mut events = reload_events(&world, &narrator, events);
+            for event in events.iter_mut() {
+                if event.get_tags().contains(&"use_item".to_string()) {
+                    assert!(event.can_be_triggered(&world));
+                    assert!(event.perform(&mut world));
                     world = reload_world(world);
                 }
-            } else if event.get_tags().contains(&"void".to_string()) {
-                // Put disliked thing to cake
-                let cevent = event
-                    .as_any_mut()
-                    .downcast_mut::<lib_events::Void>()
-                    .unwrap();
-                assert!(cevent.can_be_triggered(&world));
-                assert!(cevent.perform(&mut world));
-                world = reload_world(world);
-            }
-        }
-
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        for event in events.iter_mut() {
-            if event.get_tags().contains(&"use_item".to_string()) {
-                assert!(event.can_be_triggered(&world));
-                assert!(event.perform(&mut world));
-                world = reload_world(world);
             }
         }
 
         // move both characters to children's garden
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 2);
         for event in events.iter_mut() {
             if event.get_tags().contains(&"move".to_string()) {
                 assert!(event.can_be_triggered(&world));
@@ -213,6 +208,7 @@ pub mod tests {
         // move to garden
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 2);
         for event in events.iter_mut() {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
@@ -230,7 +226,7 @@ pub mod tests {
 
         // go to children house
         let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
+        let events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
         for event in narrator.available_events(&world).iter_mut() {
             assert!(event.can_be_triggered(&world));

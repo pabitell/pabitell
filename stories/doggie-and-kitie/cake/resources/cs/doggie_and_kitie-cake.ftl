@@ -140,192 +140,192 @@ doggie_and_kitie-cake-kitie_pick_disliked_ingredient_jam-action = Kočička zved
 doggie_and_kitie-cake-kitie_pick_disliked_ingredient_jam-fail = Kočička nemůže zvednout zavařeninu.
 doggie_and_kitie-cake-kitie_pick_disliked_ingredient_jam-success = Kočička zavařeninu nepřidala, protože zavařeninu pejsek nerad.
 
-doggie_and_kitie-cake-doggie_pick_flour-action = Pejsek vezme mouku.
-doggie_and_kitie-cake-doggie_pick_flour-fail = Pejsek nemůže vzít mouku.
-doggie_and_kitie-cake-doggie_pick_flour-success = Pejsek vzal mouku.
-doggie_and_kitie-cake-kitie_pick_flour-action = Kočička vezme mouku.
-doggie_and_kitie-cake-kitie_pick_flour-fail = Kočička nemůže vzít mouku.
-doggie_and_kitie-cake-kitie_pick_flour-success = Kočička vzala mouku.
-doggie_and_kitie-cake-doggie_pick_milk-action = Pejsek vezme mléko.
-doggie_and_kitie-cake-doggie_pick_milk-fail = Pejsek nemůže vzít mléko.
-doggie_and_kitie-cake-doggie_pick_milk-success = Pejsek vzal mléko.
-doggie_and_kitie-cake-kitie_pick_milk-action = Kočička vezme mléko.
-doggie_and_kitie-cake-kitie_pick_milk-fail = Kočička nemůže vzít mléko.
-doggie_and_kitie-cake-kitie_pick_milk-success = Kočička vzala mléko.
-doggie_and_kitie-cake-doggie_pick_butter-action = Pejsek vezme máslo.
-doggie_and_kitie-cake-doggie_pick_butter-fail = Pejsek nemůže máslo.
-doggie_and_kitie-cake-doggie_pick_butter-success = Pejsek vzal máslo.
-doggie_and_kitie-cake-kitie_pick_butter-action = Kočička vezme máslo.
-doggie_and_kitie-cake-kitie_pick_butter-fail = Kočička nemůže vzít máslo.
-doggie_and_kitie-cake-kitie_pick_butter-success = Kočička vzala máslo.
-doggie_and_kitie-cake-doggie_pick_egg-action = Pejsek vezme vajíčko.
-doggie_and_kitie-cake-doggie_pick_egg-fail = Pejsek nemůže vzít vajíčko.
-doggie_and_kitie-cake-doggie_pick_egg-success = Pejsek vzal vajíčko.
-doggie_and_kitie-cake-kitie_pick_egg-action = Kočička vezme vajíčko.
-doggie_and_kitie-cake-kitie_pick_egg-fail = Kočička nemůže vzít vajíčko.
-doggie_and_kitie-cake-kitie_pick_egg-success = Kočička vzala vajíčko.
-doggie_and_kitie-cake-doggie_pick_suggar-action = Pejsek vezme cukr.
-doggie_and_kitie-cake-doggie_pick_suggar-fail = Pejsek nemůže vzít cukr.
-doggie_and_kitie-cake-doggie_pick_suggar-success = Pejsek vzal cukr.
-doggie_and_kitie-cake-kitie_pick_suggar-action = Kočička vezme cukr.
-doggie_and_kitie-cake-kitie_pick_suggar-fail = Kočička nemůže vzít cukr.
-doggie_and_kitie-cake-kitie_pick_suggar-success = Kočička vzala cukr.
-doggie_and_kitie-cake-doggie_pick_salt-action= Pejsek vezme sůl.
-doggie_and_kitie-cake-doggie_pick_salt-fail = Pejsek nemůže vzít sůl.
-doggie_and_kitie-cake-doggie_pick_salt-success = Pejsek vzal sůl.
-doggie_and_kitie-cake-kitie_pick_salt-action = Kočička vezme sůl.
-doggie_and_kitie-cake-kitie_pick_salt-fail = Kočička nemůže vzít sůl.
-doggie_and_kitie-cake-kitie_pick_salt-success = Kočička vzala sůl.
-doggie_and_kitie-cake-doggie_pick_cheese-action = Pejsek vezme syreček.
-doggie_and_kitie-cake-doggie_pick_cheese-fail = Pejsek nemůže vzít syreček.
-doggie_and_kitie-cake-doggie_pick_cheese-success = Pejsek vzal syreček.
-doggie_and_kitie-cake-kitie_pick_cheese-action = Kočička vezme syreček.
-doggie_and_kitie-cake-kitie_pick_cheese-fail = Kočička nemůže vzít syreček.
-doggie_and_kitie-cake-kitie_pick_cheese-success = Kočička vzala syreček.
-doggie_and_kitie-cake-doggie_pick_bacon-action = Pejsek vezme špekovou kůži.
-doggie_and_kitie-cake-doggie_pick_bacon-fail = Pejsek nemůže vzít špekovou kůži.
-doggie_and_kitie-cake-doggie_pick_bacon-success = Pejsek vzal špekovou kůži.
-doggie_and_kitie-cake-kitie_pick_bacon-action = Kočička vezme špekovou kůži.
-doggie_and_kitie-cake-kitie_pick_bacon-fail = Kočička nemůže vzít špekovou kůži.
-doggie_and_kitie-cake-kitie_pick_bacon-success = Kočička vzal špekovou kůži.
-doggie_and_kitie-cake-doggie_pick_peanuts-action = Pejsek vezme oříšky.
-doggie_and_kitie-cake-doggie_pick_peanuts-fail = Pejsek nemůže vzít oříšky.
-doggie_and_kitie-cake-doggie_pick_peanuts-success = Pejsek vzal oříšky.
-doggie_and_kitie-cake-kitie_pick_peanuts-action = Kočička vezme oříšky.
-doggie_and_kitie-cake-kitie_pick_peanuts-fail = Kočička nemůže vzít oříšky.
-doggie_and_kitie-cake-kitie_pick_peanuts-success = Kočička vzal oříšky.
-doggie_and_kitie-cake-doggie_pick_cucumber-action = Pejsek vezme okurku.
-doggie_and_kitie-cake-doggie_pick_cucumber-fail = Pejsek nemůže vzít okurku.
-doggie_and_kitie-cake-doggie_pick_cucumber-success = Pejsek vzal okurku.
-doggie_and_kitie-cake-kitie_pick_cucumber-action = Kočička vezme okurku.
-doggie_and_kitie-cake-kitie_pick_cucumber-fail = Kočička nemůže vzít okurku.
-doggie_and_kitie-cake-kitie_pick_cucumber-success = Kočička vzal okurku.
-doggie_and_kitie-cake-doggie_pick_bones-action = Pejsek vezme kosti.
-doggie_and_kitie-cake-doggie_pick_bones-fail = Pejsek nemůže vzít kosti.
-doggie_and_kitie-cake-doggie_pick_bones-success = Pejsek vzal kosti.
-doggie_and_kitie-cake-kitie_pick_bones-action = Kočička vezme kosti.
-doggie_and_kitie-cake-kitie_pick_bones-fail = Kočička nemůže vzít kosti.
-doggie_and_kitie-cake-kitie_pick_bones-success = Kočička vzal kosti.
-doggie_and_kitie-cake-doggie_pick_four_mice-action = Pejsek vezme čtyři myši.
-doggie_and_kitie-cake-doggie_pick_four_mice-fail = Pejsek nemůže vzít čtyři myši.
-doggie_and_kitie-cake-doggie_pick_four_mice-success = Pejsek vzal čtyři myši.
-doggie_and_kitie-cake-kitie_pick_four_mice-action = Kočička vezme čtyři myši.
-doggie_and_kitie-cake-kitie_pick_four_mice-fail = Kočička nemůže vzít čtyři myši.
-doggie_and_kitie-cake-kitie_pick_four_mice-success = Kočička vzal čtyři myši.
-doggie_and_kitie-cake-doggie_pick_sausages-action = Pejsek vezme buřty.
-doggie_and_kitie-cake-doggie_pick_sausages-fail = Pejsek nemůže vzít buřty.
-doggie_and_kitie-cake-doggie_pick_sausages-success = Pejsek vzal buřty.
-doggie_and_kitie-cake-kitie_pick_sausages-action = Kočička vezme buřty.
-doggie_and_kitie-cake-kitie_pick_sausages-fail = Kočička nemůže vzít buřty.
-doggie_and_kitie-cake-kitie_pick_sausages-success = Kočička vzal buřty.
-doggie_and_kitie-cake-doggie_pick_whipped_cream-action = Pejsek vezme šlehačku.
-doggie_and_kitie-cake-doggie_pick_whipped_cream-fail = Pejsek nemůže vzít šlehačku.
-doggie_and_kitie-cake-doggie_pick_whipped_cream-success = Pejsek vzal šlehačku.
-doggie_and_kitie-cake-kitie_pick_whipped_cream-action = Kočička vezme šlehačku.
-doggie_and_kitie-cake-kitie_pick_whipped_cream-fail = Kočička nemůže vzít šlehačku.
-doggie_and_kitie-cake-kitie_pick_whipped_cream-success = Kočička vzal šlehačku.
-doggie_and_kitie-cake-doggie_pick_onion-action = Pejsek vezme cibuli.
-doggie_and_kitie-cake-doggie_pick_onion-fail = Pejsek nemůže vzít cibuli.
-doggie_and_kitie-cake-doggie_pick_onion-success = Pejsek vzal cibuli.
-doggie_and_kitie-cake-kitie_pick_onion-action = Kočička vezme cibuli.
-doggie_and_kitie-cake-kitie_pick_onion-fail = Kočička nemůže vzít cibuli.
-doggie_and_kitie-cake-kitie_pick_onion-success = Kočička vzal cibuli.
-doggie_and_kitie-cake-doggie_pick_chocolate-action = Pejsek vezme čokoládu.
-doggie_and_kitie-cake-doggie_pick_chocolate-fail = Pejsek nemůže vzít čokoládu.
-doggie_and_kitie-cake-doggie_pick_chocolate-success = Pejsek vzal čokoládu.
-doggie_and_kitie-cake-kitie_pick_chocolate-action = Kočička vezme čokoládu.
-doggie_and_kitie-cake-kitie_pick_chocolate-fail = Kočička nemůže vzít čokoládu.
-doggie_and_kitie-cake-kitie_pick_chocolate-success = Kočička vzal čokoládu.
-doggie_and_kitie-cake-doggie_pick_sauce-action = Pejsek vezme omáčku.
-doggie_and_kitie-cake-doggie_pick_sauce-fail = Pejsek nemůže vzít omáčku.
-doggie_and_kitie-cake-doggie_pick_sauce-success = Pejsek vzal omáčku.
-doggie_and_kitie-cake-kitie_pick_sauce-action = Kočička vezme omáčku.
-doggie_and_kitie-cake-kitie_pick_sauce-fail = Kočička nemůže vzít omáčku.
-doggie_and_kitie-cake-kitie_pick_sauce-success = Kočička vzal omáčku.
-doggie_and_kitie-cake-doggie_pick_garlic-action = Pejsek vezme česnek.
-doggie_and_kitie-cake-doggie_pick_garlic-fail = Pejsek nemůže vzít česnek.
-doggie_and_kitie-cake-doggie_pick_garlic-success = Pejsek vzal česnek.
-doggie_and_kitie-cake-kitie_pick_garlic-action = Kočička vezme česnek.
-doggie_and_kitie-cake-kitie_pick_garlic-fail = Kočička nemůže vzít česnek.
-doggie_and_kitie-cake-kitie_pick_garlic-success = Kočička vzal česnek.
-doggie_and_kitie-cake-doggie_pick_pepper-action = Pejsek vezme pepř.
-doggie_and_kitie-cake-doggie_pick_pepper-fail = Pejsek nemůže vzít pepř.
-doggie_and_kitie-cake-doggie_pick_pepper-success = Pejsek vzal pepř.
-doggie_and_kitie-cake-kitie_pick_pepper-action = Kočička vezme pepř.
-doggie_and_kitie-cake-kitie_pick_pepper-fail = Kočička nemůže vzít pepř.
-doggie_and_kitie-cake-kitie_pick_pepper-success = Kočička vzal pepř.
-doggie_and_kitie-cake-doggie_pick_lard-action = Pejsek vezme sádlo.
-doggie_and_kitie-cake-doggie_pick_lard-fail = Pejsek nemůže vzít sádlo.
-doggie_and_kitie-cake-doggie_pick_lard-success = Pejsek vzal sádlo.
-doggie_and_kitie-cake-kitie_pick_lard-action = Kočička vezme sádlo.
-doggie_and_kitie-cake-kitie_pick_lard-fail = Kočička nemůže vzít sádlo.
-doggie_and_kitie-cake-kitie_pick_lard-success = Kočička vzal sádlo.
-doggie_and_kitie-cake-doggie_pick_candy-action = Pejsek vezme bonbóny.
-doggie_and_kitie-cake-doggie_pick_candy-fail = Pejsek nemůže vzít bonbóny.
-doggie_and_kitie-cake-doggie_pick_candy-success = Pejsek vzal bonbóny.
-doggie_and_kitie-cake-kitie_pick_candy-action = Kočička vezme bonbóny.
-doggie_and_kitie-cake-kitie_pick_candy-fail = Kočička nemůže vzít bonbóny.
-doggie_and_kitie-cake-kitie_pick_candy-success = Kočička vzal bonbóny.
-doggie_and_kitie-cake-doggie_pick_greaves-action = Pejsek vezme škvarky.
-doggie_and_kitie-cake-doggie_pick_greaves-fail = Pejsek nemůže vzít škvarky.
-doggie_and_kitie-cake-doggie_pick_greaves-success = Pejsek vzal škvarky.
-doggie_and_kitie-cake-kitie_pick_greaves-action = Kočička vezme škvarky.
-doggie_and_kitie-cake-kitie_pick_greaves-fail = Kočička nemůže vzít škvarky.
-doggie_and_kitie-cake-kitie_pick_greaves-success = Kočička vzal škvarky.
-doggie_and_kitie-cake-doggie_pick_cinnamon-action = Pejsek vezme skořici.
-doggie_and_kitie-cake-doggie_pick_cinnamon-fail = Pejsek nemůže vzít skořici.
-doggie_and_kitie-cake-doggie_pick_cinnamon-success = Pejsek vzal skořici.
-doggie_and_kitie-cake-kitie_pick_cinnamon-action = Kočička vezme skořici.
-doggie_and_kitie-cake-kitie_pick_cinnamon-fail = Kočička nemůže vzít skořici.
-doggie_and_kitie-cake-kitie_pick_cinnamon-success = Kočička vzal skořici.
-doggie_and_kitie-cake-doggie_pick_porridge-action = Pejsek vezme krupičnou kaši.
-doggie_and_kitie-cake-doggie_pick_porridge-fail = Pejsek nemůže vzít krupičnou kaši.
-doggie_and_kitie-cake-doggie_pick_porridge-success = Pejsek vzal krupičnou kaši.
-doggie_and_kitie-cake-kitie_pick_porridge-action = Kočička vezme krupičnou kaši.
-doggie_and_kitie-cake-kitie_pick_porridge-fail = Kočička nemůže vzít krupičnou kaši.
-doggie_and_kitie-cake-kitie_pick_porridge-success = Kočička vzal krupičnou kaši.
-doggie_and_kitie-cake-doggie_pick_cottage_cheese-action = Pejsek vezme tvaroh.
-doggie_and_kitie-cake-doggie_pick_cottage_cheese-fail = Pejsek nemůže vzít tvaroh.
-doggie_and_kitie-cake-doggie_pick_cottage_cheese-success = Pejsek vzal tvaroh.
-doggie_and_kitie-cake-kitie_pick_cottage_cheese-action = Kočička vezme tvaroh.
-doggie_and_kitie-cake-kitie_pick_cottage_cheese-fail = Kočička nemůže vzít tvaroh.
-doggie_and_kitie-cake-kitie_pick_cottage_cheese-success = Kočička vzal tvaroh.
-doggie_and_kitie-cake-doggie_pick_ginger_bread-action = Pejsek vezme perník.
-doggie_and_kitie-cake-doggie_pick_ginger_bread-fail = Pejsek nemůže vzít perník.
-doggie_and_kitie-cake-doggie_pick_ginger_bread-success = Pejsek vzal perník.
-doggie_and_kitie-cake-kitie_pick_ginger_bread-action = Kočička vezme perník.
-doggie_and_kitie-cake-kitie_pick_ginger_bread-fail = Kočička nemůže vzít perník.
-doggie_and_kitie-cake-kitie_pick_ginger_bread-success = Kočička vzal perník.
-doggie_and_kitie-cake-doggie_pick_vinegar-action = Pejsek vezme ocet.
-doggie_and_kitie-cake-doggie_pick_vinegar-fail = Pejsek nemůže vzít ocet.
-doggie_and_kitie-cake-doggie_pick_vinegar-success = Pejsek vzal ocet.
-doggie_and_kitie-cake-kitie_pick_vinegar-action = Kočička vezme ocet.
-doggie_and_kitie-cake-kitie_pick_vinegar-fail = Kočička nemůže vzít ocet.
-doggie_and_kitie-cake-kitie_pick_vinegar-success = Kočička vzal ocet.
-doggie_and_kitie-cake-doggie_pick_goose_head-action = Pejsek vezme hlavu husy.
-doggie_and_kitie-cake-doggie_pick_goose_head-fail = Pejsek nemůže vzít hlavu husy.
-doggie_and_kitie-cake-doggie_pick_goose_head-success = Pejsek vzal hlavu husy.
-doggie_and_kitie-cake-kitie_pick_goose_head-action = Kočička vezme hlavu husy.
-doggie_and_kitie-cake-kitie_pick_goose_head-fail = Kočička nemůže vzít hlavu husy.
-doggie_and_kitie-cake-kitie_pick_goose_head-success = Kočička vzal hlavu husy.
-doggie_and_kitie-cake-doggie_pick_cabbadge-action = Pejsek vezme zelí.
-doggie_and_kitie-cake-doggie_pick_cabbadge-fail = Pejsek nemůže vzít zelí.
-doggie_and_kitie-cake-doggie_pick_cabbadge-success = Pejsek vzal zelí.
-doggie_and_kitie-cake-kitie_pick_cabbadge-action = Kočička vezme zelí.
-doggie_and_kitie-cake-kitie_pick_cabbadge-fail = Kočička nemůže vzít zelí.
-doggie_and_kitie-cake-kitie_pick_cabbadge-success = Kočička vzal zelí.
-doggie_and_kitie-cake-doggie_pick_cocoa-action = Pejsek vezme kakao.
-doggie_and_kitie-cake-doggie_pick_cocoa-fail = Pejsek nemůže vzít kakao.
-doggie_and_kitie-cake-doggie_pick_cocoa-success = Pejsek vzal kakao.
-doggie_and_kitie-cake-kitie_pick_cocoa-action = Kočička vezme kakao.
-doggie_and_kitie-cake-kitie_pick_cocoa-fail = Kočička nemůže vzít kakao.
-doggie_and_kitie-cake-kitie_pick_cocoa-success = Kočička vzal kakao.
-doggie_and_kitie-cake-doggie_pick_raisins-action = Pejsek vezme rozinky.
-doggie_and_kitie-cake-doggie_pick_raisins-fail = Pejsek nemůže vzít rozinky.
-doggie_and_kitie-cake-doggie_pick_raisins-success = Pejsek vzal rozinky.
-doggie_and_kitie-cake-kitie_pick_raisins-action = Kočička vezme rozinky.
-doggie_and_kitie-cake-kitie_pick_raisins-fail = Kočička nemůže vzít rozinky.
-doggie_and_kitie-cake-kitie_pick_raisins-success = Kočička vzal rozinky.
+doggie_and_kitie-cake-doggie_pick_ingredient_flour-action = Pejsek vezme mouku.
+doggie_and_kitie-cake-doggie_pick_ingredient_flour-fail = Pejsek nemůže vzít mouku.
+doggie_and_kitie-cake-doggie_pick_ingredient_flour-success = Pejsek vzal mouku.
+doggie_and_kitie-cake-kitie_pick_ingredient_flour-action = Kočička vezme mouku.
+doggie_and_kitie-cake-kitie_pick_ingredient_flour-fail = Kočička nemůže vzít mouku.
+doggie_and_kitie-cake-kitie_pick_ingredient_flour-success = Kočička vzala mouku.
+doggie_and_kitie-cake-doggie_pick_ingredient_milk-action = Pejsek vezme mléko.
+doggie_and_kitie-cake-doggie_pick_ingredient_milk-fail = Pejsek nemůže vzít mléko.
+doggie_and_kitie-cake-doggie_pick_ingredient_milk-success = Pejsek vzal mléko.
+doggie_and_kitie-cake-kitie_pick_ingredient_milk-action = Kočička vezme mléko.
+doggie_and_kitie-cake-kitie_pick_ingredient_milk-fail = Kočička nemůže vzít mléko.
+doggie_and_kitie-cake-kitie_pick_ingredient_milk-success = Kočička vzala mléko.
+doggie_and_kitie-cake-doggie_pick_ingredient_butter-action = Pejsek vezme máslo.
+doggie_and_kitie-cake-doggie_pick_ingredient_butter-fail = Pejsek nemůže máslo.
+doggie_and_kitie-cake-doggie_pick_ingredient_butter-success = Pejsek vzal máslo.
+doggie_and_kitie-cake-kitie_pick_ingredient_butter-action = Kočička vezme máslo.
+doggie_and_kitie-cake-kitie_pick_ingredient_butter-fail = Kočička nemůže vzít máslo.
+doggie_and_kitie-cake-kitie_pick_ingredient_butter-success = Kočička vzala máslo.
+doggie_and_kitie-cake-doggie_pick_ingredient_egg-action = Pejsek vezme vajíčko.
+doggie_and_kitie-cake-doggie_pick_ingredient_egg-fail = Pejsek nemůže vzít vajíčko.
+doggie_and_kitie-cake-doggie_pick_ingredient_egg-success = Pejsek vzal vajíčko.
+doggie_and_kitie-cake-kitie_pick_ingredient_egg-action = Kočička vezme vajíčko.
+doggie_and_kitie-cake-kitie_pick_ingredient_egg-fail = Kočička nemůže vzít vajíčko.
+doggie_and_kitie-cake-kitie_pick_ingredient_egg-success = Kočička vzala vajíčko.
+doggie_and_kitie-cake-doggie_pick_ingredient_suggar-action = Pejsek vezme cukr.
+doggie_and_kitie-cake-doggie_pick_ingredient_suggar-fail = Pejsek nemůže vzít cukr.
+doggie_and_kitie-cake-doggie_pick_ingredient_suggar-success = Pejsek vzal cukr.
+doggie_and_kitie-cake-kitie_pick_ingredient_suggar-action = Kočička vezme cukr.
+doggie_and_kitie-cake-kitie_pick_ingredient_suggar-fail = Kočička nemůže vzít cukr.
+doggie_and_kitie-cake-kitie_pick_ingredient_suggar-success = Kočička vzala cukr.
+doggie_and_kitie-cake-doggie_pick_ingredient_salt-action= Pejsek vezme sůl.
+doggie_and_kitie-cake-doggie_pick_ingredient_salt-fail = Pejsek nemůže vzít sůl.
+doggie_and_kitie-cake-doggie_pick_ingredient_salt-success = Pejsek vzal sůl.
+doggie_and_kitie-cake-kitie_pick_ingredient_salt-action = Kočička vezme sůl.
+doggie_and_kitie-cake-kitie_pick_ingredient_salt-fail = Kočička nemůže vzít sůl.
+doggie_and_kitie-cake-kitie_pick_ingredient_salt-success = Kočička vzala sůl.
+doggie_and_kitie-cake-doggie_pick_ingredient_cheese-action = Pejsek vezme syreček.
+doggie_and_kitie-cake-doggie_pick_ingredient_cheese-fail = Pejsek nemůže vzít syreček.
+doggie_and_kitie-cake-doggie_pick_ingredient_cheese-success = Pejsek vzal syreček.
+doggie_and_kitie-cake-kitie_pick_ingredient_cheese-action = Kočička vezme syreček.
+doggie_and_kitie-cake-kitie_pick_ingredient_cheese-fail = Kočička nemůže vzít syreček.
+doggie_and_kitie-cake-kitie_pick_ingredient_cheese-success = Kočička vzala syreček.
+doggie_and_kitie-cake-doggie_pick_ingredient_bacon-action = Pejsek vezme špekovou kůži.
+doggie_and_kitie-cake-doggie_pick_ingredient_bacon-fail = Pejsek nemůže vzít špekovou kůži.
+doggie_and_kitie-cake-doggie_pick_ingredient_bacon-success = Pejsek vzal špekovou kůži.
+doggie_and_kitie-cake-kitie_pick_ingredient_bacon-action = Kočička vezme špekovou kůži.
+doggie_and_kitie-cake-kitie_pick_ingredient_bacon-fail = Kočička nemůže vzít špekovou kůži.
+doggie_and_kitie-cake-kitie_pick_ingredient_bacon-success = Kočička vzala špekovou kůži.
+doggie_and_kitie-cake-doggie_pick_ingredient_peanuts-action = Pejsek vezme oříšky.
+doggie_and_kitie-cake-doggie_pick_ingredient_peanuts-fail = Pejsek nemůže vzít oříšky.
+doggie_and_kitie-cake-doggie_pick_ingredient_peanuts-success = Pejsek vzal oříšky.
+doggie_and_kitie-cake-kitie_pick_ingredient_peanuts-action = Kočička vezme oříšky.
+doggie_and_kitie-cake-kitie_pick_ingredient_peanuts-fail = Kočička nemůže vzít oříšky.
+doggie_and_kitie-cake-kitie_pick_ingredient_peanuts-success = Kočička vzala oříšky.
+doggie_and_kitie-cake-doggie_pick_ingredient_cucumber-action = Pejsek vezme okurku.
+doggie_and_kitie-cake-doggie_pick_ingredient_cucumber-fail = Pejsek nemůže vzít okurku.
+doggie_and_kitie-cake-doggie_pick_ingredient_cucumber-success = Pejsek vzal okurku.
+doggie_and_kitie-cake-kitie_pick_ingredient_cucumber-action = Kočička vezme okurku.
+doggie_and_kitie-cake-kitie_pick_ingredient_cucumber-fail = Kočička nemůže vzít okurku.
+doggie_and_kitie-cake-kitie_pick_ingredient_cucumber-success = Kočička vzala okurku.
+doggie_and_kitie-cake-doggie_pick_ingredient_bones-action = Pejsek vezme kosti.
+doggie_and_kitie-cake-doggie_pick_ingredient_bones-fail = Pejsek nemůže vzít kosti.
+doggie_and_kitie-cake-doggie_pick_ingredient_bones-success = Pejsek vzal kosti.
+doggie_and_kitie-cake-kitie_pick_ingredient_bones-action = Kočička vezme kosti.
+doggie_and_kitie-cake-kitie_pick_ingredient_bones-fail = Kočička nemůže vzít kosti.
+doggie_and_kitie-cake-kitie_pick_ingredient_bones-success = Kočička vzala kosti.
+doggie_and_kitie-cake-doggie_pick_ingredient_four_mice-action = Pejsek vezme čtyři myši.
+doggie_and_kitie-cake-doggie_pick_ingredient_four_mice-fail = Pejsek nemůže vzít čtyři myši.
+doggie_and_kitie-cake-doggie_pick_ingredient_four_mice-success = Pejsek vzal čtyři myši.
+doggie_and_kitie-cake-kitie_pick_ingredient_four_mice-action = Kočička vezme čtyři myši.
+doggie_and_kitie-cake-kitie_pick_ingredient_four_mice-fail = Kočička nemůže vzít čtyři myši.
+doggie_and_kitie-cake-kitie_pick_ingredient_four_mice-success = Kočička vzala čtyři myši.
+doggie_and_kitie-cake-doggie_pick_ingredient_sausages-action = Pejsek vezme buřty.
+doggie_and_kitie-cake-doggie_pick_ingredient_sausages-fail = Pejsek nemůže vzít buřty.
+doggie_and_kitie-cake-doggie_pick_ingredient_sausages-success = Pejsek vzal buřty.
+doggie_and_kitie-cake-kitie_pick_ingredient_sausages-action = Kočička vezme buřty.
+doggie_and_kitie-cake-kitie_pick_ingredient_sausages-fail = Kočička nemůže vzít buřty.
+doggie_and_kitie-cake-kitie_pick_ingredient_sausages-success = Kočička vzala buřty.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-action = Pejsek vezme šlehačku.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-fail = Pejsek nemůže vzít šlehačku.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-success = Pejsek vzal šlehačku.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-action = Kočička vezme šlehačku.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-fail = Kočička nemůže vzít šlehačku.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-success = Kočička vzala šlehačku.
+doggie_and_kitie-cake-doggie_pick_ingredient_onion-action = Pejsek vezme cibuli.
+doggie_and_kitie-cake-doggie_pick_ingredient_onion-fail = Pejsek nemůže vzít cibuli.
+doggie_and_kitie-cake-doggie_pick_ingredient_onion-success = Pejsek vzal cibuli.
+doggie_and_kitie-cake-kitie_pick_ingredient_onion-action = Kočička vezme cibuli.
+doggie_and_kitie-cake-kitie_pick_ingredient_onion-fail = Kočička nemůže vzít cibuli.
+doggie_and_kitie-cake-kitie_pick_ingredient_onion-success = Kočička vzala cibuli.
+doggie_and_kitie-cake-doggie_pick_ingredient_chocolate-action = Pejsek vezme čokoládu.
+doggie_and_kitie-cake-doggie_pick_ingredient_chocolate-fail = Pejsek nemůže vzít čokoládu.
+doggie_and_kitie-cake-doggie_pick_ingredient_chocolate-success = Pejsek vzal čokoládu.
+doggie_and_kitie-cake-kitie_pick_ingredient_chocolate-action = Kočička vezme čokoládu.
+doggie_and_kitie-cake-kitie_pick_ingredient_chocolate-fail = Kočička nemůže vzít čokoládu.
+doggie_and_kitie-cake-kitie_pick_ingredient_chocolate-success = Kočička vzala čokoládu.
+doggie_and_kitie-cake-doggie_pick_ingredient_sauce-action = Pejsek vezme omáčku.
+doggie_and_kitie-cake-doggie_pick_ingredient_sauce-fail = Pejsek nemůže vzít omáčku.
+doggie_and_kitie-cake-doggie_pick_ingredient_sauce-success = Pejsek vzal omáčku.
+doggie_and_kitie-cake-kitie_pick_ingredient_sauce-action = Kočička vezme omáčku.
+doggie_and_kitie-cake-kitie_pick_ingredient_sauce-fail = Kočička nemůže vzít omáčku.
+doggie_and_kitie-cake-kitie_pick_ingredient_sauce-success = Kočička vzala omáčku.
+doggie_and_kitie-cake-doggie_pick_ingredient_garlic-action = Pejsek vezme česnek.
+doggie_and_kitie-cake-doggie_pick_ingredient_garlic-fail = Pejsek nemůže vzít česnek.
+doggie_and_kitie-cake-doggie_pick_ingredient_garlic-success = Pejsek vzal česnek.
+doggie_and_kitie-cake-kitie_pick_ingredient_garlic-action = Kočička vezme česnek.
+doggie_and_kitie-cake-kitie_pick_ingredient_garlic-fail = Kočička nemůže vzít česnek.
+doggie_and_kitie-cake-kitie_pick_ingredient_garlic-success = Kočička vzala česnek.
+doggie_and_kitie-cake-doggie_pick_ingredient_pepper-action = Pejsek vezme pepř.
+doggie_and_kitie-cake-doggie_pick_ingredient_pepper-fail = Pejsek nemůže vzít pepř.
+doggie_and_kitie-cake-doggie_pick_ingredient_pepper-success = Pejsek vzal pepř.
+doggie_and_kitie-cake-kitie_pick_ingredient_pepper-action = Kočička vezme pepř.
+doggie_and_kitie-cake-kitie_pick_ingredient_pepper-fail = Kočička nemůže vzít pepř.
+doggie_and_kitie-cake-kitie_pick_ingredient_pepper-success = Kočička vzala pepř.
+doggie_and_kitie-cake-doggie_pick_ingredient_lard-action = Pejsek vezme sádlo.
+doggie_and_kitie-cake-doggie_pick_ingredient_lard-fail = Pejsek nemůže vzít sádlo.
+doggie_and_kitie-cake-doggie_pick_ingredient_lard-success = Pejsek vzal sádlo.
+doggie_and_kitie-cake-kitie_pick_ingredient_lard-action = Kočička vezme sádlo.
+doggie_and_kitie-cake-kitie_pick_ingredient_lard-fail = Kočička nemůže vzít sádlo.
+doggie_and_kitie-cake-kitie_pick_ingredient_lard-success = Kočička vzala sádlo.
+doggie_and_kitie-cake-doggie_pick_ingredient_candy-action = Pejsek vezme bonbóny.
+doggie_and_kitie-cake-doggie_pick_ingredient_candy-fail = Pejsek nemůže vzít bonbóny.
+doggie_and_kitie-cake-doggie_pick_ingredient_candy-success = Pejsek vzal bonbóny.
+doggie_and_kitie-cake-kitie_pick_ingredient_candy-action = Kočička vezme bonbóny.
+doggie_and_kitie-cake-kitie_pick_ingredient_candy-fail = Kočička nemůže vzít bonbóny.
+doggie_and_kitie-cake-kitie_pick_ingredient_candy-success = Kočička vzala bonbóny.
+doggie_and_kitie-cake-doggie_pick_ingredient_greaves-action = Pejsek vezme škvarky.
+doggie_and_kitie-cake-doggie_pick_ingredient_greaves-fail = Pejsek nemůže vzít škvarky.
+doggie_and_kitie-cake-doggie_pick_ingredient_greaves-success = Pejsek vzal škvarky.
+doggie_and_kitie-cake-kitie_pick_ingredient_greaves-action = Kočička vezme škvarky.
+doggie_and_kitie-cake-kitie_pick_ingredient_greaves-fail = Kočička nemůže vzít škvarky.
+doggie_and_kitie-cake-kitie_pick_ingredient_greaves-success = Kočička vzala škvarky.
+doggie_and_kitie-cake-doggie_pick_ingredient_cinnamon-action = Pejsek vezme skořici.
+doggie_and_kitie-cake-doggie_pick_ingredient_cinnamon-fail = Pejsek nemůže vzít skořici.
+doggie_and_kitie-cake-doggie_pick_ingredient_cinnamon-success = Pejsek vzal skořici.
+doggie_and_kitie-cake-kitie_pick_ingredient_cinnamon-action = Kočička vezme skořici.
+doggie_and_kitie-cake-kitie_pick_ingredient_cinnamon-fail = Kočička nemůže vzít skořici.
+doggie_and_kitie-cake-kitie_pick_ingredient_cinnamon-success = Kočička vzala skořici.
+doggie_and_kitie-cake-doggie_pick_ingredient_porridge-action = Pejsek vezme krupičnou kaši.
+doggie_and_kitie-cake-doggie_pick_ingredient_porridge-fail = Pejsek nemůže vzít krupičnou kaši.
+doggie_and_kitie-cake-doggie_pick_ingredient_porridge-success = Pejsek vzal krupičnou kaši.
+doggie_and_kitie-cake-kitie_pick_ingredient_porridge-action = Kočička vezme krupičnou kaši.
+doggie_and_kitie-cake-kitie_pick_ingredient_porridge-fail = Kočička nemůže vzít krupičnou kaši.
+doggie_and_kitie-cake-kitie_pick_ingredient_porridge-success = Kočička vzala krupičnou kaši.
+doggie_and_kitie-cake-doggie_pick_ingredient_cottage_cheese-action = Pejsek vezme tvaroh.
+doggie_and_kitie-cake-doggie_pick_ingredient_cottage_cheese-fail = Pejsek nemůže vzít tvaroh.
+doggie_and_kitie-cake-doggie_pick_ingredient_cottage_cheese-success = Pejsek vzal tvaroh.
+doggie_and_kitie-cake-kitie_pick_ingredient_cottage_cheese-action = Kočička vezme tvaroh.
+doggie_and_kitie-cake-kitie_pick_ingredient_cottage_cheese-fail = Kočička nemůže vzít tvaroh.
+doggie_and_kitie-cake-kitie_pick_ingredient_cottage_cheese-success = Kočička vzala tvaroh.
+doggie_and_kitie-cake-doggie_pick_ingredient_ginger_bread-action = Pejsek vezme perník.
+doggie_and_kitie-cake-doggie_pick_ingredient_ginger_bread-fail = Pejsek nemůže vzít perník.
+doggie_and_kitie-cake-doggie_pick_ingredient_ginger_bread-success = Pejsek vzal perník.
+doggie_and_kitie-cake-kitie_pick_ingredient_ginger_bread-action = Kočička vezme perník.
+doggie_and_kitie-cake-kitie_pick_ingredient_ginger_bread-fail = Kočička nemůže vzít perník.
+doggie_and_kitie-cake-kitie_pick_ingredient_ginger_bread-success = Kočička vzala perník.
+doggie_and_kitie-cake-doggie_pick_ingredient_vinegar-action = Pejsek vezme ocet.
+doggie_and_kitie-cake-doggie_pick_ingredient_vinegar-fail = Pejsek nemůže vzít ocet.
+doggie_and_kitie-cake-doggie_pick_ingredient_vinegar-success = Pejsek vzal ocet.
+doggie_and_kitie-cake-kitie_pick_ingredient_vinegar-action = Kočička vezme ocet.
+doggie_and_kitie-cake-kitie_pick_ingredient_vinegar-fail = Kočička nemůže vzít ocet.
+doggie_and_kitie-cake-kitie_pick_ingredient_vinegar-success = Kočička vzala ocet.
+doggie_and_kitie-cake-doggie_pick_ingredient_goose_head-action = Pejsek vezme hlavu husy.
+doggie_and_kitie-cake-doggie_pick_ingredient_goose_head-fail = Pejsek nemůže vzít hlavu husy.
+doggie_and_kitie-cake-doggie_pick_ingredient_goose_head-success = Pejsek vzal hlavu husy.
+doggie_and_kitie-cake-kitie_pick_ingredient_goose_head-action = Kočička vezme hlavu husy.
+doggie_and_kitie-cake-kitie_pick_ingredient_goose_head-fail = Kočička nemůže vzít hlavu husy.
+doggie_and_kitie-cake-kitie_pick_ingredient_goose_head-success = Kočička vzala hlavu husy.
+doggie_and_kitie-cake-doggie_pick_ingredient_cabbadge-action = Pejsek vezme zelí.
+doggie_and_kitie-cake-doggie_pick_ingredient_cabbadge-fail = Pejsek nemůže vzít zelí.
+doggie_and_kitie-cake-doggie_pick_ingredient_cabbadge-success = Pejsek vzal zelí.
+doggie_and_kitie-cake-kitie_pick_ingredient_cabbadge-action = Kočička vezme zelí.
+doggie_and_kitie-cake-kitie_pick_ingredient_cabbadge-fail = Kočička nemůže vzít zelí.
+doggie_and_kitie-cake-kitie_pick_ingredient_cabbadge-success = Kočička vzala zelí.
+doggie_and_kitie-cake-doggie_pick_ingredient_cocoa-action = Pejsek vezme kakao.
+doggie_and_kitie-cake-doggie_pick_ingredient_cocoa-fail = Pejsek nemůže vzít kakao.
+doggie_and_kitie-cake-doggie_pick_ingredient_cocoa-success = Pejsek vzal kakao.
+doggie_and_kitie-cake-kitie_pick_ingredient_cocoa-action = Kočička vezme kakao.
+doggie_and_kitie-cake-kitie_pick_ingredient_cocoa-fail = Kočička nemůže vzít kakao.
+doggie_and_kitie-cake-kitie_pick_ingredient_cocoa-success = Kočička vzala kakao.
+doggie_and_kitie-cake-doggie_pick_ingredient_raisins-action = Pejsek vezme rozinky.
+doggie_and_kitie-cake-doggie_pick_ingredient_raisins-fail = Pejsek nemůže vzít rozinky.
+doggie_and_kitie-cake-doggie_pick_ingredient_raisins-success = Pejsek vzal rozinky.
+doggie_and_kitie-cake-kitie_pick_ingredient_raisins-action = Kočička vezme rozinky.
+doggie_and_kitie-cake-kitie_pick_ingredient_raisins-fail = Kočička nemůže vzít rozinky.
+doggie_and_kitie-cake-kitie_pick_ingredient_raisins-success = Kočička vzala rozinky.
 
 doggie_and_kitie-cake-doggie_use_flour-action = Pejsek přidá mouku do dortu.
 doggie_and_kitie-cake-doggie_use_flour-fail = Pejsek nemůže přidat mouku do dortu.
@@ -520,24 +520,24 @@ doggie_and_kitie-cake-kitie_move_to_children_garden-action = Kočička odejde k 
 doggie_and_kitie-cake-kitie_move_to_children_garden-fail = Kočička nemůže odejít k dětem na zahradu.
 doggie_and_kitie-cake-kitie_move_to_children_garden-success = Kočička odešla k dětem na zahradu
 
-doggie_and_kitie-cake-doggie_pick_ball-action = Pejsek si zahraje s míčem s dětmi.
-doggie_and_kitie-cake-doggie_pick_ball-fail = Pejsek si nemůže zahrát s míčem s dětmi.
-doggie_and_kitie-cake-doggie_pick_ball-success = Pejsek si zahrál s míčem s dětmi.
-doggie_and_kitie-cake-kitie_pick_ball-action = Kočička si zahraje s míčem s dětmi.
-doggie_and_kitie-cake-kitie_pick_ball-fail = Kočička si nemůže zahrát s míčem s dětmi.
-doggie_and_kitie-cake-kitie_pick_ball-success = Kočička si zahrála s míčem s dětmi.
-doggie_and_kitie-cake-doggie_pick_dice-action = Pejsek si zahraje kostky s dětmi.
-doggie_and_kitie-cake-doggie_pick_dice-fail = Pejsek si nemůže zahrát kostky s dětmi.
-doggie_and_kitie-cake-doggie_pick_dice-success = Pejsek si zahrál kostky s dětmi.
-doggie_and_kitie-cake-kitie_pick_dice-action = Kočička si zahraje kostky s dětmi.
-doggie_and_kitie-cake-kitie_pick_dice-fail = Kočička si nemůže zahrát kostky s dětmi.
-doggie_and_kitie-cake-kitie_pick_dice-success = Kočička si zahrála kostky s dětmi.
-doggie_and_kitie-cake-doggie_pick_marbles-action = Pejsek si zahraje kuličky s dětmi.
-doggie_and_kitie-cake-doggie_pick_marbles-fail = Pejsek si nemůže zahrát kuličky s dětmi.
-doggie_and_kitie-cake-doggie_pick_marbles-success = Pejsek si zahrál kuličky s dětmi.
-doggie_and_kitie-cake-kitie_pick_marbles-action = Kočička si zahraje kuličky s dětmi.
-doggie_and_kitie-cake-kitie_pick_marbles-fail = Kočička si nemůže zahrát kuličky s dětmi.
-doggie_and_kitie-cake-kitie_pick_marbles-success = Kočička si zahrála kuličky s dětmi.
+doggie_and_kitie-cake-doggie_play_ball-action = Pejsek si zahraje s míčem s dětmi.
+doggie_and_kitie-cake-doggie_play_ball-fail = Pejsek si nemůže zahrát s míčem s dětmi.
+doggie_and_kitie-cake-doggie_play_ball-success = Pejsek si zahrál s míčem s dětmi.
+doggie_and_kitie-cake-kitie_play_ball-action = Kočička si zahraje s míčem s dětmi.
+doggie_and_kitie-cake-kitie_play_ball-fail = Kočička si nemůže zahrát s míčem s dětmi.
+doggie_and_kitie-cake-kitie_play_ball-success = Kočička si zahrála s míčem s dětmi.
+doggie_and_kitie-cake-doggie_play_dice-action = Pejsek si zahraje kostky s dětmi.
+doggie_and_kitie-cake-doggie_play_dice-fail = Pejsek si nemůže zahrát kostky s dětmi.
+doggie_and_kitie-cake-doggie_play_dice-success = Pejsek si zahrál kostky s dětmi.
+doggie_and_kitie-cake-kitie_play_dice-action = Kočička si zahraje kostky s dětmi.
+doggie_and_kitie-cake-kitie_play_dice-fail = Kočička si nemůže zahrát kostky s dětmi.
+doggie_and_kitie-cake-kitie_play_dice-success = Kočička si zahrála kostky s dětmi.
+doggie_and_kitie-cake-doggie_play_marbles-action = Pejsek si zahraje kuličky s dětmi.
+doggie_and_kitie-cake-doggie_play_marbles-fail = Pejsek si nemůže zahrát kuličky s dětmi.
+doggie_and_kitie-cake-doggie_play_marbles-success = Pejsek si zahrál kuličky s dětmi.
+doggie_and_kitie-cake-kitie_play_marbles-action = Kočička si zahraje kuličky s dětmi.
+doggie_and_kitie-cake-kitie_play_marbles-fail = Kočička si nemůže zahrát kuličky s dětmi.
+doggie_and_kitie-cake-kitie_play_marbles-success = Kočička si zahrála kuličky s dětmi.
 
 doggie_and_kitie-cake-doggie_move_to_garden-action = Pejsek se vrátí zpátky na zahradu.
 doggie_and_kitie-cake-doggie_move_to_garden-fail = Pejsek nemůže vrátit zpátky na zahradu.
@@ -634,33 +634,41 @@ doggie_and_kitie-cake-playground-kitie_last =
     { -doggie_and_kitie-cake-playground-post }
 
 doggie_and_kitie-cake-kitchen-short = Kuchyň
-doggie_and_kitie-cake-kitchen-ingredients =
+doggie_and_kitie-cake-kitchen-ingredients-batch1 =
     Pejsek a kočička si vzali zástěry a pustili se do vaření.
-    Vzali mouku, mlíčko a vajíčko a míchali to dohromady. „Dort musí
-    být sladký,“ řekla kočička a nasypala do toho cukr. „A trochu slaný ta-
-    ky,“ řekl pejsek a dal tam sůl. „A teď tam dáme máslo a zavařeninu,“
+    Vzali mouku, mlíčko a vajíčko a míchali to dohromady.
+doggie_and_kitie-cake-kitchen-ingredients-batch2 =
+    „Dort musí být sladký,“ řekla kočička a nasypala do toho cukr. „A trochu
+    slaný taky,“ řekl pejsek a dal tam sůl. „A teď tam dáme máslo a zavařeninu,“
     řekla kočička. „Zavařeninu, tu ne, tu já nerad,“ povídal pejsek, „dáme
     tam místo zavařeniny syreček, ten já tuze rád.“ Tak tam dali několik
-    syrečků. „Mně se zdá, že je málo mastný,“ řekla kočička, „musíme tam
+    syrečků.
+doggie_and_kitie-cake-kitchen-ingredients-batch3 =
+    „Mně se zdá, že je málo mastný,“ řekla kočička, „musíme tam
     dát několik špekových kůží.“ – „A oříšky, abychom nezapomněli, “ řekl
     pejsek a nasypal tam kornout oříšků. „Oříšky jsou dobré,“ schválila to
     kočička, „ale měla by tam jistě také přijít okurka,“ a dala tam okurku.
     „A kosti,“ volal pejsek, „musíme tam přece dát nějaké kosti!“ Tak do
-    toho dortu dali hodně kostí. „A přece nějakou myš, myši já tak tuze
-    ráda!“ vzpomněla si kočička a dala do dortu čtyři myši. „Tak, a teď ně-
-    kolik buřtů hodně pepřovatých, to je něco pro mne,“ řekl pejsek a dal
-    tam několik buřtů. „A to hlavní!“ povídala kočička, „přece šlehanou
-    smetanu tam musíme dát!“ Dali tam plný hrnec smetany. „A trochu
-    cibule,“ řekl pejsek a dal tam cibuli. „A čokoládu,“ řekla kočička a přida-
-    la do toho čokoládu. „A omáčku!“ napadlo pejskovi, i dali tam omáčku.
+    toho dortu dali hodně kostí.
+doggie_and_kitie-cake-kitchen-ingredients-batch4 =
+    „A přece nějakou myš, myši já tak tuze ráda!“ vzpomněla si kočička a
+    dala do dortu čtyři myši. „Tak, a teď několik buřtů hodně pepřovatých,
+    to je něco pro mne,“ řekl pejsek a dal tam několik buřtů. „A to hlavní!“
+    povídala kočička, „přece šlehanou smetanu tam musíme dát!“ Dali tam plný
+    hrnec smetany. „A trochu cibule,“ řekl pejsek a dal tam cibuli.
+    „A čokoládu,“ řekla kočička a přidala do toho čokoládu. „A omáčku!“ napadlo
+    pejskovi, i dali tam omáčku.
+doggie_and_kitie-cake-kitchen-ingredients-batch5 =
     Tak do toho svého dortu dávali a míchali všechno možné, dali tam
     i česnek a pepř a namíchali tam sádlo i bonbóny, škvarky a skořici,
-    krupičnou kaši a tvaroh, perník a ocet, kakao a zelí, jednu hlavu z husy
-    a hrozinky, inu všechno možné do toho dortu dali, jen chleba tam neda-
-    li, protože pejskové a kočičky chleba zrovna tuze moc rádi nejedí.
+    krupičnou kaši a tvaroh,
+doggie_and_kitie-cake-kitchen-ingredients-batch6 =
+    perník a ocet, kakao a zelí, jednu hlavu z husy a hrozinky,
+    inu všechno možné do toho dortu dali, jen chleba tam nedali,
+    protože pejskové a kočičky chleba zrovna tuze moc rádi nejedí.
 doggie_and_kitie-cake-kitchen-ready =
-    Když to všechno smíchali a rozmíchali, byl z toho dort tak veliký ja-
-    ko kolo u vozu. „Panečku, to bude veliký dort, to se nějak najíme!“ chvá-
+    Když to všechno smíchali a rozmíchali, byl z toho dort tak veliký jako
+    kolo u vozu. „Panečku, to bude veliký dort, to se nějak najíme!“ chvá-
     lili si to, „a teď to dáme péci.“
     Dali dort péci a těšili se na to, až bude upečený. Kouřilo se z toho,
     bublalo to, prskalo a syčelo, škvířilo se to, syčelo to a šla z toho pára,
