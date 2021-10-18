@@ -1,12 +1,23 @@
-use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder};
+use actix::*;
+use actix_web::{
+    error, get, post, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder,
+};
+use actix_web_actors::ws;
 use anyhow::{anyhow, Result};
 use futures::StreamExt;
 use pabitell_lib::{data::EventData, Dumpable, Narrator, World};
 use serde::{Deserialize, Serialize};
 use sled::Db;
+use std::{
+    sync::{atomic::AtomicUsize, Arc},
+    time::Instant,
+};
 use uuid::Uuid;
 
-use crate::{backend, make_story_doggie_and_kitie_cake};
+use crate::{
+    backend, make_story_doggie_and_kitie_cake,
+    websocket::{ClientMessage as WsClientMessage, WsConnection, WsManager},
+};
 
 const WORKERS: usize = 8;
 const MAX_SIZE: usize = 1024 * 1024;
@@ -24,10 +35,13 @@ fn make_world(_namespace: &str, story: &str) -> Option<(Box<dyn World>, Box<dyn 
 }
 
 #[post("/{namespace}/{story}/")]
-async fn create_world(data: web::Data<Db>, path: web::Path<(String, String)>) -> impl Responder {
+async fn create_world(
+    data: web::Data<(Db, Addr<WsManager>)>,
+    path: web::Path<(String, String)>,
+) -> impl Responder {
     let (namespace, story) = path.into_inner();
     if let Some((world, _)) = make_world(&namespace, &story) {
-        backend::store(&mut data.as_ref().clone(), &story, world.as_ref()).unwrap();
+        backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
         HttpResponse::Created().json(NewWorld {
             id: world.id().clone(),
         })
@@ -37,11 +51,14 @@ async fn create_world(data: web::Data<Db>, path: web::Path<(String, String)>) ->
 }
 
 #[get("/{namespace}/{story}/{world}/")]
-async fn get_world(data: web::Data<Db>, path: web::Path<(String, String, Uuid)>) -> impl Responder {
+async fn get_world(
+    data: web::Data<(Db, Addr<WsManager>)>,
+    path: web::Path<(String, String, Uuid)>,
+) -> impl Responder {
     let (namespace, story, world_id) = path.into_inner();
     if let Some((mut world, _)) = make_world(&namespace, &story) {
         if backend::load(
-            &mut data.as_ref().clone(),
+            &mut data.as_ref().0.clone(),
             &story,
             &world_id,
             world.as_mut(),
@@ -61,7 +78,7 @@ async fn get_world(data: web::Data<Db>, path: web::Path<(String, String, Uuid)>)
 
 #[post("/{namespace}/{story}/{world}/event/")]
 async fn event_world(
-    data: web::Data<Db>,
+    data: web::Data<(Db, Addr<WsManager>)>,
     path: web::Path<(String, String, Uuid)>,
     mut payload: web::Payload,
 ) -> std::result::Result<HttpResponse, Error> {
@@ -69,7 +86,7 @@ async fn event_world(
 
     if let Some((mut world, narrator)) = make_world(&namespace, &story) {
         if backend::load(
-            &mut data.as_ref().clone(),
+            &mut data.as_ref().0.clone(),
             &story,
             &world_id,
             world.as_mut(),
@@ -96,7 +113,15 @@ async fn event_world(
             if let Some(mut event) = narrator.parse_event(value) {
                 if event.can_be_triggered(world.as_ref()) {
                     event.trigger(world.as_mut());
-                    backend::store(&mut data.as_ref().clone(), &story, world.as_ref()).unwrap();
+                    backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
+
+                    let ws_manager = data.as_ref().1.clone();
+                    ws_manager.do_send(WsClientMessage {
+                        world_id,
+                        data: event.dump().to_string(),
+                    });
+                    //ws_manager.send(EventTriggered {});
+
                     // TODO think of some reasonable retval
                     Ok(HttpResponse::Ok().json(serde_json::json!({})))
                 } else {
@@ -115,15 +140,34 @@ async fn event_world(
     }
 }
 
+#[get("/ws/{namespace}/{story}/{world}/")]
+async fn ws_endpoint(
+    req: HttpRequest,
+    data: web::Data<(Db, Addr<WsManager>)>,
+    path: web::Path<(String, String, Uuid)>,
+    stream: web::Payload,
+) -> std::result::Result<HttpResponse, Error> {
+    ws::start(
+        WsConnection::new(Instant::now(), path.2, data.get_ref().1.clone()),
+        &req,
+        stream,
+    )
+}
+
 async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {
+    // init db connection
     let db = sled::open(db_path)?;
+    // Start chat server actor
+    let ws_manager = WsManager::new().start();
+
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(db.clone()))
+            .app_data(web::Data::new((db.clone(), ws_manager.to_owned())))
             .wrap(actix_web::middleware::Logger::default())
             .service(create_world)
             .service(get_world)
             .service(event_world)
+            .service(ws_endpoint)
     })
     .workers(WORKERS)
     .bind(format!("0.0.0.0:{}", port))?

@@ -1,6 +1,7 @@
 pub mod backend;
 pub mod cli;
 pub mod web;
+pub mod websocket;
 
 use anyhow::{anyhow, Result};
 use clap::{
