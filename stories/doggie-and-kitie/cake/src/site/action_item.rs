@@ -11,10 +11,10 @@ use super::{
 pub struct Props {
     pub item: Rc<items::Item>,
     pub item_used_event: Callback<(String, String)>,
+    pub show_qr_cb: Callback<Rc<Vec<u8>>>,
 }
 
 pub struct ActionItem {
-    pub qr_scope: Rc<RefCell<Option<html::Scope<qrcode::QRCode>>>>,
     pub qr_scanner_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
 }
 
@@ -33,12 +33,9 @@ impl Component for ActionItem {
         match msg {
             Msg::ShowQRCode => {
                 log::info!("QR active");
-                self.qr_scope
-                    .as_ref()
-                    .borrow()
-                    .clone()
-                    .unwrap()
-                    .send_message(qrcode::Msg::Active(true));
+                let item = ctx.props().item.clone();
+                let data = item.data.clone();
+                props.show_qr_cb.emit(data);
             }
             Msg::QRCodeScanned(data) => {
                 props
@@ -60,14 +57,11 @@ impl Component for ActionItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             qr_scanner_callback: Rc::new(RefCell::new(None)),
-            qr_scope: Rc::new(RefCell::new(None)),
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let item = ctx.props().item.clone();
-
-        let data = item.data.clone();
         let link = ctx.link().clone();
 
         let show_qr = link.callback(|_| Msg::ShowQRCode);
@@ -96,7 +90,6 @@ impl Component for ActionItem {
                 </div>
                 <div class="card-content">
                     <div class="content">{item.long.clone()}</div>
-                    <qrcode::QRCode {data} shared_scope={self.qr_scope.clone()} />
                     <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()} />
                 </div>
                 <footer class="card-footer">

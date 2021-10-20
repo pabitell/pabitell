@@ -37,11 +37,10 @@ impl ActionEventItem {
 pub struct Props {
     pub item: Rc<ActionEventItem>,
     pub trigger_event_cb: Callback<()>,
+    pub show_qr_cb: Callback<Rc<Vec<u8>>>,
 }
 
-pub struct ActionEvent {
-    pub qr_scope: Rc<RefCell<Option<html::Scope<qrcode::QRCode>>>>,
-}
+pub struct ActionEvent {}
 
 pub enum Msg {
     ShowQRCode,
@@ -55,26 +54,20 @@ impl Component for ActionEvent {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ShowQRCode => {
-                self.qr_scope
-                    .as_ref()
-                    .borrow()
-                    .clone()
-                    .unwrap()
-                    .send_message(qrcode::Msg::Active(true));
+                let data = ctx.props().item.data.clone();
+                ctx.props().show_qr_cb.emit(data);
+                false
             }
             Msg::TriggerEvent => {
                 ctx.props().trigger_event_cb.emit(());
                 // TODO emit trigger event
-                true;
+                true
             }
         }
-        false
     }
 
     fn create(ctx: &Context<Self>) -> Self {
-        Self {
-            qr_scope: Rc::new(RefCell::new(None)),
-        }
+        Self {}
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -108,7 +101,6 @@ impl Component for ActionEvent {
                                 <button class="button" onclick={ show_qr_cb } >
                                     <i class="fas fa-qrcode"></i>
                                 </button>
-                                <qrcode::QRCode {data} shared_scope={self.qr_scope.clone()} />
                             </p>
                         </div>
                     </div>

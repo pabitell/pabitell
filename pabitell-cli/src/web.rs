@@ -34,7 +34,7 @@ fn make_world(_namespace: &str, story: &str) -> Option<(Box<dyn World>, Box<dyn 
     }
 }
 
-#[post("/{namespace}/{story}/")]
+#[post("/api/{namespace}/{story}/")]
 async fn create_world(
     data: web::Data<(Db, Addr<WsManager>)>,
     path: web::Path<(String, String)>,
@@ -50,7 +50,7 @@ async fn create_world(
     }
 }
 
-#[get("/{namespace}/{story}/{world}/")]
+#[get("/api/{namespace}/{story}/{world}/")]
 async fn get_world(
     data: web::Data<(Db, Addr<WsManager>)>,
     path: web::Path<(String, String, Uuid)>,
@@ -76,7 +76,7 @@ async fn get_world(
     }
 }
 
-#[post("/{namespace}/{story}/{world}/event/")]
+#[post("/api/{namespace}/{story}/{world}/event/")]
 async fn event_world(
     data: web::Data<(Db, Addr<WsManager>)>,
     path: web::Path<(String, String, Uuid)>,
@@ -116,11 +116,11 @@ async fn event_world(
                     backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
 
                     let ws_manager = data.as_ref().1.clone();
+                    println!("Sending: {}", event.dump());
                     ws_manager.do_send(WsClientMessage {
                         world_id,
                         data: event.dump().to_string(),
                     });
-                    //ws_manager.send(EventTriggered {});
 
                     // TODO think of some reasonable retval
                     Ok(HttpResponse::Ok().json(serde_json::json!({})))

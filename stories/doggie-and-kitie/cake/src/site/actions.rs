@@ -13,7 +13,7 @@ use super::{
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
 
-#[derive(Clone, Debug, PartialEq, Default, Properties)]
+#[derive(Clone, Debug, Default, Properties)]
 pub struct Props {
     pub lang: String,
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
@@ -23,19 +23,34 @@ pub struct Props {
     pub trigger_event: Callback<usize>,
     pub trigger_scanned_event: Callback<Value>,
     pub world_id: Uuid,
+    pub actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
+}
+
+impl PartialEq for Props {
+    fn eq(&self, other: &Self) -> bool {
+        self.lang == other.lang
+            && self.available_characters == other.available_characters
+            && self.owned_items == other.owned_items
+            && self.selected_character == other.selected_character
+            && self.events == other.events
+            && self.trigger_event == other.trigger_event
+            && self.trigger_scanned_event == other.trigger_scanned_event
+            && self.world_id == other.world_id
+    }
 }
 
 pub enum Msg {
     QRCodeScanShow,
     TriggerEvent(usize),
-    QRCodeShow(String),
+    QRCodeShow(Rc<Vec<u8>>),
+    QRCodeHide,
     QRCodeScanned(String),
     QRCodeUseItemScanned(String, String),
 }
 
 pub struct Actions {
-    qr_callabacks: RefCell<HashMap<String, Rc<RefCell<Option<html::Scope<QRCode>>>>>>,
-    qr_scanner_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
+    qr_code_scope: Rc<RefCell<Option<html::Scope<QRCode>>>>,
+    qr_scanner_scope: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
 }
 
 impl Component for Actions {
@@ -43,9 +58,10 @@ impl Component for Actions {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
+        *ctx.props().actions_scope.borrow_mut() = Some(ctx.link().clone());
         Self {
-            qr_scanner_callback: Rc::new(RefCell::new(None)),
-            qr_callabacks: RefCell::new(HashMap::new()),
+            qr_code_scope: Rc::new(RefCell::new(None)),
+            qr_scanner_scope: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -100,20 +116,25 @@ impl Component for Actions {
                 true
             }
             Msg::QRCodeShow(data) => {
-                self.qr_callabacks
-                    .clone()
-                    .borrow()
-                    .get(&data)
+                self.qr_code_scope
                     .as_ref()
-                    .unwrap()
                     .borrow()
                     .clone()
                     .unwrap()
-                    .send_message(QRCodeMsg::Active(true));
+                    .send_message(QRCodeMsg::Show(Some(data)));
+                false
+            }
+            Msg::QRCodeHide => {
+                self.qr_code_scope
+                    .as_ref()
+                    .borrow()
+                    .clone()
+                    .unwrap()
+                    .send_message(QRCodeMsg::Show(None));
                 false
             }
             Msg::QRCodeScanShow => {
-                self.qr_scanner_callback
+                self.qr_scanner_scope
                     .as_ref()
                     .borrow()
                     .clone()
@@ -130,9 +151,10 @@ impl Component for Actions {
         let render_action = move |item: Rc<action_event::ActionEventItem>| {
             let idx = item.idx;
             let cb = link.clone().callback(move |_| Msg::TriggerEvent(idx));
+            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
 
             html! {
-                <action_event::ActionEvent {item} trigger_event_cb={cb} />
+                <action_event::ActionEvent {item} trigger_event_cb={cb} {show_qr_cb} />
             }
         };
         let cloned_link = ctx.link().clone();
@@ -191,18 +213,27 @@ impl Component for Actions {
         let render_item = move |item: &Rc<items::Item>| {
             let use_item_scanned_cb =
                 link.callback(|(item, data)| Msg::QRCodeUseItemScanned(item, data));
+
+            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
             html! {
                 <action_item::ActionItem
                   item={item.clone()}
                   item_used_event={use_item_scanned_cb}
+                  {show_qr_cb}
                 />
             }
         };
 
+        let link = ctx.link().clone();
         let render_join = |character: &Rc<characters::Character>| {
             let world_id = ctx.props().world_id.clone();
+            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
             html! {
-                <action_join::ActionJoin character={character.clone()} world_id={world_id}/>
+                <action_join::ActionJoin
+                  {show_qr_cb}
+                  character={character.clone()}
+                  world_id={world_id}
+                />
             }
         };
 
@@ -214,8 +245,9 @@ impl Component for Actions {
                     { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
                     { for joinable_characters.iter().map(|e| render_join(e.clone())) }
                     { for items.iter().map(render_item) }
-                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()} />
+                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_scope.clone()} />
                     { for events.into_iter().map(render_action) }
+                    <QRCode qr_code_scope={self.qr_code_scope.clone()}/>
                 </div>
             </section>
         }
@@ -223,6 +255,7 @@ impl Component for Actions {
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
         // Update when component is reused
+        *ctx.props().actions_scope.borrow_mut() = Some(ctx.link().clone());
         true
     }
 }

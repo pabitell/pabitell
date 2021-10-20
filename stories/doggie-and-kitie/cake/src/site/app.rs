@@ -12,7 +12,7 @@ use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
 
 use super::{
     action_event::ActionEventItem,
-    actions::Actions,
+    actions::{Actions, Msg as ActionsMsg},
     character_combo::CharacterCombo,
     characters::{self, make_characters},
     intro::Intro,
@@ -20,6 +20,7 @@ use super::{
     message::{Kind as MessageKind, MessageItem},
     messages::{Messages, Msg as MessagesMsg},
     speech::{Msg as SpeechMsg, Speech},
+    status::{Msg as StatusMsg, Status},
 };
 
 pub enum Msg {
@@ -28,30 +29,25 @@ pub enum Msg {
     TriggerScannedEvent(Value),
     TriggerScannedCharacter(String, Uuid),
     PlayText(String),
+    NotificationRecieved(String),
     Reset,
-    Void,
     CreateNewWorld,
     NewWorldIdFetched(Uuid),
     WorldUpdateFetched(CakeWorld),
     EventPublished,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Page {
+    StatusReady,
     Void,
-    QR,
-    Use,
-    Give,
-    Hint,
 }
 
 pub struct App {
     world_id: Option<Uuid>,
     world: Option<CakeWorld>,
     selected_character: Rc<Option<String>>,
-    page: Page,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
     speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
+    status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
+    actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
+    ws_queue: Vec<String>,
 }
 
 async fn make_request(
@@ -101,9 +97,11 @@ impl Component for App {
             world_id,
             world: None,
             selected_character: Rc::new(None),
-            page: Page::Void,
             messages_scope: Rc::new(RefCell::new(None)),
             speech_scope: Rc::new(RefCell::new(None)),
+            status_scope: Rc::new(RefCell::new(None)),
+            actions_scope: Rc::new(RefCell::new(None)),
+            ws_queue: vec![],
         }
     }
 
@@ -215,13 +213,20 @@ impl Component for App {
             Msg::TriggerScannedCharacter(character, world_id) => {
                 // check whether character exists in the world
                 let world = Self::make_world();
-                if world.characters().get(&character).is_some() {
+                if let Some(character_instance) = world.characters().get(&character) {
                     storage::LocalStorage::set("world_id", world_id).unwrap();
+                    self.world_id = Some(world_id);
+
                     // Setch the character
                     ctx.link()
                         .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
                     // Get the world
                     Self::request_to_get_world(ctx, world_id);
+
+                    // Queue character notification
+                    // we need to wait till Status component is initialized
+                    self.ws_queue.push(character_instance.dump().to_string());
+
                     true
                 } else {
                     log::warn!("Character '{}' is not found", character);
@@ -269,6 +274,51 @@ impl Component for App {
                 }
                 false
             }
+            Msg::NotificationRecieved(data) => {
+                let narrator = narrator::Cake::default();
+                if let Ok(json) = serde_json::from_str(&data) {
+                    let json: Value = json;
+                    if let Some(_event) = narrator.parse_event(json.clone()) {
+                        log::info!("New event arrived from ws");
+                        if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
+                            log::debug!("Hiding QR code of actions");
+                            actions_scope.send_message(ActionsMsg::QRCodeHide);
+                        }
+                        if let Some(world_id) = self.world_id {
+                            // TODO this should be optimized
+                            // not need to refresh the whole world just a single event
+                            Self::request_to_get_world(ctx, world_id);
+                        }
+                    } else if let Value::String(name) = &json["name"] {
+                        // It can be a message that character was joining the game
+                        // => close Modal which is displaying QR code
+                        log::info!("Character '{}' joined", name);
+                        if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
+                            actions_scope.send_message(ActionsMsg::QRCodeHide);
+                        }
+                    }
+                }
+                false
+            }
+            Msg::StatusReady => {
+                // Send notification to other connected clients
+                //
+                // Note that notification needs to be send once
+                // status_scope in initialized by the subcomponent
+                let status_scope = self.status_scope.clone();
+
+                self.ws_queue.drain(..).for_each(|msg| {
+                    let status_scope = status_scope.clone();
+                    ctx.link().send_future(async move {
+                        log::warn!("{:?}", status_scope);
+                        if let Some(status_scope) = status_scope.as_ref().borrow().as_ref() {
+                            status_scope.send_message(StatusMsg::SendMessage(msg));
+                        }
+                        Msg::Void
+                    });
+                });
+                false
+            }
         }
     }
 
@@ -312,6 +362,9 @@ impl Component for App {
 
             let lang = world.lang().to_string();
 
+            let notification_cb = ctx.link().callback(|data| Msg::NotificationRecieved(data));
+            let status_ready_cb = ctx.link().callback(|_| Msg::StatusReady);
+
             html! {
                 <>
                     <section class="hero is-small is-light">
@@ -319,13 +372,27 @@ impl Component for App {
                           <p class="title">
                             {world.description().short(world)}
                           </p>
-                          <p class="subtitle">
-                              <Speech
-                                lang={ lang.clone() }
-                                start_text={ world.description().short(world) }
-                                shared_scope={ self.speech_scope.clone() }
-                              />
-                          </p>
+                          <div class="subtitle is-flex">
+                              <div class="w-100 field is-grouped is-grouped-multiline">
+                                  <div class="has-text-centered">
+                                      <Status
+                                        world_id={self.world_id.clone()}
+                                        namespace={"some_namespace"}
+                                        story={"doggie_and_kitie_cake"}
+                                        msg_recieved={notification_cb}
+                                        status_ready={status_ready_cb}
+                                        status_scope={self.status_scope.clone()}
+                                      />
+                                  </div>
+                                  <div class="has-text-centered">
+                                      <Speech
+                                        lang={lang.clone()}
+                                        start_text={world.description().short(world)}
+                                        shared_scope={self.speech_scope.clone()}
+                                      />
+                                  </div>
+                              </div>
+                          </div>
                       </div>
                     </section>
                     <main>
@@ -345,6 +412,7 @@ impl Component for App {
                           trigger_event={ trigger_event_callback }
                           trigger_scanned_event={ trigger_scanned_event_callback }
                           world_id={self.world_id.unwrap_or_default().clone()}
+                          actions_scope={self.actions_scope.clone()}
                         />
                     </main>
                     <footer class="footer">

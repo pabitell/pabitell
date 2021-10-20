@@ -26,10 +26,8 @@ dist = "dist/"
 cargo = false
 
 [[proxy]]
-backend = "http://localhost:8081/"
-rewrite = "/api/"
+backend = "http://localhost:8081/api/"
 
 [[proxy]]
 backend = "ws://localhost:8081/ws/"
-rewrite = "/ws/"
 ws = true

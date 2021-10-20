@@ -13,3 +13,4 @@ pub mod messages;
 pub mod qrcode;
 pub mod qrscanner;
 pub mod speech;
+pub mod status;
