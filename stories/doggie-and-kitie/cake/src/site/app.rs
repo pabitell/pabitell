@@ -442,6 +442,7 @@ impl Component for App {
                 <Intro
                     new_world={new_world_cb}
                     story_name={world.description().short(&world)}
+                    story_detail={world.description().long(&world)}
                     character_scanned={character_scanned_cb}
                 />
             }

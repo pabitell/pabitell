@@ -19,6 +19,7 @@ use yew::{html, prelude::*};
 pub struct Props {
     pub new_world: Callback<()>,
     pub story_name: String,
+    pub story_detail: String,
     pub character_scanned: Callback<(String, Uuid)>,
 }
 
@@ -104,22 +105,31 @@ impl Component for Intro {
                 <div class="modal-background"></div>
                 <div class="modal-card">
                     <header class="modal-card-head">
-                        <p class="modal-card-title">{ctx.props().story_name.clone()}</p>
+                        <p class="modal-card-title is-flex-shrink-1">
+                            {ctx.props().story_name.clone()}
+                        </p>
                     </header>
                     <section class="modal-card-body">
-                        <div class="columns is-flex-wrap-wrap w-100">
-                            <figure class="image is-128x128 is-clickable box" onclick={new_world_cb}>
-                                <img src="svgs/solid/plus-circle.svg"/>
-                            </figure>
-                            <figure class="image is-128x128 is-clickable box" onclick={show_qr_cb}>
-                                <img src="svgs/solid/sign-in-alt.svg"/>
-                            </figure>
+                        <div class="content">
+                            <p>{ctx.props().story_detail.clone()}</p>
                             <QRScanner
                               qr_found={qr_found_cb}
                               shared_scope={self.qr_scanner_character_callback.clone()}
                             />
                         </div>
                     </section>
+                    <footer class="modal-card-foot is-justify-content-center">
+                        <button class="button is-medium is-success is-outlined">
+                            <span class="icon">
+                                <i class="fas fa-plus-circle" onclick={new_world_cb}></i>
+                            </span>
+                        </button>
+                        <button class="button is-medium is-info is-outlined">
+                            <span class="icon">
+                                <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
+                            </span>
+                        </button>
+                    </footer>
                 </div>
             </div>
         }
