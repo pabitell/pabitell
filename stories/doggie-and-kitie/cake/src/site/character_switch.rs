@@ -13,16 +13,17 @@ pub struct Props {
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
     pub set_character: Callback<Rc<Option<String>>>,
     pub selected_character: Rc<Option<String>>,
+    pub fixed: bool,
 }
 
-pub struct CharacterCombo {}
+pub struct CharacterSwitch {}
 
 pub enum Msg {
     UpdateSelectedCharacter(Rc<characters::Character>),
     Void,
 }
 
-impl Component for CharacterCombo {
+impl Component for CharacterSwitch {
     type Message = Msg;
     type Properties = Props;
 
@@ -50,15 +51,28 @@ impl Component for CharacterCombo {
             let cloned_character: Rc<characters::Character> = character.clone();
             let onclick =
                 link.callback(move |_| Msg::UpdateSelectedCharacter(cloned_character.clone()));
-            html! {
-                <li class={ if selected_character_code == character.code { "is-active" } else { "" } }>
-                  <a {onclick}>
-                    <span class="icon is-small">
-                        <i class={ character.icon.to_string() }></i>
-                    </span>
-                    <span>{ character.short.clone() }</span>
-                  </a>
-                </li>
+            if ctx.props().fixed {
+                html! {
+                    <li class={ if selected_character_code == character.code { "is-active" } else { "" } }>
+                      <a class="button" disabled={selected_character_code != character.code}>
+                        <span class="icon is-small">
+                            <i class={ character.icon.to_string() }></i>
+                        </span>
+                        <span>{ character.short.clone() }</span>
+                      </a>
+                    </li>
+                }
+            } else {
+                html! {
+                    <li class={ if selected_character_code == character.code { "is-active" } else { "" } }>
+                      <a {onclick} class="button">
+                        <span class="icon is-small">
+                            <i class={ character.icon.to_string() }></i>
+                        </span>
+                        <span>{ character.short.clone() }</span>
+                      </a>
+                    </li>
+                }
             }
         };
 

@@ -13,7 +13,7 @@ use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
 use super::{
     action_event::ActionEventItem,
     actions::{Actions, Msg as ActionsMsg},
-    character_combo::CharacterCombo,
+    character_switch::CharacterSwitch,
     characters::{self, make_characters},
     intro::Intro,
     items::{self, make_owned_items},
@@ -215,6 +215,7 @@ impl Component for App {
                 let world = Self::make_world();
                 if let Some(character_instance) = world.characters().get(&character) {
                     storage::LocalStorage::set("world_id", world_id).unwrap();
+                    storage::LocalStorage::set("fixed_character", &character).unwrap();
                     self.world_id = Some(world_id);
 
                     // Setch the character
@@ -246,6 +247,7 @@ impl Component for App {
             Msg::Reset => {
                 self.world = None;
                 storage::LocalStorage::delete("world_id");
+                storage::LocalStorage::delete("fixed_character");
                 if let Some(scope) = self.messages_scope.as_ref().borrow().clone() {
                     scope.send_message(MessagesMsg::Clear);
                 }
@@ -366,6 +368,9 @@ impl Component for App {
             let status_ready_cb = link.callback(|_| Msg::StatusReady);
             let reset_cb = link.callback(|_| Msg::Reset);
 
+            let fixed_character: Option<String> =
+                storage::LocalStorage::get("fixed_character").ok();
+
             html! {
                 <>
                     <section class="hero is-small is-light">
@@ -404,10 +409,11 @@ impl Component for App {
                       </div>
                     </section>
                     <main>
-                        <CharacterCombo
+                        <CharacterSwitch
                           available_characters={ available_characters.clone() }
                           set_character={ set_character_callback }
                           selected_character={ self.selected_character.clone() }
+                          fixed={fixed_character.is_some()}
                         />
                         <Messages shared_scope={ self.messages_scope.clone() }/>
                         { self.view_scene(ctx) }

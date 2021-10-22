@@ -3,7 +3,7 @@ pub mod action_item;
 pub mod action_join;
 pub mod actions;
 pub mod app;
-pub mod character_combo;
+pub mod character_switch;
 pub mod characters;
 pub mod intro;
 pub mod items;
