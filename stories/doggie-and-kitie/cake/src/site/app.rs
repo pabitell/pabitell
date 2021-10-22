@@ -362,8 +362,9 @@ impl Component for App {
 
             let lang = world.lang().to_string();
 
-            let notification_cb = ctx.link().callback(|data| Msg::NotificationRecieved(data));
-            let status_ready_cb = ctx.link().callback(|_| Msg::StatusReady);
+            let notification_cb = link.callback(|data| Msg::NotificationRecieved(data));
+            let status_ready_cb = link.callback(|_| Msg::StatusReady);
+            let reset_cb = link.callback(|_| Msg::Reset);
 
             html! {
                 <>
@@ -373,7 +374,7 @@ impl Component for App {
                             {world.description().short(world)}
                           </p>
                           <div class="subtitle is-flex">
-                              <div class="w-100 field is-grouped is-grouped-multiline">
+                              <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
                                   <div class="has-text-centered">
                                       <Status
                                         world_id={self.world_id.clone()}
@@ -390,6 +391,13 @@ impl Component for App {
                                         start_text={world.description().short(world)}
                                         shared_scope={self.speech_scope.clone()}
                                       />
+                                  </div>
+                                  <div class="has-text-centered">
+                                      <button class="button is-outlined" onclick={reset_cb}>
+                                          <span class="icon has-text-danger">
+                                              <i class="fas fa-sign-out-alt"></i>
+                                          </span>
+                                      </button>
                                   </div>
                               </div>
                           </div>
