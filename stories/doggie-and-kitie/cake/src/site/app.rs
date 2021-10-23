@@ -36,7 +36,7 @@ pub enum Msg {
     WorldUpdateFetched(CakeWorld),
     EventPublished,
     StatusReady,
-    Void,
+    Void(bool),
 }
 
 pub struct App {
@@ -48,6 +48,7 @@ pub struct App {
     status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
     actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
     ws_queue: Vec<String>,
+    loading: Rc<RefCell<bool>>,
 }
 
 async fn make_request(
@@ -87,13 +88,7 @@ impl Component for App {
             None
         };
 
-        if let Some(world_id) = world_id.as_ref() {
-            log::info!("World Id: {:?}", &world_id);
-            // Update data from the server
-            Self::request_to_get_world(ctx, *world_id);
-        }
-
-        Self {
+        let mut res = Self {
             world_id,
             world: None,
             selected_character: Rc::new(None),
@@ -102,7 +97,16 @@ impl Component for App {
             status_scope: Rc::new(RefCell::new(None)),
             actions_scope: Rc::new(RefCell::new(None)),
             ws_queue: vec![],
+            loading: Rc::new(RefCell::new(false)),
+        };
+
+        if let Some(world_id) = world_id.as_ref() {
+            log::info!("World Id: {:?}", &world_id);
+            // Update data from the server
+            res.request_to_get_world(ctx, *world_id);
         }
+
+        res
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -140,7 +144,7 @@ impl Component for App {
                         .clone()
                         .unwrap()
                         .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                    Self::request_to_trigger_event(
+                    self.request_to_trigger_event(
                         ctx,
                         self.world_id.unwrap().clone(),
                         event.dump(),
@@ -189,7 +193,7 @@ impl Component for App {
                             .unwrap()
                             .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                         ctx.link().send_message(Msg::PlayText(text.to_string()));
-                        Self::request_to_trigger_event(
+                        self.request_to_trigger_event(
                             ctx,
                             self.world_id.unwrap().clone(),
                             event.dump(),
@@ -222,7 +226,7 @@ impl Component for App {
                     ctx.link()
                         .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
                     // Get the world
-                    Self::request_to_get_world(ctx, world_id);
+                    self.request_to_get_world(ctx, world_id);
 
                     // Queue character notification
                     // we need to wait till Status component is initialized
@@ -257,7 +261,7 @@ impl Component for App {
                 log::info!("New world id fetched {}", &world_id);
                 storage::LocalStorage::set("world_id", world_id).unwrap();
                 self.world_id = Some(world_id);
-                Self::request_to_get_world(ctx, world_id);
+                self.request_to_get_world(ctx, world_id);
                 true
             }
             Msg::WorldUpdateFetched(world) => {
@@ -265,16 +269,16 @@ impl Component for App {
                 true
             }
             Msg::CreateNewWorld => {
-                Self::request_to_create_new_world(ctx);
+                self.request_to_create_new_world(ctx);
                 true
             }
-            Msg::Void => false,
+            Msg::Void(render) => render,
             Msg::EventPublished => {
                 // TODO this should be optimized
                 if let Some(world_id) = self.world_id.as_ref() {
-                    Self::request_to_get_world(ctx, *world_id);
+                    self.request_to_get_world(ctx, *world_id);
                 }
-                false
+                true
             }
             Msg::NotificationRecieved(data) => {
                 let narrator = narrator::Cake::default();
@@ -289,7 +293,7 @@ impl Component for App {
                         if let Some(world_id) = self.world_id {
                             // TODO this should be optimized
                             // not need to refresh the whole world just a single event
-                            Self::request_to_get_world(ctx, world_id);
+                            self.request_to_get_world(ctx, world_id);
                         }
                     } else if let Value::String(name) = &json["name"] {
                         // It can be a message that character was joining the game
@@ -316,7 +320,7 @@ impl Component for App {
                         if let Some(status_scope) = status_scope.as_ref().borrow().as_ref() {
                             status_scope.send_message(StatusMsg::SendMessage(msg));
                         }
-                        Msg::Void
+                        Msg::Void(false)
                     });
                 });
                 false
@@ -327,9 +331,21 @@ impl Component for App {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
 
-        // TODO loading page when world_id is set, but world not
-        // this means world was set, but wasn't loaded from the server yet
-        //
+        let loading_classes = if *self.loading.borrow() {
+            classes!("modal", "is-active")
+        } else {
+            classes!("modal")
+        };
+        let loading = html! {
+                <div class={loading_classes}>
+                    <div class="modal-background"></div>
+                    <div class="modal-content has-text-centered">
+                        <figure class="image is-square is-64x64 inverted is-inline-block rotate">
+                            <img src="svgs/solid/spinner.svg" alt="" />
+                        </figure>
+                    </div>
+                </div>
+        };
 
         if let Some(world) = &self.world {
             let available_characters = make_characters(&world);
@@ -434,6 +450,7 @@ impl Component for App {
                             <a href="https://github.com/shenek/pabitell/"> { "Pabitell" }</a>
                         </div>
                     </footer>
+                    { loading }
                 </>
             }
         } else {
@@ -445,12 +462,15 @@ impl Component for App {
             let world = Self::make_world();
 
             html! {
-                <Intro
-                    new_world={new_world_cb}
-                    story_name={world.description().short(&world)}
-                    story_detail={world.description().long(&world)}
-                    character_scanned={character_scanned_cb}
-                />
+                <>
+                    <Intro
+                        new_world={new_world_cb}
+                        story_name={world.description().short(&world)}
+                        story_detail={world.description().long(&world)}
+                        character_scanned={character_scanned_cb}
+                    />
+                    { loading }
+                </>
             }
         }
     }
@@ -540,20 +560,24 @@ impl App {
         world
     }
 
-    fn request_to_create_new_world(ctx: &Context<Self>) {
-        ctx.link().send_future(async {
+    fn request_to_create_new_world(&mut self, ctx: &Context<Self>) {
+        *self.loading.borrow_mut() = true;
+        let loading = self.loading.clone();
+        ctx.link().send_future(async move {
             let url = "/api/some_namespace/doggie_and_kitie_cake/";
-            match make_request(&url, "POST", None).await {
+            let res = make_request(&url, "POST", None).await;
+            *loading.borrow_mut() = false;
+            match res {
                 Ok((Some(json), status)) => {
                     if let Some(Value::String(id_str)) = json.get("id") {
                         if let Ok(uuid) = Uuid::parse_str(id_str) {
                             log::info!("New World Id: {:?}", &uuid);
                             Msg::NewWorldIdFetched(uuid)
                         } else {
-                            Msg::Void
+                            Msg::Void(true)
                         }
                     } else {
-                        Msg::Void
+                        Msg::Void(true)
                     }
                 }
                 Ok((None, status)) => {
@@ -562,20 +586,24 @@ impl App {
                         "No JSON response from the server when creating new world (http={})",
                         status
                     );
-                    Msg::Void
+                    Msg::Void(true)
                 }
                 Err(e) => {
                     log::warn!("Failed to fetch: {:?}", e);
-                    Msg::Void
+                    Msg::Void(true)
                 }
             }
         });
     }
 
-    fn request_to_get_world(ctx: &Context<Self>, world_id: Uuid) {
+    fn request_to_get_world(&mut self, ctx: &Context<Self>, world_id: Uuid) {
+        *self.loading.borrow_mut() = true;
+        let loading = self.loading.clone();
         ctx.link().send_future(async move {
             let url = format!("/api/some_namespace/doggie_and_kitie_cake/{}/", world_id);
-            match make_request(&url, "GET", None).await {
+            let res = make_request(&url, "GET", None).await;
+            *loading.borrow_mut() = false;
+            match res {
                 Ok((Some(json), status)) => {
                     let mut world = Self::make_world();
                     match status {
@@ -586,7 +614,7 @@ impl App {
                         e if 200 <= e && e < 300 => {
                             if let Err(e) = world.load(json) {
                                 log::warn!("Fetched world in wrong format: {:?}", e);
-                                Msg::Void
+                                Msg::Void(true)
                             } else {
                                 log::debug!("World {} updated", world_id);
                                 Msg::WorldUpdateFetched(world)
@@ -594,29 +622,33 @@ impl App {
                         }
                         _ => {
                             log::warn!("Wrong server response when downloading world {}", world_id);
-                            Msg::Void
+                            Msg::Void(true)
                         }
                     }
                 }
                 Ok((None, _)) => {
                     log::warn!("No JSON response from the server when creating new world");
-                    Msg::Void
+                    Msg::Void(true)
                 }
                 Err(e) => {
                     log::warn!("Failed to fetch: {:?}", e);
-                    Msg::Void
+                    Msg::Void(true)
                 }
             }
         })
     }
 
-    fn request_to_trigger_event(ctx: &Context<Self>, world_id: Uuid, event_json: Value) {
+    fn request_to_trigger_event(&mut self, ctx: &Context<Self>, world_id: Uuid, event_json: Value) {
+        *self.loading.borrow_mut() = true;
+        let loading = self.loading.clone();
         ctx.link().send_future(async move {
             let url = format!(
                 "/api/some_namespace/doggie_and_kitie_cake/{}/event/",
                 world_id
             );
-            match make_request(&url, "POST", Some(event_json)).await {
+            let res = make_request(&url, "POST", Some(event_json)).await;
+            *loading.borrow_mut() = false;
+            match res {
                 Ok((resp, status)) => {
                     match status {
                         e if 200 <= e && e < 300 => {
@@ -625,13 +657,13 @@ impl App {
                         }
                         _ => {
                             // TODO failed to publish event message
-                            Msg::Void
+                            Msg::Void(true)
                         }
                     }
                 }
                 Err(e) => {
                     log::warn!("Failed to trigger: {:?}", e);
-                    Msg::Void
+                    Msg::Void(true)
                 }
             }
         })
