@@ -19,6 +19,8 @@ use super::{
     items::{self, make_owned_items},
     message::{Kind as MessageKind, MessageItem},
     messages::{Messages, Msg as MessagesMsg},
+    print::Print,
+    print_items::make_print_items,
     speech::{Msg as SpeechMsg, Speech},
     status::{Msg as StatusMsg, Status},
 };
@@ -36,6 +38,7 @@ pub enum Msg {
     WorldUpdateFetched(CakeWorld),
     EventPublished,
     StatusReady,
+    ShowPrint(bool),
     Void(bool),
 }
 
@@ -49,6 +52,7 @@ pub struct App {
     actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
     ws_queue: Vec<String>,
     loading: Rc<RefCell<bool>>,
+    show_print: bool,
 }
 
 async fn make_request(
@@ -98,6 +102,7 @@ impl Component for App {
             actions_scope: Rc::new(RefCell::new(None)),
             ws_queue: vec![],
             loading: Rc::new(RefCell::new(false)),
+            show_print: false,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -325,6 +330,14 @@ impl Component for App {
                 });
                 false
             }
+            Msg::ShowPrint(show) => {
+                if self.show_print != show {
+                    self.show_print = show;
+                    true
+                } else {
+                    false
+                }
+            }
         }
     }
 
@@ -346,6 +359,13 @@ impl Component for App {
                     </div>
                 </div>
         };
+
+        if self.show_print {
+            let close_cb = link.callback(|_| Msg::ShowPrint(false));
+            return html! {
+                <Print {close_cb} items={make_print_items(&Self::make_world())}/>
+            };
+        }
 
         if let Some(world) = &self.world {
             let available_characters = make_characters(&world);
@@ -458,6 +478,7 @@ impl Component for App {
             let character_scanned_cb = link.callback(|(character, world_id)| {
                 Msg::TriggerScannedCharacter(character, world_id)
             });
+            let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
 
             let world = Self::make_world();
 
@@ -468,6 +489,7 @@ impl Component for App {
                         story_name={world.description().short(&world)}
                         story_detail={world.description().long(&world)}
                         character_scanned={character_scanned_cb}
+                        show_print={show_print_cb}
                     />
                     { loading }
                 </>

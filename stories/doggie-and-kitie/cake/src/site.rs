@@ -10,6 +10,8 @@ pub mod items;
 pub mod jsQR;
 pub mod message;
 pub mod messages;
+pub mod print;
+pub mod print_items;
 pub mod qrcode;
 pub mod qrscanner;
 pub mod speech;

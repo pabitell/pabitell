@@ -18,6 +18,7 @@ use yew::{html, prelude::*};
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
     pub new_world: Callback<()>,
+    pub show_print: Callback<bool>,
     pub story_name: String,
     pub story_detail: String,
     pub character_scanned: Callback<(String, Uuid)>,
@@ -27,6 +28,7 @@ pub enum Msg {
     NewWorld,
     QRCodeScanShow,
     QRCodeScanned(String),
+    ShowPrint,
 }
 
 pub struct Intro {
@@ -39,6 +41,10 @@ impl Component for Intro {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::ShowPrint => {
+                ctx.props().show_print.emit(true);
+                false
+            }
             Msg::NewWorld => {
                 ctx.props().new_world.emit(());
                 true
@@ -96,7 +102,9 @@ impl Component for Intro {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
+
         let qr_found_cb = link.callback(|string| Msg::QRCodeScanned(string));
+        let show_print_cb = link.callback(|_| Msg::ShowPrint);
 
         let new_world_cb = link.callback(|_| Msg::NewWorld);
         let show_qr_cb = link.callback(|_| Msg::QRCodeScanShow);
@@ -127,6 +135,11 @@ impl Component for Intro {
                         <button class="button is-medium is-info is-outlined">
                             <span class="icon">
                                 <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
+                            </span>
+                        </button>
+                        <button class="button is-medium is-outlined is-dark is-hidden-touch" onclick={show_print_cb}>
+                            <span class="icon">
+                                <i class="fas fa-print"></i>
                             </span>
                         </button>
                     </footer>

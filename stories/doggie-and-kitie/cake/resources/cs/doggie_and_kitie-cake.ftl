@@ -26,6 +26,8 @@ doggie_and_kitie-cake-flour-short = Mouka
 doggie_and_kitie-cake-flour-long = { doggie_and_kitie-cake-flour-short }, přísada do dortu
 doggie_and_kitie-cake-milk-short = Mléko
 doggie_and_kitie-cake-milk-long = { doggie_and_kitie-cake-milk-short }, přísada do dortu
+doggie_and_kitie-cake-butter-short = Máslo
+doggie_and_kitie-cake-butter-long = { doggie_and_kitie-cake-butter-short }, přísada do dortu
 doggie_and_kitie-cake-egg-short = Vajíčko
 doggie_and_kitie-cake-egg-long = { doggie_and_kitie-cake-egg-short }, přísada do dortu
 doggie_and_kitie-cake-suggar-short = Cukr
@@ -742,3 +744,6 @@ doggie_and_kitie-cake-way_home-end =
     a narozeniny přece jen nakonec vydařily.
     A ten zlý pes po tom jejich dortu hekal a naříkal v tom houští ještě
     celých čtrnáct dní.
+
+# Customs
+doggie_and_kitie-cake-large_pot = Velký hrnec
