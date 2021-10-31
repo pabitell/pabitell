@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://web.resource.org/cc/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:ns1="http://sozi.baierouge.fr" id="svg2" viewBox="0 0 607.39 749.02" version="1.0" inkscape:version="0.91 r13725">
+  <defs id="defs4">
+    <linearGradient id="linearGradient3229" y2="692.65" gradientUnits="userSpaceOnUse" x2="373.22" gradientTransform="matrix(.92070 -.39027 .39027 .92070 -37.332 -100.35)" y1="549.86" x1="261.29">
+      <stop id="stop3174" style="stop-color:#f5f5f5" offset="0"/>
+      <stop id="stop3176" style="stop-color:#bab6b6" offset="1"/>
+    </linearGradient>
+  </defs>
+  <g id="layer1" transform="translate(-97.165 -169.12)">
+    <g id="g3220">
+      <path id="path3181" style="stroke:#20b2aa;stroke-linecap:round;stroke-width:8.403;fill:#dcdcdc" d="m520 433.17c45.41-6.93 84.77-28.15 122.96-52.12 0 0-36.02-6.69-67.33 6.02-31.59 12.82-55.63 46.1-55.63 46.1z"/>
+      <path id="path2398" style="stroke:#20b2aa;stroke-linecap:round;stroke-width:8.403;fill:#dcdcdc" d="m657.93 178.95c-6.08 2.78-9.9 6.81-22.83 49.36-44.58 31.6-108.82 50.26-157.82 63.5-44.16 11.94-68.96-1.48-99.99 32.04l91.63 28.46 192.33-67.78c16.35-25.09 54.64-53.82 32.25-99.98-5.13-10.57-11.89-15.8-34.3-6.13-0.43 0.18-0.86 0.35-1.27 0.53zm5.13 2.89c1.92-0.93 4.13-1.55 6.65-1.84 38.19 21.32 15.35 55.37-5.98 84.13l-1.31 1.54-7.28-29.8c-4.96-26.11-5.52-47.53 7.92-54.03z"/>
+      <path id="path3190" style="stroke:#8b4513;stroke-linecap:round;stroke-width:8.403;fill:#d2691e" d="m372.57 320.62c-64.06 3.83-59.71 414.13-72.79 542.22-9.93 0.44-18.92 1.8-27.03 3.82l-16.06-79.85c-5.39-26.77-26.37-28.1-14.13 4.44l28.53 75.84c-5.44 1.44-10.5 3.13-15.15 5.07l-41.38-66.1c-19.92-31.85-62.55-6.08-26.87 25.1l54.69 47.78c-24.56 14.41-34.35 33.18-34.35 33.18h72.35l1.28 1.13-0.72-1.13h123.65s-0.48-0.75-1.37-2l75.78-0.46c37.57-0.23 38.06-50.06-7.22-36.07l-79.03 24.41c-2.84-2.84-6.17-5.93-10.06-9.03l59.43-50.19c20.87-17.62 11.93-36.66-10.68-10.25l-50.56 59.06c-5.65-4.33-12.35-8.68-20.1-12.5l35.28-82.18c14.82-34.53-30.64-54.91-35.94-7.82l-9.62 85.5c-10.78-4.09-23.23-7.02-37.41-7.75 8-105.4 19.64-440.86 41.08-519.22l18.4-23zm-256.51 575.04c-19.246 0.17-22.47 14.78 7.94 15.65l91.53 2.63-90.28-17.38c-3.35-0.64-6.44-0.93-9.19-0.9z"/>
+      <path id="path3208" style="stroke:#8b4513;stroke-linecap:round;stroke-width:3.7985;fill:#d2691e" d="m166.68 867.67l-50.05-33.47c-19.005-12.71-2.2-25.65 9.76-12.11l40.29 45.58z"/>
+      <path id="path3210" style="stroke:#8b4513;stroke-linecap:round;stroke-width:3.7985;fill:#d2691e" d="m425.68 795.96l39.52-45.42c15-17.25 25.73 1.05 10.78 11.21l-50.3 34.21z"/>
+      <path id="path3212" style="stroke:#8b4513;stroke-linecap:round;stroke-width:3.7985;fill:#d2691e" d="m474.86 846.56l50.72-32.44c19.26-12.32 24.39 8.26 7.18 13.8l-57.9 18.64z"/>
+      <path id="path2396" style="stroke:#20b2aa;stroke-linecap:round;stroke-width:8.403;fill:url(#linearGradient3229)" d="m357.6 345.95c18.06-43.32 59.53-6.2 110.96-17 63.03-13.24 148.51-38.59 184.39-98.25 22.16 83.41-33.07 142.24-74.9 162.54-127.59 51.3-146.41-49.47-220.45-47.29z"/>
+    </g>
+  </g>
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title>Sauciere</dc:title>
+        <dc:date>2010-04-15T15:11:55</dc:date>
+        <dc:description/>
+        <dc:source>https://openclipart.org/detail/48193/sauciere-by-hextrust</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>hextrust</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>delicious</rdf:li>
+            <rdf:li>kitchen</rdf:li>
+            <rdf:li>sauce</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>

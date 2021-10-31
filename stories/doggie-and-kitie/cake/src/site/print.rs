@@ -95,7 +95,7 @@ impl Component for Print {
             let render_image = |url: Option<String>| {
                 if let Some(url) = url.as_ref() {
                     html! {
-                        <figure class="image is-48x48">
+                        <figure class="image is-48x48 is-align-items-center is-flex">
                             <img src={url.clone()}/>
                         </figure>
                     }

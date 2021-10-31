@@ -104,7 +104,7 @@ simple_item!(Flour, "flour", ["ingredient", "accepted", "batch1"]);
 simple_item!(Milk, "milk", ["ingredient", "accepted", "batch1"]);
 simple_item!(Egg, "egg", ["ingredient", "accepted", "batch1"]);
 
-simple_item!(Suggar, "suggar", ["ingredient", "accepted", "batch2"]);
+simple_item!(Sugar, "sugar", ["ingredient", "accepted", "batch2"]);
 simple_item!(Salt, "salt", ["ingredient", "accepted", "batch2"]);
 simple_item!(Butter, "butter", ["ingredient", "accepted", "batch2"]);
 simple_item!(Jam, "jam", ["ingredient", "rejected", "batch2"]);
@@ -146,7 +146,7 @@ simple_item!(
 );
 simple_item!(Vinegar, "vinegar", ["ingredient", "accepted", "batch6"]);
 simple_item!(Cocoa, "cocoa", ["ingredient", "accepted", "batch6"]);
-simple_item!(Cabbadge, "cabbadge", ["ingredient", "accepted", "batch6"]);
+simple_item!(Cabbage, "cabbage", ["ingredient", "accepted", "batch6"]);
 simple_item!(
     GooseHead,
     "goose_head",

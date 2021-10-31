@@ -79,7 +79,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
                 &world.lang(),
                 None,
             )))
-            .img_url(Some("images/bit-pot.svg".to_owned())),
+            .img_url(Some("images/big-pot.svg".to_owned())),
     );
 
     // move to children garden
