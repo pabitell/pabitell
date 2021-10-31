@@ -35,7 +35,7 @@ pub fn make_characters(world: &CakeWorld) -> Rc<Vec<Rc<Character>>> {
         Rc::new(Character {
             code: Rc::new(None),
             name: Rc::new("narrator".to_string()),
-            character_url: Rc::new("svgs/solid/book.svg".to_string()),
+            character_url: Rc::new("images/book.svg".to_string()),
             short: Rc::new(translations::get_message("narrator", world.lang(), None)),
             long: Rc::new(translations::get_message("narrator", world.lang(), None)),
             icon: Rc::new("fas fa-book".to_string()),
@@ -43,7 +43,7 @@ pub fn make_characters(world: &CakeWorld) -> Rc<Vec<Rc<Character>>> {
         Rc::new(Character {
             code: Rc::new(Some("doggie".to_string())),
             name: Rc::new("doggie".to_string()),
-            character_url: Rc::new("svgs/solid/dog.svg".to_string()),
+            character_url: Rc::new("images/dog.svg".to_string()),
             short: Rc::new(world.characters().get("doggie").unwrap().short(world)),
             long: Rc::new(world.characters().get("doggie").unwrap().long(world)),
             icon: Rc::new("fas fa-dog".to_string()),
@@ -51,7 +51,7 @@ pub fn make_characters(world: &CakeWorld) -> Rc<Vec<Rc<Character>>> {
         Rc::new(Character {
             code: Rc::new(Some("kitie".to_string())),
             name: Rc::new("kitie".to_string()),
-            character_url: Rc::new("svgs/solid/cat.svg".to_string()),
+            character_url: Rc::new("images/cat.svg".to_string()),
             short: Rc::new(world.characters().get("kitie").unwrap().short(world)),
             long: Rc::new(world.characters().get("kitie").unwrap().long(world)),
             icon: Rc::new("fas fa-cat".to_string()),

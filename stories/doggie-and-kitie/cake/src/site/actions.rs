@@ -168,7 +168,7 @@ impl Component for Actions {
                         <div class="media">
                             <div class="media-left">
                                 <figure class="image is-48x48">
-                                    <img src="svgs/solid/search.svg"/>
+                                    <img src="images/search.svg"/>
                                 </figure>
                             </div>
                             <div class="media-content">

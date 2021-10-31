@@ -354,7 +354,7 @@ impl Component for App {
                     <div class="modal-background"></div>
                     <div class="modal-content has-text-centered">
                         <figure class="image is-square is-64x64 inverted is-inline-block rotate">
-                            <img src="svgs/solid/spinner.svg" alt="" />
+                            <img src="images/spinner.svg" alt="" />
                         </figure>
                     </div>
                 </div>

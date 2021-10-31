@@ -79,7 +79,7 @@ impl Component for ActionEvent {
         let image_url = if let Some(url) = item.image_url.as_ref() {
             url.to_string()
         } else {
-            "svgs/solid/cog.svg".to_string()
+            "images/cog.svg".to_string()
         };
 
         let data = item.data.clone();

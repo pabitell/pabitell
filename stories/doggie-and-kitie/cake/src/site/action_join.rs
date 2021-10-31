@@ -51,7 +51,7 @@ impl Component for ActionJoin {
                     <div class="media">
                         <div class="media-left">
                             <figure class="image is-48x48">
-                                <img src={"svgs/solid/sign-in-alt.svg"} />
+                                <img src={"images/sign-in-alt.svg"} />
                             </figure>
                         </div>
                         <div class="media-content">
