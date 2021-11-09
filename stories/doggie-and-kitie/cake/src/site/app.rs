@@ -454,8 +454,6 @@ impl Component for App {
                           selected_character={ self.selected_character.clone() }
                           fixed={fixed_character.is_some()}
                         />
-                        <Messages shared_scope={ self.messages_scope.clone() }/>
-                        { self.view_scene(ctx) }
                         <Actions
                           lang={ lang }
                           available_characters={ available_characters }
@@ -467,6 +465,8 @@ impl Component for App {
                           world_id={self.world_id.unwrap_or_default().clone()}
                           actions_scope={self.actions_scope.clone()}
                         />
+                        { self.view_scene(ctx) }
+                        <Messages shared_scope={ self.messages_scope.clone() }/>
                     </main>
                     <footer class="footer">
                         <div class="content has-text-centered">
