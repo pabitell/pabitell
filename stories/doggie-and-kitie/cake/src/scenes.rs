@@ -192,6 +192,7 @@ impl Description for Kitchen {
                 "batch3".to_string(),
                 "batch4".to_string(),
                 "batch5".to_string(),
+                "batch6".to_string(),
             ],
             ItemState::Unassigned,
         );
