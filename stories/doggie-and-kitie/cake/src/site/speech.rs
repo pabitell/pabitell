@@ -32,6 +32,11 @@ pub struct Props {
     pub start_text: String,
     pub lang: String,
     pub shared_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
+    pub world_name: String,
+}
+
+fn storage_world_prefix(world_name: &str, key: &str) -> String {
+    format!("{}:{}", world_name, key)
 }
 
 impl PartialEq<Self> for Props {
@@ -46,6 +51,7 @@ pub struct Speech {
     queue: VecDeque<SpeechSynthesisUtterance>,
     playing: bool,
     end: Closure<dyn Fn()>,
+    default_voice_key: String,
 }
 
 pub enum Msg {
@@ -84,9 +90,12 @@ impl Component for Speech {
             }
             Msg::SetVoice(idx) => {
                 if let Some(idx) = idx {
+                    storage::LocalStorage::set(&self.default_voice_key, &self.voices[idx].name())
+                        .unwrap();
                     self.voice = Some(self.voices[idx].clone());
                 } else {
                     self.voice = None;
+                    storage::LocalStorage::delete(&self.default_voice_key);
                 }
                 ctx.link()
                     .send_message(Msg::Play(ctx.props().start_text.clone()));
@@ -128,6 +137,7 @@ impl Component for Speech {
             queue: VecDeque::new(),
             playing: false,
             end: closure,
+            default_voice_key: storage_world_prefix(&ctx.props().world_name, "speech"),
         }
     }
 
@@ -143,23 +153,44 @@ impl Component for Speech {
                 }
             })
         });
+
+        let default_voice: Option<String> =
+            storage::LocalStorage::get(&self.default_voice_key).ok();
         let render_voice = |(idx, voice): (usize, &SpeechSynthesisVoice)| {
+            if let Some(default_voice) = default_voice.clone() {
+                if default_voice == voice.name() {
+                    return html! {
+                        <option value={idx.to_string()} selected={true}>{ voice.name() }</option>
+                    };
+                }
+            }
             html! {
                 <option value={idx.to_string()}>{ voice.name() }</option>
+            }
+        };
+        let render_empty_option = || {
+            if default_voice.is_some() {
+                html! {
+                  <option value={""}>{"---"}</option>
+                }
+            } else {
+                html! {
+                  <option value={""} selected={true}>{"---"}</option>
+                }
             }
         };
 
         html! {
             <div class="control has-icons-left">
-              <div class="select">
-                <select {onchange}>
-                  <option value={""} selected={true}>{"---"}</option>
-                  { for self.voices.iter().enumerate().map(render_voice) }
-                </select>
-              </div>
-              <div class="icon is-small is-left">
-                <i class="fas fa-bullhorn"></i>
-              </div>
+                <div class="select">
+                    <select {onchange}>
+                        { render_empty_option() }
+                        { for self.voices.iter().enumerate().map(render_voice) }
+                    </select>
+                </div>
+                <div class="icon is-small is-left">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
             </div>
         }
     }

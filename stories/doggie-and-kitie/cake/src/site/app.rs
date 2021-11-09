@@ -1,5 +1,5 @@
 use gloo::storage::{self, Storage};
-use pabitell_lib::{Description, Dumpable, Id, Narrator, World, WorldBuilder};
+use pabitell_lib::{Description, Dumpable, Id, Named, Narrator, World, WorldBuilder};
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
@@ -431,6 +431,7 @@ impl Component for App {
                                         lang={lang.clone()}
                                         start_text={world.description().short(world)}
                                         shared_scope={self.speech_scope.clone()}
+                                        world_name={world.name()}
                                       />
                                   </div>
                                   <div class="has-text-centered">
