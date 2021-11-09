@@ -95,7 +95,7 @@ impl Component for App {
         let mut res = Self {
             world_id,
             world: None,
-            selected_character: Rc::new(None),
+            selected_character: Rc::new(storage::LocalStorage::get("fixed_character").ok()),
             messages_scope: Rc::new(RefCell::new(None)),
             speech_scope: Rc::new(RefCell::new(None)),
             status_scope: Rc::new(RefCell::new(None)),
