@@ -169,7 +169,7 @@ impl Component for App {
                 let narrator = narrator::Cake::default();
                 let old_screen_text = self.screen_text();
                 if let Some(world) = self.world.as_mut() {
-                    if let Some(mut event) = narrator.parse_event(json_value) {
+                    if let Some(mut event) = narrator.parse_event(&json_value) {
                         // Update initiator
                         if let Some(character) = self.selected_character.clone().as_ref() {
                             event.set_initiator(character.to_string());
@@ -206,6 +206,7 @@ impl Component for App {
                     } else {
                         // Can't construct event based on given data
                         // TODO some error message
+                        log::warn!("Failed to parse event from {}", json_value.to_string());
                         return false;
                     }
                 } else {
@@ -288,7 +289,7 @@ impl Component for App {
                 let narrator = narrator::Cake::default();
                 if let Ok(json) = serde_json::from_str(&data) {
                     let json: Value = json;
-                    if let Some(_event) = narrator.parse_event(json.clone()) {
+                    if let Some(_event) = narrator.parse_event(&json) {
                         log::info!("New event arrived from ws");
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             log::debug!("Hiding QR code of actions");

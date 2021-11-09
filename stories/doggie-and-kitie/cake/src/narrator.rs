@@ -349,7 +349,7 @@ impl Narrator for Cake {
         res
     }
 
-    fn parse_event(&self, value: Value) -> Option<Box<dyn Event>> {
+    fn parse_event(&self, value: &Value) -> Option<Box<dyn Event>> {
         // TODO validate characters, items, scenes
         match &value["name"] {
             Value::String(name) if name == "move_to_kitchen" => {

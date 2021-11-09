@@ -6,21 +6,12 @@ use crate::translations::get_message;
 
 use super::print::PrintItem;
 
-fn remove_character_from_data(mut data: Value) -> Value {
-    if let Value::Object(ref mut map) = data {
-        map.remove("character");
-    }
-    data
-}
-
 pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     let mut res = vec![];
 
     // sand cake
     let item = world.items().get("sand_cake").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::PickData::new("pick", "", "sand_cake")).unwrap(),
-    );
+    let data = serde_json::to_value(data::PickData::new("pick", "", "sand_cake")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(item.short(world)))
@@ -29,9 +20,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
 
     // move to kitchen
     let scene = world.scenes().get("kitchen").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::MoveData::new("move_to_kitchen", "", "kitchen")).unwrap(),
-    );
+    let data = serde_json::to_value(data::MoveData::new("move_to_kitchen", "", "kitchen")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world)))
@@ -52,9 +41,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
             }
             .to_string();
 
-            let data = remove_character_from_data(
-                serde_json::to_value(data::PickData::new(event_name, "", e.name())).unwrap(),
-            );
+            let data = serde_json::to_value(data::PickData::new(event_name, "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world)))
@@ -63,9 +50,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
         });
 
     // put into pot
-    let mut data = remove_character_from_data(
-        serde_json::to_value(data::UseItemData::new("add_ingredient", "", "")).unwrap(),
-    );
+    let mut data = serde_json::to_value(data::UseItemData::new("add_ingredient", "", "")).unwrap();
     let data = {
         if let Value::Object(ref mut map) = data {
             map.remove("item");
@@ -84,14 +69,12 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
 
     // move to children garden
     let scene = world.scenes().get("children_garden").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::MoveData::new(
-            "move_to_children_garden",
-            "",
-            "children_garden",
-        ))
-        .unwrap(),
-    );
+    let data = serde_json::to_value(data::MoveData::new(
+        "move_to_children_garden",
+        "",
+        "children_garden",
+    ))
+    .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world)))
@@ -104,9 +87,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
         .values()
         .filter(|e| e.get_tags().contains(&"toy".to_string()))
         .for_each(|e| {
-            let data = remove_character_from_data(
-                serde_json::to_value(data::PickData::new("play", "", e.name())).unwrap(),
-            );
+            let data = serde_json::to_value(data::PickData::new("play", "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world)))
@@ -116,9 +97,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
 
     // move to garden
     let scene = world.scenes().get("garden").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::MoveData::new("move_to_garden", "", "garden")).unwrap(),
-    );
+    let data = serde_json::to_value(data::MoveData::new("move_to_garden", "", "garden")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world)))
@@ -127,9 +106,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
 
     // find bad dog
     let item = world.items().get("bad_dog").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::PickData::new("find", "", "bad_dog")).unwrap(),
-    );
+    let data = serde_json::to_value(data::PickData::new("find", "", "bad_dog")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(item.short(world)))
@@ -138,14 +115,12 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
 
     // move to children house
     let scene = world.scenes().get("children_house").unwrap();
-    let data = remove_character_from_data(
-        serde_json::to_value(data::MoveData::new(
-            "move_to_children_house",
-            "",
-            "children_house",
-        ))
-        .unwrap(),
-    );
+    let data = serde_json::to_value(data::MoveData::new(
+        "move_to_children_house",
+        "",
+        "children_house",
+    ))
+    .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world)))
@@ -158,9 +133,8 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
         .values()
         .filter(|e| e.get_tags().contains(&"meal".to_string()))
         .for_each(|e| {
-            let data = remove_character_from_data(
-                serde_json::to_value(data::VoidData::new("eat", "", Some(e.name()))).unwrap(),
-            );
+            let data =
+                serde_json::to_value(data::VoidData::new("eat", "", Some(e.name()))).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world)))

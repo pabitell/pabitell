@@ -109,7 +109,7 @@ async fn event_world(
         }
 
         // Test whether it matches available_events
-        if let Ok(value) = serde_json::from_slice(&body) {
+        if let Ok(value) = &serde_json::from_slice(&body) {
             if let Some(mut event) = narrator.parse_event(value) {
                 if event.can_be_triggered(world.as_ref()) {
                     event.trigger(world.as_mut());
