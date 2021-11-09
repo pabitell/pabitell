@@ -14,6 +14,7 @@ pub struct Props {
     pub story: String,
     pub msg_recieved: Callback<String>,
     pub status_ready: Callback<()>,
+    pub refresh_world: Callback<()>,
     pub status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
 }
 
@@ -69,6 +70,7 @@ pub enum Msg {
     Connected(WebSocket),
     Disconnect,
     SendMessage(String),
+    RefreshWorld,
 }
 
 impl Component for Status {
@@ -149,6 +151,10 @@ impl Component for Status {
                 }
                 false
             }
+            Msg::RefreshWorld => {
+                ctx.props().refresh_world.emit(());
+                false
+            }
         }
     }
 
@@ -167,12 +173,21 @@ impl Component for Status {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick = ctx.link().callback(|_| Msg::Connect);
 
+        let refresh_world_cb = ctx.link().callback(|_| Msg::RefreshWorld);
+
         html! {
-            <button class="button is-outlined" {onclick}>
-                <span class={ classes!(self.status.text_classes()) }>
-                    <i class={ classes!(self.status.icon_classes()) }></i>
-                </span>
-            </button>
+            <>
+                <button class="button is-outlined" onclick={ refresh_world_cb }>
+                    <span class="icon has-text-info">
+                        <i class="fas fa-sync"></i>
+                    </span>
+                </button>
+                <button class="button is-outlined" {onclick}>
+                    <span class={ classes!(self.status.text_classes()) }>
+                        <i class={ classes!(self.status.icon_classes()) }></i>
+                    </span>
+                </button>
+            </>
         }
     }
 

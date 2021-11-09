@@ -36,7 +36,7 @@ pub enum Msg {
     CreateNewWorld,
     NewWorldIdFetched(Uuid),
     WorldUpdateFetched(CakeWorld),
-    EventPublished,
+    RefreshWorld,
     StatusReady,
     ShowPrint(bool),
     Void(bool),
@@ -278,10 +278,9 @@ impl Component for App {
                 true
             }
             Msg::Void(render) => render,
-            Msg::EventPublished => {
-                // TODO this should be optimized
-                if let Some(world_id) = self.world_id.as_ref() {
-                    self.request_to_get_world(ctx, *world_id);
+            Msg::RefreshWorld => {
+                if let Some(world_id) = self.world_id.clone() {
+                    self.request_to_get_world(ctx, world_id);
                 }
                 true
             }
@@ -403,6 +402,7 @@ impl Component for App {
             let notification_cb = link.callback(|data| Msg::NotificationRecieved(data));
             let status_ready_cb = link.callback(|_| Msg::StatusReady);
             let reset_cb = link.callback(|_| Msg::Reset);
+            let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
             let fixed_character: Option<String> =
                 storage::LocalStorage::get("fixed_character").ok();
@@ -423,6 +423,7 @@ impl Component for App {
                                         story={"doggie_and_kitie_cake"}
                                         msg_recieved={notification_cb}
                                         status_ready={status_ready_cb}
+                                        refresh_world={refresh_world_cb}
                                         status_scope={self.status_scope.clone()}
                                       />
                                   </div>
@@ -676,7 +677,7 @@ impl App {
                     match status {
                         e if 200 <= e && e < 300 => {
                             log::debug!("Event triggered {:?}", resp);
-                            Msg::EventPublished
+                            Msg::RefreshWorld
                         }
                         _ => {
                             // TODO failed to publish event message
