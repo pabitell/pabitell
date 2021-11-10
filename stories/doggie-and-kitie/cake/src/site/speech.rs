@@ -51,6 +51,7 @@ pub struct Speech {
     queue: VecDeque<SpeechSynthesisUtterance>,
     playing: bool,
     end: Closure<dyn Fn()>,
+    onvoiceschanged: Closure<dyn Fn()>,
     default_voice_key: String,
 }
 
@@ -58,6 +59,7 @@ pub enum Msg {
     Play(String),
     End,
     SetVoice(Option<usize>),
+    GetVoiceList,
 }
 
 impl Component for Speech {
@@ -112,31 +114,50 @@ impl Component for Speech {
                 }
                 false
             }
+            Msg::GetVoiceList => {
+                let voices = web_sys::window()
+                    .unwrap()
+                    .speech_synthesis()
+                    .unwrap()
+                    .get_voices();
+                self.voices = voices
+                    .iter()
+                    .filter_map(|e| e.dyn_into::<SpeechSynthesisVoice>().ok())
+                    .filter(|e| e.lang().starts_with(&ctx.props().lang))
+                    .collect();
+                true
+            }
         }
     }
 
     fn create(ctx: &Context<Self>) -> Self {
         *ctx.props().shared_scope.borrow_mut() = Some(ctx.link().clone());
-        let window = web_sys::window().unwrap();
-
-        let voices = window.speech_synthesis().unwrap().get_voices();
-        let voices = voices
-            .iter()
-            .filter_map(|e| e.dyn_into::<SpeechSynthesisVoice>().ok())
-            .filter(|e| e.lang().starts_with(&ctx.props().lang))
-            .collect();
 
         let link = ctx.link().clone();
-        let closure = Closure::wrap(Box::new(move || {
+
+        // Update voices
+        link.send_future(async move { Msg::GetVoiceList });
+
+        // Set on voice changed handler
+        let synth = web_sys::window().unwrap().speech_synthesis().unwrap();
+        let cloned_link = link.clone();
+        let onvoiceschanged = Closure::wrap(Box::new(move || {
+            log::info!("Synth voices updated");
+            cloned_link.send_future(async move { Msg::GetVoiceList })
+        }) as Box<dyn Fn()>);
+        synth.set_onvoiceschanged(Some(onvoiceschanged.as_ref().unchecked_ref()));
+
+        let end = Closure::wrap(Box::new(move || {
             link.send_future(async move { Msg::End });
         }) as Box<dyn Fn()>);
 
         Self {
             voice: None,
-            voices,
+            voices: vec![],
             queue: VecDeque::new(),
             playing: false,
-            end: closure,
+            end,
+            onvoiceschanged,
             default_voice_key: storage_world_prefix(&ctx.props().world_name, "speech"),
         }
     }
