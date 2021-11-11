@@ -15,6 +15,7 @@ pub struct Props {
     pub msg_recieved: Callback<String>,
     pub status_ready: Callback<()>,
     pub refresh_world: Callback<()>,
+    pub reset_world: Callback<()>,
     pub status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
 }
 
@@ -71,6 +72,7 @@ pub enum Msg {
     Disconnect,
     SendMessage(String),
     RefreshWorld,
+    ResetWorld,
 }
 
 impl Component for Status {
@@ -155,6 +157,10 @@ impl Component for Status {
                 ctx.props().refresh_world.emit(());
                 false
             }
+            Msg::ResetWorld => {
+                ctx.props().reset_world.emit(());
+                false
+            }
         }
     }
 
@@ -171,20 +177,27 @@ impl Component for Status {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let onclick = ctx.link().callback(|_| Msg::Connect);
+        let link = ctx.link();
+        let onclick = link.callback(|_| Msg::Connect);
 
-        let refresh_world_cb = ctx.link().callback(|_| Msg::RefreshWorld);
+        let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
+        let reset_world_cb = link.callback(|_| Msg::ResetWorld);
 
         html! {
             <>
-                <button class="button is-outlined" onclick={ refresh_world_cb }>
+                <button class="button is-outlined is-medium" onclick={ refresh_world_cb }>
                     <span class="icon has-text-info">
                         <i class="fas fa-sync"></i>
                     </span>
                 </button>
-                <button class="button is-outlined" {onclick}>
+                <button class="button is-outlined is-medium" {onclick}>
                     <span class={ classes!(self.status.text_classes()) }>
                         <i class={ classes!(self.status.icon_classes()) }></i>
+                    </span>
+                </button>
+                <button class="button is-outlined is-medium" onclick={reset_world_cb}>
+                    <span class="icon has-text-danger">
+                        <i class="fas fa-sign-out-alt"></i>
                     </span>
                 </button>
             </>

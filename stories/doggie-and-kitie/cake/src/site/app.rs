@@ -431,17 +431,6 @@ impl Component for App {
                           <div class="subtitle is-flex">
                               <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
                                   <div class="has-text-centered">
-                                      <Status
-                                        world_id={self.world_id.clone()}
-                                        namespace={"some_namespace"}
-                                        story={"doggie_and_kitie_cake"}
-                                        msg_recieved={notification_cb}
-                                        status_ready={status_ready_cb}
-                                        refresh_world={refresh_world_cb}
-                                        status_scope={self.status_scope.clone()}
-                                      />
-                                  </div>
-                                  <div class="has-text-centered">
                                       <Speech
                                         lang={lang.clone()}
                                         start_text={world.description().short(world)}
@@ -449,12 +438,21 @@ impl Component for App {
                                         world_name={world.name()}
                                       />
                                   </div>
+                              </div>
+                          </div>
+                          <div class="subtitle is-flex">
+                              <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
                                   <div class="has-text-centered">
-                                      <button class="button is-outlined" onclick={reset_cb}>
-                                          <span class="icon has-text-danger">
-                                              <i class="fas fa-sign-out-alt"></i>
-                                          </span>
-                                      </button>
+                                      <Status
+                                        world_id={self.world_id.clone()}
+                                        namespace={"some_namespace"}
+                                        story={"doggie_and_kitie_cake"}
+                                        msg_recieved={notification_cb}
+                                        status_ready={status_ready_cb}
+                                        refresh_world={refresh_world_cb}
+                                        reset_world={reset_cb}
+                                        status_scope={self.status_scope.clone()}
+                                      />
                                   </div>
                               </div>
                           </div>
