@@ -48,9 +48,9 @@ doggie_and_kitie-cake-bones-short = Kosti
 doggie_and_kitie-cake-bones-long = { doggie_and_kitie-cake-bones-short }, přísada do dortu
 doggie_and_kitie-cake-four_mice-short = Čtyři myši
 doggie_and_kitie-cake-four_mice-long = { doggie_and_kitie-cake-four_mice-short }, přísada do dortu
-doggie_and_kitie-cake-sausages-short = Párky
+doggie_and_kitie-cake-sausages-short = Buřty
 doggie_and_kitie-cake-sausages-long = { doggie_and_kitie-cake-sausages-short }, přísada do dortu
-doggie_and_kitie-cake-whipped_cream-short = Šlehačka
+doggie_and_kitie-cake-whipped_cream-short = Šlehaná smetana
 doggie_and_kitie-cake-whipped_cream-long = { doggie_and_kitie-cake-whipped_cream-short }, přísada do dortu
 doggie_and_kitie-cake-onion-short = Cibule
 doggie_and_kitie-cake-onion-long = { doggie_and_kitie-cake-onion-short }, přísada do dortu
@@ -220,12 +220,12 @@ doggie_and_kitie-cake-doggie_pick_ingredient_sausages-success = Pejsek vzal buř
 doggie_and_kitie-cake-kitie_pick_ingredient_sausages-action = Kočička vezme buřty.
 doggie_and_kitie-cake-kitie_pick_ingredient_sausages-fail = Kočička nemůže vzít buřty.
 doggie_and_kitie-cake-kitie_pick_ingredient_sausages-success = Kočička vzala buřty.
-doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-action = Pejsek vezme šlehačku.
-doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-fail = Pejsek nemůže vzít šlehačku.
-doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-success = Pejsek vzal šlehačku.
-doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-action = Kočička vezme šlehačku.
-doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-fail = Kočička nemůže vzít šlehačku.
-doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-success = Kočička vzala šlehačku.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-action = Pejsek vezme šlehanou smetanu.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-fail = Pejsek nemůže vzít šlehanou smetanu.
+doggie_and_kitie-cake-doggie_pick_ingredient_whipped_cream-success = Pejsek vzal šlehanou smetanu.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-action = Kočička vezme šlehanou smetanu.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-fail = Kočička nemůže vzít šlehanou smetanu.
+doggie_and_kitie-cake-kitie_pick_ingredient_whipped_cream-success = Kočička vzala šlehanou smetanu.
 doggie_and_kitie-cake-doggie_pick_ingredient_onion-action = Pejsek vezme cibuli.
 doggie_and_kitie-cake-doggie_pick_ingredient_onion-fail = Pejsek nemůže vzít cibuli.
 doggie_and_kitie-cake-doggie_pick_ingredient_onion-success = Pejsek vzal cibuli.
@@ -407,12 +407,12 @@ doggie_and_kitie-cake-doggie_use_sausages-success = Pejsek přidal buřty do dor
 doggie_and_kitie-cake-kitie_use_sausages-action = Kočička přidá buřty do dortu.
 doggie_and_kitie-cake-kitie_use_sausages-fail = Kočička nemůže přidat buřty do dortu.
 doggie_and_kitie-cake-kitie_use_sausages-success = Kočička přidala buřty do dortu.
-doggie_and_kitie-cake-doggie_use_whipped_cream-action = Pejsek přidá šlehačku do dortu.
-doggie_and_kitie-cake-doggie_use_whipped_cream-fail = Pejsek nemůže přidat šlehačku do dortu.
-doggie_and_kitie-cake-doggie_use_whipped_cream-success = Pejsek přidal šlehačku do dortu.
-doggie_and_kitie-cake-kitie_use_whipped_cream-action = Kočička přidá šlehačku do dortu.
-doggie_and_kitie-cake-kitie_use_whipped_cream-fail = Kočička nemůže přidat šlehačku do dortu.
-doggie_and_kitie-cake-kitie_use_whipped_cream-success = Kočička přidala šlehačku do dortu.
+doggie_and_kitie-cake-doggie_use_whipped_cream-action = Pejsek přidá šlehanou smetanu do dortu.
+doggie_and_kitie-cake-doggie_use_whipped_cream-fail = Pejsek nemůže přidat šlehanou smetanu do dortu.
+doggie_and_kitie-cake-doggie_use_whipped_cream-success = Pejsek přidal šlehanou smetanu do dortu.
+doggie_and_kitie-cake-kitie_use_whipped_cream-action = Kočička přidá šlehanou smetanu do dortu.
+doggie_and_kitie-cake-kitie_use_whipped_cream-fail = Kočička nemůže přidat šlehanou smetanu do dortu.
+doggie_and_kitie-cake-kitie_use_whipped_cream-success = Kočička přidala šlehanou smetanu do dortu.
 doggie_and_kitie-cake-doggie_use_onion-action = Pejsek přidá cibuli do dortu.
 doggie_and_kitie-cake-doggie_use_onion-fail = Pejsek nemůže přidat cibuli do dortu.
 doggie_and_kitie-cake-doggie_use_onion-success = Pejsek přidal cibuli do dortu.
@@ -473,12 +473,12 @@ doggie_and_kitie-cake-doggie_use_porridge-success = Pejsek přidal krupičnou ka
 doggie_and_kitie-cake-kitie_use_porridge-action = Kočička přidá krupičnou kaši do dortu.
 doggie_and_kitie-cake-kitie_use_porridge-fail = Kočička nemůže přidat krupičnou kaši do dortu.
 doggie_and_kitie-cake-kitie_use_porridge-success = Kočička přidala krupičnou kaši do dortu.
-doggie_and_kitie-cake-doggie_use_cottage_cheese-action = Pejsek přídá tvaroh do dortu.
+doggie_and_kitie-cake-doggie_use_cottage_cheese-action = Pejsek přidá tvaroh do dortu.
 doggie_and_kitie-cake-doggie_use_cottage_cheese-fail = Pejsek nemůže přidat tvaroh do dortu.
-doggie_and_kitie-cake-doggie_use_cottage_cheese-success = Pejsek přídal tvaroh do dortu.
-doggie_and_kitie-cake-kitie_use_cottage_cheese-action = Kočička přídá tvaroh do dortu.
+doggie_and_kitie-cake-doggie_use_cottage_cheese-success = Pejsek přidal tvaroh do dortu.
+doggie_and_kitie-cake-kitie_use_cottage_cheese-action = Kočička přidá tvaroh do dortu.
 doggie_and_kitie-cake-kitie_use_cottage_cheese-fail = Kočička nemůže přidat tvaroh do dortu.
-doggie_and_kitie-cake-kitie_use_cottage_cheese-success = Kočička přídala tvaroh do dortu.
+doggie_and_kitie-cake-kitie_use_cottage_cheese-success = Kočička přidala tvaroh do dortu.
 doggie_and_kitie-cake-doggie_use_ginger_bread-action = Pejsek přidá perník do dortu.
 doggie_and_kitie-cake-doggie_use_ginger_bread-fail = Pejsek nemůže přidat perník do dortu.
 doggie_and_kitie-cake-doggie_use_ginger_bread-success = Pejsek přidal perník do dortu.
@@ -613,15 +613,15 @@ doggie_and_kitie-cake-playground-kitie_pick =
     „takovýhle dort jsme jakživi nejedli.“ Děti z toho měly radost a šly domů.
     „Škoda že pejskové a kočičky písek nejedí,“ řekl pejsek kočičce, když
     děti odešly, „takový krásný dort, to bych si na něm nějak pochutnal!'
-    Jestlipak víš, že jsem nad ním dostal náramnou chuť na nějaký oprav-
-    dický dort. Ale musel by být opravdický, povídám!“
+    Jestlipak víš, že jsem nad ním dostal náramnou chuť na nějaký
+    opravdický dort. Ale musel by být opravdický, povídám!“
     „Také jsem dostala chuť na opravdický dort,“ řekla kočička. „Víš co,
     však když mám zítra narozeniny a ty svátek, měli bychom si nějaký
     dort udělat! Jenomže nevím, jak se takový dort dělá.“
     „To nic není,“ řekl pejsek, „to je lehké, to já vím, jak se takový pravý
     dort dělá! To se do takového dortu dá všecko, co je k jídlu nejlepší,
-    všecko, co nejraději jíš, a pak je ten dort nejlepší. Když tam dáš tako-
-    vých nejlepších jídel pět, tak je pětkrát dobrý, když jich tam dáš deset,
+    všecko, co nejraději jíš, a pak je ten dort nejlepší. Když tam dáš takových
+    nejlepších jídel pět, tak je pětkrát dobrý, když jich tam dáš deset,
     tak je potom desetkrát dobrý. Ale my si jich tam dáme sto a budeme
     mít stokrát dobrý dort!“
 doggie_and_kitie-cake-playground-doggie_last =
@@ -670,8 +670,8 @@ doggie_and_kitie-cake-kitchen-ingredients-batch6 =
     protože pejskové a kočičky chleba zrovna tuze moc rádi nejedí.
 doggie_and_kitie-cake-kitchen-ready =
     Když to všechno smíchali a rozmíchali, byl z toho dort tak veliký jako
-    kolo u vozu. „Panečku, to bude veliký dort, to se nějak najíme!“ chvá-
-    lili si to, „a teď to dáme péci.“
+    kolo u vozu. „Panečku, to bude veliký dort, to se nějak najíme!“
+    chválili si to, „a teď to dáme péci.“
     Dali dort péci a těšili se na to, až bude upečený. Kouřilo se z toho,
     bublalo to, prskalo a syčelo, škvířilo se to, syčelo to a šla z toho pára,
     smažilo se to a připalovalo, kypělo to a přetékalo a čmoudilo to, jako
@@ -685,18 +685,18 @@ doggie_and_kitie-cake-kitchen-ready =
 doggie_and_kitie-cake-children_garden-short = U dětí na zahradě
 doggie_and_kitie-cake-children_garden-playing =
     Děti byly v zahrádce před domem a hrály si tam
-    s kuličkami. Pejsek s kočičkou je pozvali na dort a chvíli si s nimi po-
-    hráli s kuličkami a potom ještě s míčem a trochu s kostkami.
+    s kuličkami. Pejsek s kočičkou je pozvali na dort a chvíli si s nimi
+    pohráli s kuličkami a potom ještě s míčem a trochu s kostkami.
 doggie_and_kitie-cake-children_garden-leaving =
-    Ale zatím šel kolem toho dortu jeden zlý pes, a jak ten dort vychlá-
-    dal, zavonělo mu to do nosu všelijak. „Ha ha haf,“ pomyslil si ten zlý
+    Ale zatím šel kolem toho dortu jeden zlý pes, a jak ten dort vychládal,
+    zavonělo mu to do nosu všelijak. „Ha ha haf,“ pomyslil si ten zlý
     pes, „tady mně to nějak voní, to bude asi něco na můj zub!“
     Čichal, čichal, čichal, až se toho pejskova a kočiččina dortu dočichal.
     „Ha ha!“ řekl, když se toho dortu dočichal, „tady to je, to si dám!“
     A tak se ten zlý pes pustil do toho dortu. Hltal a hltal, až mu v očích
-    slzy stály, jak byl ten dort uvnitř ještě horký, hltal, až se při tom několi-
-    krát zakuckal, hltal a hltal, až ho celý dohltal. Pak na to vypil ještě celou
-    konev vody a odvalil se pryč.
+    slzy stály, jak byl ten dort uvnitř ještě horký, hltal, až se při tom
+    několikrát zakuckal, hltal a hltal, až ho celý dohltal. Pak na to vypil
+    ještě celoukonev vody a odvalil se pryč.
     Když si pejsek a kočička s dětmi dost pohráli, vzpomněli si na ten
     dort. Tak se vzali všichni za ruce a šli se podívat, jestli už ten dort dost
     vychladl. „Panečku, to si, děti, pochutnáte,“ řekli pejsek s kočičkou, „to
@@ -704,14 +704,14 @@ doggie_and_kitie-cake-children_garden-leaving =
 
 doggie_and_kitie-cake-garden-short = Zahráda u pejska a kočičky
 doggie_and_kitie-cake-garden-searching =
-    Došli: dívají se a – co to? – dort je pryč! „Jemine,“ řekli pejsek s ko-
-    čičkou, „dort je pryč, někdo nám jej vzal!“
+    Došli: dívají se a – co to? – dort je pryč! „Jemine,“ řekli pejsek
+    s kočičkou, „dort je pryč, někdo nám jej vzal!“
 doggie_and_kitie-cake-garden-found =
     Dívají se a dívají, a vida! tamhle
     pod keřem leží veliký zlý pes a tuze heká. Moc se tím dortem přejedl
     a teď je mu špatně. Ukrutně ho bolí v břiše. „To to bolí, to to bolí!“ naříkal
-    ten zlý pes, „to jsem si dal, co ono to bylo v tom dortu všechno namíchá-
-    no, že z toho mám takové ukrutánské bolení!“
+    ten zlý pes, „to jsem si dal, co ono to bylo v tom dortu všechno namícháno,
+    že z toho mám takové ukrutánské bolení!“
     „Heč, to máš z toho,“ řekl pejsek, „měls toho nechat, když dort nebyl
     tvůj!“`
     „Víš, pejsku, já si z toho nic nedělám, že nám ten zlý pes snědl ten
@@ -728,16 +728,16 @@ doggie_and_kitie-cake-children_house-short = U dětí doma
 doggie_and_kitie-cake-children_house-eating =
     Tak šel pejsek s kočičkou k dětem k obědu. „Pojďte, děti, jíst!“ volala
     na ně už maminka, a děti řekly: „Maminko, tady ten pejsek má svátek
-    a kočička narozeniny, musíme jim také něco k obědu dát.“ Tak dali ko-
-    čičce a pejskovi od oběda; dali jim polívečku a bylo také masíčko
+    a kočička narozeniny, musíme jim také něco k obědu dát.“ Tak dali
+    kočičce a pejskovi od oběda; dali jim polívečku a bylo také masíčko
     a bramborové knedlíčky. A ještě kousek koláče od včerejška někde pro
     ně maminka vyšťárala.
-    
+
 doggie_and_kitie-cake-way_home-short = Cesta domů
 doggie_and_kitie-cake-way_home-end =
     Kočičce a pejskovi to tuze chutnalo. Poděkovali dětem za oběd a šli
-    spokojeně domů. „To jsme se na náš svátek a na naše narozeniny po-
-    měli!“ libovali si. „Takový dobrý oběd! A ani trošičku nás po něm bříško
+    spokojeně domů. „To jsme se na náš svátek a na naše narozeniny
+    poměli!“ libovali si. „Takový dobrý oběd! A ani trošičku nás po něm bříško
     nebolí.“
     Došli domů a ten veliký zlý pes tam ještě v houští hekal a naříkal.
     Oni šli po tom dobrém obědě spát a libovali si, jak se jim ten svátek
