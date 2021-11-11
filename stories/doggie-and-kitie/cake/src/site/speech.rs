@@ -49,6 +49,7 @@ pub struct Speech {
     voice: Option<SpeechSynthesisVoice>,
     voices: Vec<SpeechSynthesisVoice>,
     queue: VecDeque<SpeechSynthesisUtterance>,
+    retry_texts: Vec<String>,
     playing: bool,
     end: Closure<dyn Fn()>,
     onvoiceschanged: Closure<dyn Fn()>,
@@ -71,7 +72,6 @@ impl Component for Speech {
             Msg::Play(text) => {
                 let text = text.replace("\n", " ").replace(".", ".\n"); // converts string for better tts
                 let synth = web_sys::window().unwrap().speech_synthesis().unwrap();
-                // Already speaking
                 if let Some(voice) = self.voice.as_ref() {
                     let mut ut = SpeechSynthesisUtterance::new().unwrap();
                     ut.set_text(&text);
@@ -79,6 +79,7 @@ impl Component for Speech {
                     ut.set_rate(1.0);
                     ut.set_voice(Some(voice));
 
+                    // Already speaking
                     if self.playing {
                         self.queue.push_back(ut);
                     } else {
@@ -86,6 +87,14 @@ impl Component for Speech {
                         self.playing = true;
                         synth.cancel();
                         synth.speak(&ut);
+                    }
+                } else {
+                    // Some voice was set in the past
+                    // but speech was not initialized yet
+                    if (storage::LocalStorage::get(&self.default_voice_key) as Result<String, _>)
+                        .is_ok()
+                    {
+                        self.retry_texts.push(text);
                     }
                 }
                 false
@@ -125,6 +134,22 @@ impl Component for Speech {
                     .filter_map(|e| e.dyn_into::<SpeechSynthesisVoice>().ok())
                     .filter(|e| e.lang().starts_with(&ctx.props().lang))
                     .collect();
+
+                if let Ok(selected_voice) =
+                    storage::LocalStorage::get(&self.default_voice_key) as Result<String, _>
+                {
+                    for (idx, voice) in self.voices.iter().enumerate() {
+                        if voice.name() == selected_voice {
+                            self.voice = Some(self.voices[idx].clone());
+
+                            let link = ctx.link();
+                            // Play the texts which should be retried
+                            self.retry_texts
+                                .drain(..)
+                                .for_each(|e| link.send_message(Msg::Play(e)));
+                        }
+                    }
+                }
                 true
             }
         }
@@ -155,6 +180,7 @@ impl Component for Speech {
             voice: None,
             voices: vec![],
             queue: VecDeque::new(),
+            retry_texts: vec![],
             playing: false,
             end,
             onvoiceschanged,

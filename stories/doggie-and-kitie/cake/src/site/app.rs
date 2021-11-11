@@ -131,7 +131,6 @@ impl Component for App {
                 }
             }
             Msg::TriggerEvent(idx) => {
-                let old_screen_text = self.screen_text();
                 if let Some(world) = self.world.as_mut() {
                     let narrator = narrator::Cake::default();
                     let mut events = narrator.available_events(world);
@@ -155,11 +154,6 @@ impl Component for App {
                         event.dump(),
                     );
                     ctx.link().send_message(Msg::PlayText(text.to_string()));
-                    if old_screen_text != self.screen_text() {
-                        if let Some(text) = self.screen_text() {
-                            ctx.link().send_message(Msg::PlayText(text));
-                        }
-                    }
                     true
                 } else {
                     false
@@ -167,7 +161,6 @@ impl Component for App {
             }
             Msg::TriggerScannedEvent(json_value) => {
                 let narrator = narrator::Cake::default();
-                let old_screen_text = self.screen_text();
                 if let Some(world) = self.world.as_mut() {
                     if let Some(mut event) = narrator.parse_event(&json_value) {
                         // Update initiator
@@ -212,12 +205,6 @@ impl Component for App {
                 } else {
                     return false;
                 }
-                let new_screen_text = self.screen_text();
-                if old_screen_text != new_screen_text {
-                    if let Some(text) = new_screen_text {
-                        ctx.link().send_message(Msg::PlayText(text));
-                    }
-                }
                 false
             }
             Msg::TriggerScannedCharacter(character, world_id) => {
@@ -228,7 +215,7 @@ impl Component for App {
                     storage::LocalStorage::set("fixed_character", &character).unwrap();
                     self.world_id = Some(world_id);
 
-                    // Setch the character
+                    // Set the character
                     ctx.link()
                         .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
                     // Get the world
@@ -246,6 +233,7 @@ impl Component for App {
                 }
             }
             Msg::PlayText(text) => {
+                log::debug!("Playing: {}", &text);
                 self.speech_scope
                     .as_ref()
                     .borrow()
@@ -271,7 +259,14 @@ impl Component for App {
                 true
             }
             Msg::WorldUpdateFetched(world) => {
+                let old_screen_text = App::screen_text(&self.world, &self.selected_character);
                 self.world = Some(world);
+                let new_screen_text = App::screen_text(&self.world, &self.selected_character);
+                if new_screen_text != old_screen_text {
+                    if let Some(text) = new_screen_text {
+                        ctx.link().send_message(Msg::PlayText(text));
+                    }
+                }
                 true
             }
             Msg::CreateNewWorld => {
@@ -289,7 +284,7 @@ impl Component for App {
                 let narrator = narrator::Cake::default();
                 if let Ok(json) = serde_json::from_str(&data) {
                     let json: Value = json;
-                    if let Some(_event) = narrator.parse_event(&json) {
+                    if let Some(event) = narrator.parse_event(&json) {
                         log::info!("New event arrived from ws");
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             log::debug!("Hiding QR code of actions");
@@ -299,6 +294,25 @@ impl Component for App {
                             // TODO this should be optimized
                             // not need to refresh the whole world just a single event
                             self.request_to_get_world(ctx, world_id);
+                        }
+
+                        if let Some(world) = self.world.as_ref() {
+                            if event.can_be_triggered(world) {
+                                let message = MessageItem::new(
+                                    translations::get_message("event", world.lang(), None),
+                                    event.success_text(world),
+                                    MessageKind::Success,
+                                    Some("fas fa-cogs".to_string()),
+                                );
+                                let text = message.text.clone();
+                                self.messages_scope
+                                    .as_ref()
+                                    .borrow()
+                                    .clone()
+                                    .unwrap()
+                                    .send_message(MessagesMsg::AddMessage(Rc::new(message)));
+                                ctx.link().send_message(Msg::PlayText(text.to_string()));
+                            }
                         }
                     } else if let Value::String(name) = &json["name"] {
                         // It can be a message that character was joining the game
@@ -321,7 +335,6 @@ impl Component for App {
                 self.ws_queue.drain(..).for_each(|msg| {
                     let status_scope = status_scope.clone();
                     ctx.link().send_future(async move {
-                        log::warn!("{:?}", status_scope);
                         if let Some(status_scope) = status_scope.as_ref().borrow().as_ref() {
                             status_scope.send_message(StatusMsg::SendMessage(msg));
                         }
@@ -502,9 +515,12 @@ impl Component for App {
 }
 
 impl App {
-    fn screen_text(&self) -> Option<String> {
-        let world = self.world.as_ref()?;
-        if let Some(character) = self.selected_character.as_ref() {
+    fn screen_text<W>(world: &Option<W>, selected_character: &Option<String>) -> Option<String>
+    where
+        W: World,
+    {
+        let world = world.as_ref()?;
+        if let Some(character) = selected_character.as_ref() {
             let character = world.characters().get(character).unwrap();
             let scene_name = character.scene().as_ref().unwrap();
             let scene = world.scenes().get(scene_name).unwrap();
