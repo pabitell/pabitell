@@ -1,7 +1,16 @@
 use super::characters;
-use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemState, Tagged};
+use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemState, Tagged, World};
 
 use crate::translations::get_message;
+
+fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
+    conditions::same_scene(
+        world,
+        &vec!["doggie".to_string(), "kitie".to_string()],
+        &vec![],
+    )
+    .unwrap()
+}
 
 pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
     let mut event = events::Pick::new(pick_data);
@@ -91,6 +100,7 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
                 &vec![event.item().to_string()],
             )
             .unwrap()
+            && doggie_and_kitie_in_same_scene(world)
     })));
 
     event.set_make_action_text(Some(Box::new(|event, world| {
@@ -356,16 +366,7 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
     })));
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        conditions::same_scene(
-            world,
-            &world
-                .characters()
-                .values()
-                .map(|e| e.name().to_string())
-                .collect::<Vec<_>>(),
-            &vec![],
-        )
-        .unwrap()
+        doggie_and_kitie_in_same_scene(world)
             && conditions::has_item(
                 world,
                 event.character().to_string(),
@@ -499,6 +500,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
             &vec![event.item().to_string()],
         )
         .unwrap()
+            && doggie_and_kitie_in_same_scene(world)
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
@@ -661,6 +663,9 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
     })));
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Void>().unwrap();
+        if !doggie_and_kitie_in_same_scene(world) {
+            return false;
+        }
 
         let character = world.characters().get(event.character()).unwrap();
         if character.scene() != &Some("children_house".into()) {
