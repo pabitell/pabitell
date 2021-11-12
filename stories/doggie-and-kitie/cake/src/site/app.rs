@@ -1,7 +1,7 @@
 use gloo::storage::{self, Storage};
-use pabitell_lib::{Description, Dumpable, Id, Named, Narrator, World, WorldBuilder};
+use pabitell_lib::{events, Description, Dumpable, Id, Named, Narrator, World, WorldBuilder};
 use serde_json::Value;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{any::Any, cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
@@ -396,12 +396,25 @@ impl Component for App {
                 .into_iter()
                 .enumerate()
                 .map(|(idx, e)| {
+                    let image = if let Some(event) = e.as_any().downcast_ref::<events::Pick>() {
+                        Some(format!("images/{}.svg", event.item()))
+                    } else if let Some(event) = e.as_any().downcast_ref::<events::Give>() {
+                        Some(format!("images/{}.svg", event.item()))
+                    } else if let Some(event) = e.as_any().downcast_ref::<events::Move>() {
+                        Some(format!("images/{}.svg", event.scene()))
+                    } else if let Some(event) = e.as_any().downcast_ref::<events::UseItem>() {
+                        Some(format!("images/{}.svg", event.item()))
+                    } else if let Some(event) = e.as_any().downcast_ref::<events::Void>() {
+                        event.item().as_ref().map(|e| format!("images/{}.svg", e))
+                    } else {
+                        None
+                    };
                     Rc::new(ActionEventItem::new(
                         idx,
                         e.action_text(world),
                         characters_map.get(&e.initiator()).unwrap().clone(),
                         None,
-                        None,
+                        image,
                         serde_json::to_vec(&e.dump()).unwrap(),
                     ))
                 })
