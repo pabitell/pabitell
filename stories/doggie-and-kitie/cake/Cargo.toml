@@ -24,12 +24,10 @@ with_webapp = [
 	'wasm-bindgen-futures',
 	'wee_alloc',
 	'yew',
-	'bardecoder',
 ]	
 
 [dependencies]
 anyhow = "1"
-bardecoder = { path =  "../../../../bardecoder/", optional = true }
 base64 = { version = "0.13", optional = true }
 data-url = { version = "0.1", optional = true }
 futures = "0.3"
