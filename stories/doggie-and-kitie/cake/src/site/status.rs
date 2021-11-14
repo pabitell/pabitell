@@ -1,5 +1,5 @@
-use futures::{SinkExt, StreamExt};
-use reqwasm::websocket::{futures::WebSocket, Message};
+use futures::{stream::SplitSink, SinkExt, StreamExt};
+use reqwasm::websocket::{futures::WebSocket, Message, WebSocketError};
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen_futures::spawn_local;
@@ -62,13 +62,13 @@ impl WsStatus {
 
 pub struct Status {
     status: WsStatus,
-    ws: Option<WebSocket>,
+    sender: Option<Rc<RefCell<SplitSink<WebSocket, Message>>>>,
     queued_messages: Vec<String>,
 }
 
 pub enum Msg {
     Connect,
-    Connected(WebSocket),
+    Connected(SplitSink<WebSocket, Message>),
     Disconnect,
     SendMessage(String),
     RefreshWorld,
@@ -88,10 +88,11 @@ impl Component for Status {
                     let props = ctx.props().clone();
                     link.clone().send_future(async move {
                         match WebSocket::open(&url) {
-                            Ok(mut ws) => {
+                            Ok(ws) => {
                                 log::debug!("WS opened {}", url);
-                                link.send_message(Msg::Connected(ws.clone()));
-                                while let Some(msg) = ws.next().await {
+                                let (sender, mut receiver) = ws.split();
+                                link.send_message(Msg::Connected(sender));
+                                while let Some(msg) = receiver.next().await {
                                     log::debug!("MSG recieved: {:?}", &msg);
                                     match msg {
                                         Ok(Message::Text(msg)) => {
@@ -104,9 +105,16 @@ impl Component for Status {
                                                 msg.len()
                                             );
                                         }
-                                        Err(err) => {
-                                            log::warn!("WS error {}:{:?}", url, err);
+                                        Err(WebSocketError::ConnectionClose(err)) => {
+                                            log::warn!("WS closed {}:{:?}", url, err);
                                             break;
+                                        }
+                                        Err(WebSocketError::ConnectionError(err)) => {
+                                            log::warn!("WS connection Error {}:{:?}", url, err);
+                                            break;
+                                        }
+                                        Err(_) => {
+                                            unreachable!()
                                         }
                                     }
                                 }
@@ -122,9 +130,9 @@ impl Component for Status {
                     false
                 }
             }
-            Msg::Connected(ws) => {
+            Msg::Connected(sender) => {
                 log::info!("Ws connected");
-                self.ws = Some(ws);
+                self.sender = Some(Rc::new(RefCell::new(sender)));
                 self.status = WsStatus::CONNECTED;
                 self.queued_messages.drain(..).for_each(|msg| {
                     log::debug!("Sending stored message {}", msg);
@@ -134,18 +142,17 @@ impl Component for Status {
             }
             Msg::Disconnect => {
                 log::warn!("Disconnect");
-                let render = self.ws.is_some();
+                let render = self.sender.is_some();
                 self.status = WsStatus::DISCONNECTED;
-                self.ws = None;
+                self.sender = None;
                 render
             }
             Msg::SendMessage(message) => {
                 log::debug!("Sending a message to websockets");
-                if let Some(ws) = self.ws.as_ref() {
-                    let mut ws = ws.clone();
+                if let Some(mut sender) = self.sender.clone() {
                     spawn_local(async move {
                         // Best effort - don't care about the Result
-                        let _ = ws.send(Message::Text(message)).await;
+                        let _ = sender.borrow_mut().send(Message::Text(message)).await;
                     });
                 } else {
                     log::debug!("Add '{}' to queue", message);
@@ -171,7 +178,7 @@ impl Component for Status {
         ctx.link().send_future(async { Msg::Connect });
         Self {
             status: WsStatus::default(),
-            ws: None,
+            sender: None,
             queued_messages: vec![],
         }
     }
