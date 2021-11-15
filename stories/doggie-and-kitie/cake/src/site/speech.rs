@@ -14,18 +14,13 @@ use gloo::{
 use js_sys::{ArrayBuffer, Function, Uint8Array};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use yew::{
-    function_component, html,
-    prelude::*,
-    web_sys::{
-        Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-        Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlSelectElement,
-        HtmlVideoElement, MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream,
-        MediaStreamConstraints, MediaStreamTrack, SpeechSynthesis, SpeechSynthesisUtterance,
-        SpeechSynthesisVoice,
-    },
-    Event,
+use web_sys::{
+    Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
+    Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlSelectElement, HtmlVideoElement,
+    MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
+    MediaStreamTrack, SpeechSynthesis, SpeechSynthesisUtterance, SpeechSynthesisVoice,
 };
+use yew::{function_component, html, prelude::*, Event};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

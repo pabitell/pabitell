@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::{cell::RefCell, rc::Rc};
-use yew::{html, prelude::*, web_sys::Element};
+use yew::{html, prelude::*};
 
 use super::{
     characters, items, qrcode,

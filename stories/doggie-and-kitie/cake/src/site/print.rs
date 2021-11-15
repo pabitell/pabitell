@@ -1,7 +1,7 @@
 use ::qrcode::{render::svg, EcLevel, QrCode, Version};
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
-use yew::{html, prelude::*, utils, web_sys::Element, Html};
+use yew::{html, prelude::*, utils, Html};
 
 use super::{characters, qrcode};
 
@@ -87,7 +87,12 @@ impl Component for Print {
                 .dark_color(svg::Color("#000000"))
                 .light_color(svg::Color("#ffffff"))
                 .build();
-            let qr_div = utils::document().create_element("div").unwrap();
+            let qr_div = web_sys::window()
+                .unwrap()
+                .document()
+                .unwrap()
+                .create_element("div")
+                .unwrap();
             qr_div.set_inner_html(&svg);
             let qr_part = Html::VRef(qr_div.into());
 

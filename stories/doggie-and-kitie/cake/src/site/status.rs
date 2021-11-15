@@ -1,9 +1,10 @@
 use futures::{stream::SplitSink, SinkExt, StreamExt};
+use gloo::timers::callback::Timeout;
 use reqwasm::websocket::{futures::WebSocket, Message, WebSocketError};
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen_futures::spawn_local;
-use yew::{html, prelude::*, web_sys::Element};
+use yew::{html, prelude::*};
 
 use super::{characters, qrcode};
 
@@ -64,6 +65,7 @@ pub struct Status {
     status: WsStatus,
     sender: Option<Rc<RefCell<SplitSink<WebSocket, Message>>>>,
     queued_messages: Vec<String>,
+    reconnect_timeout: Option<Timeout>,
 }
 
 pub enum Msg {
@@ -127,6 +129,7 @@ impl Component for Status {
                     });
                     true
                 } else {
+                    self.plan_reconnect(ctx);
                     false
                 }
             }
@@ -138,12 +141,16 @@ impl Component for Status {
                     log::debug!("Sending stored message {}", msg);
                     link.send_message(Msg::SendMessage(msg));
                 });
+                if let Some(timer) = self.reconnect_timeout.take() {
+                    timer.cancel();
+                }
                 true
             }
             Msg::Disconnect => {
                 log::warn!("Disconnect");
                 let render = self.sender.is_some();
                 self.status = WsStatus::DISCONNECTED;
+                self.plan_reconnect(ctx);
                 self.sender = None;
                 render
             }
@@ -180,6 +187,7 @@ impl Component for Status {
             status: WsStatus::default(),
             sender: None,
             queued_messages: vec![],
+            reconnect_timeout: None,
         }
     }
 
@@ -220,6 +228,13 @@ impl Component for Status {
 }
 
 impl Status {
+    fn plan_reconnect(&mut self, ctx: &Context<Self>) {
+        let link = ctx.link().to_owned();
+        self.reconnect_timeout = Some(Timeout::new(5000, move || {
+            link.send_message(Msg::Connect);
+        }));
+    }
+
     fn ws_url(ctx: &Context<Self>) -> Option<String> {
         let location = web_sys::window().unwrap().location();
         let proto = if location.protocol().unwrap() == "https:" {

@@ -5,7 +5,8 @@ use std::{
 };
 
 use qrcode::{render::svg, EcLevel, QrCode, Version};
-use yew::{function_component, html, prelude::*, web_sys::Element};
+use web_sys::Element;
+use yew::{function_component, html, prelude::*};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

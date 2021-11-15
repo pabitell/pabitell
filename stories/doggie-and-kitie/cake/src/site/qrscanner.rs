@@ -13,16 +13,13 @@ use gloo::{
 use js_sys::{ArrayBuffer, Function, Uint8Array, Uint8ClampedArray};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use yew::{
-    function_component, html,
-    prelude::*,
-    web_sys::{
-        Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-        Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlVideoElement, ImageData,
-        MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
-        MediaStreamTrack,
-    },
+use web_sys::{
+    Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
+    Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlVideoElement, ImageData,
+    MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
+    MediaStreamTrack,
 };
+use yew::{function_component, html, prelude::*};
 
 use super::jsQR::js_qr;
 
