@@ -5,6 +5,7 @@ use std::{
     collections::HashMap,
     time::{Duration, Instant},
 };
+use tracing::{debug, info};
 use uuid::Uuid;
 
 /// How often heartbeat pings are sent
@@ -43,6 +44,7 @@ pub struct ClientMessage {
 }
 
 /// Should manage connected clients
+#[derive(Debug)]
 pub struct WsManager {
     clients: HashMap<Uuid, HashMap<usize, Recipient<Message>>>,
     rng: ThreadRng,
@@ -60,11 +62,10 @@ impl WsManager {
 impl WsManager {
     /// Sends messages to all users in the same world
     fn send_message(&self, id: &Uuid, message: &str) {
-        println!("client {:?}", self.clients);
-        println!("client {:?}", self.clients.get(id));
+        debug!("client={:?}", self.clients.get(id));
         self.clients.get(id).iter().for_each(|clients| {
             clients.values().for_each(|addr| {
-                println!("Sending message to {:?}", addr);
+                debug!("sending_message; to={:?}", addr);
                 let _ = addr.do_send(Message(message.to_owned()));
             });
         });
@@ -80,7 +81,7 @@ impl Handler<Connect> for WsManager {
     type Result = usize;
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
-        println!("Connect in Manager");
+        debug!("Connect in Manager");
         // register session with random id
         let id = self.rng.gen::<usize>();
         self.clients
@@ -88,7 +89,7 @@ impl Handler<Connect> for WsManager {
             .or_insert(HashMap::new())
             .insert(id, msg.addr);
 
-        println!("con clients: {:?}", self.clients);
+        debug!("clients={:?}", self.clients);
 
         // send id back
         id
@@ -100,7 +101,7 @@ impl Handler<Disconnect> for WsManager {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        println!("Disconnected: {:?}-{}", msg.world_id, msg.id);
+        info!("Disconnected;world={},mid={}", msg.world_id, msg.id);
         if let Some(clients) = self.clients.get_mut(&msg.world_id) {
             clients.remove(&msg.id);
             if clients.is_empty() {
@@ -118,11 +119,12 @@ impl Handler<ClientMessage> for WsManager {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        println!("Handling message");
+        debug!("Handling message");
         self.send_message(&msg.world_id, &msg.data);
     }
 }
 
+#[derive(Debug)]
 pub struct WsConnection {
     /// unique id of the connection
     /// it should be obtained from WsManager on start()
@@ -139,7 +141,7 @@ impl Actor for WsConnection {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        println!("Started");
+        debug!("Started");
         // start heartbeat
         self.hb(ctx);
 
@@ -166,7 +168,7 @@ impl Actor for WsConnection {
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         // notify server
-        println!("Stopping");
+        debug!("Stopping");
         self.addr.do_send(Disconnect {
             id: self.id.unwrap_or_default(),
             world_id: self.world_id.clone(),
@@ -195,7 +197,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
             Ok(msg) => msg,
         };
 
-        println!("WEBSOCKET MESSAGE: {:?}", msg);
+        debug!("message={:?}", msg);
         match msg {
             ws::Message::Ping(msg) => {
                 // ping recieved the connection is alive
@@ -232,11 +234,11 @@ impl WsConnection {
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
         let world_id = self.world_id.clone();
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
-            println!("heartbeat {:?}-{:?}", world_id.clone(), act.id);
+            debug!("heartbeat;world={},act={:?}", world_id.clone(), act.id);
             // check client heartbeats
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 // heartbeat timed out
-                println!("Websocket Client heartbeat failed, disconnecting!");
+                debug!("Websocket Client heartbeat failed, disconnecting!");
 
                 // notify chat server
                 act.addr.do_send(Disconnect {
@@ -257,7 +259,7 @@ impl WsConnection {
     }
 
     pub fn new(hb: Instant, world_id: Uuid, addr: Addr<WsManager>) -> Self {
-        println!("NEW WS connection {}", world_id);
+        debug!("new connection;world={}", world_id);
         Self {
             id: None,
             hb,

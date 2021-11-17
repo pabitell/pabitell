@@ -12,6 +12,9 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
     time::Instant,
 };
+use tracing::{debug, info, Level};
+use tracing_actix_web::TracingLogger;
+use tracing_subscriber::{self, filter::LevelFilter, EnvFilter};
 use uuid::Uuid;
 
 use crate::{
@@ -116,7 +119,7 @@ async fn event_world(
                     backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
 
                     let ws_manager = data.as_ref().1.clone();
-                    println!("Sending: {}", event.dump());
+                    debug!("Sending;dump={}", event.dump());
                     ws_manager.do_send(WsClientMessage {
                         world_id,
                         data: event.dump().to_string(),
@@ -155,6 +158,13 @@ async fn ws_endpoint(
 }
 
 async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {
+    // setting logging collector
+    let _collector = tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::try_from_env("PABITELL_LOG_LEVEL")?)
+        .pretty()
+        .try_init();
+    info!("Logging");
+
     // init db connection
     let db = sled::open(db_path)?;
     // Start chat server actor
@@ -163,7 +173,7 @@ async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new((db.clone(), ws_manager.to_owned())))
-            .wrap(actix_web::middleware::Logger::default())
+            .wrap(TracingLogger::default())
             .service(create_world)
             .service(get_world)
             .service(event_world)
