@@ -65,7 +65,12 @@ impl Component for Speech {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Play(text) => {
-                let text = text.replace("\n", " ").replace(".", ".\n"); // converts string for better tts
+                let text = text
+                    .replace("\n", " ")
+                    .replace(".", ".\n")
+                    .replace("\"", "")
+                    .replace("„", "")
+                    .replace("“", ""); // converts string for better tts
                 let synth = web_sys::window().unwrap().speech_synthesis().unwrap();
                 if let Some(voice) = self.voice.as_ref() {
                     let mut ut = SpeechSynthesisUtterance::new().unwrap();
