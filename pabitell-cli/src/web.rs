@@ -160,7 +160,9 @@ async fn ws_endpoint(
 async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {
     // setting logging collector
     let _collector = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_env("PABITELL_LOG_LEVEL")?)
+        .with_env_filter(
+            EnvFilter::try_from_env("PABITELL_LOG_LEVEL").unwrap_or_else(|_| "info".into()),
+        )
         .pretty()
         .try_init();
     info!("Logging");
