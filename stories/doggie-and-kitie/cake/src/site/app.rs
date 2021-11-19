@@ -233,13 +233,12 @@ impl Component for App {
                 }
             }
             Msg::PlayText(text) => {
-                log::debug!("Playing: {}", &text);
-                self.speech_scope
-                    .as_ref()
-                    .borrow()
-                    .clone()
-                    .unwrap()
-                    .send_message(SpeechMsg::Play(text));
+                if let Some(speech) = self.speech_scope.as_ref().borrow().clone() {
+                    log::debug!("Playing: {}", &text);
+                    speech.send_message(SpeechMsg::Play(text));
+                } else {
+                    log::warn!("Speech not initialized");
+                }
                 false
             }
             Msg::Reset => {
