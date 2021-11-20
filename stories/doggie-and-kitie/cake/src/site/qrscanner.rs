@@ -72,12 +72,15 @@ impl Component for QRScanner {
                 if !active {
                     if let Some(interval) = self.interval.take() {
                         interval.cancel();
+                        self.turn_off_camera();
                     }
                 } else {
                     // restore previous view on re-open
-                    if let Some(device_id) = self.current_device_id.as_ref() {
+                    if let Some(device_id) = self.current_device_id.clone() {
+                        // This needs to be send as future - to make sure
+                        // that underlaying DOM is properly initialized
                         ctx.link()
-                            .send_message(Msg::SwitchCamera(Some(device_id.clone())));
+                            .send_future(async move { Msg::SwitchCamera(Some(device_id)) });
                     }
                 }
                 true
@@ -141,24 +144,11 @@ impl Component for QRScanner {
                 let navigator = window.navigator();
                 let media_devices = navigator.media_devices().unwrap();
 
-                let media = self.video_ref.cast::<HtmlMediaElement>().unwrap();
-
                 // Turn camera off
-                if let Some(stream) = media.src_object() {
-                    let tracks = stream.get_tracks();
-                    tracks.iter().for_each(|e| {
-                        e.dyn_into::<MediaStreamTrack>()
-                            .map(|t| t.stop())
-                            .unwrap_or(())
-                    });
-                    // Stop all streams
-                    media.set_src_object(None);
-                    // Reset video
-                    media.load();
-                }
+                self.turn_off_camera();
+
                 let video = self.video_ref.cast::<HtmlVideoElement>().unwrap();
                 let canvas = self.canvas_ref.cast::<HtmlCanvasElement>().unwrap();
-
                 if let Some(device_id) = device_id.clone() {
                     // Turn camera on
                     ctx.link().send_future(async move {
@@ -175,8 +165,8 @@ impl Component for QRScanner {
                         let stream_js = JsFuture::from(stream_fut.unwrap()).await.unwrap();
                         let media_stream = MediaStream::from(stream_js);
 
-                        media.set_src_object(Some(&media_stream));
-                        JsFuture::from(media.play().unwrap()).await.unwrap();
+                        video.set_src_object(Some(&media_stream));
+                        JsFuture::from(video.play().unwrap()).await.unwrap();
 
                         canvas.set_width(video.video_width());
                         canvas.set_height(video.video_height());
@@ -373,5 +363,22 @@ impl QRScanner {
         });
 
         self.interval = Some(interval);
+    }
+
+    fn turn_off_camera(&self) {
+        if let Some(video) = self.video_ref.cast::<HtmlVideoElement>() {
+            if let Some(stream) = video.src_object() {
+                let tracks = stream.get_tracks();
+                tracks.iter().for_each(|e| {
+                    e.dyn_into::<MediaStreamTrack>()
+                        .map(|t| t.stop())
+                        .unwrap_or(())
+                });
+                // Stop all streams
+                video.set_src_object(None);
+                // Reset video
+                video.load();
+            }
+        }
     }
 }
