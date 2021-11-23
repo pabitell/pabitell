@@ -21,7 +21,7 @@ pub struct Props {
     pub show_print: Callback<bool>,
     pub story_name: String,
     pub story_detail: String,
-    pub character_scanned: Callback<(String, Uuid)>,
+    pub character_scanned: Callback<(Option<String>, Uuid)>,
 }
 
 pub enum Msg {
@@ -69,7 +69,7 @@ impl Component for Intro {
                                         world_id,
                                     } = character_json;
                                     log::debug!(
-                                        "Joining world (id={:?}) as character {}",
+                                        "Joining world (id={:?}) as character {:?}",
                                         &world_id,
                                         &character
                                     );

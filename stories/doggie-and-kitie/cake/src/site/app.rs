@@ -29,7 +29,7 @@ pub enum Msg {
     UpdateSelectedCharacter(Rc<Option<String>>),
     TriggerEvent(usize),
     TriggerScannedEvent(Value),
-    TriggerScannedCharacter(String, Uuid),
+    TriggerScannedCharacter(Option<String>, Uuid),
     PlayText(String),
     NotificationRecieved(String),
     Reset,
@@ -210,26 +210,38 @@ impl Component for App {
             Msg::TriggerScannedCharacter(character, world_id) => {
                 // check whether character exists in the world
                 let world = Self::make_world();
-                if let Some(character_instance) = world.characters().get(&character) {
-                    storage::LocalStorage::set("world_id", world_id).unwrap();
-                    storage::LocalStorage::set("fixed_character", &character).unwrap();
-                    self.world_id = Some(world_id);
+                if let Some(character) = character {
+                    if let Some(character_instance) = world.characters().get(&character) {
+                        storage::LocalStorage::set("world_id", world_id).unwrap();
+                        storage::LocalStorage::set("fixed_character", &character).unwrap();
+                        self.world_id = Some(world_id);
 
-                    // Set the character
+                        // Set the character
+                        ctx.link()
+                            .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
+                        // Get the world
+                        self.request_to_get_world(ctx, world_id);
+
+                        // Queue character notification
+                        // we need to wait till Status component is initialized
+                        self.ws_queue.push(character_instance.dump().to_string());
+
+                        true
+                    } else {
+                        log::warn!("Character '{}' is not found", character);
+                        // TODO display message that character is not found
+                        false
+                    }
+                } else {
+                    self.world_id = Some(world_id);
+                    // Narrator
                     ctx.link()
-                        .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
+                        .send_message(Msg::UpdateSelectedCharacter(Rc::new(None)));
+
                     // Get the world
                     self.request_to_get_world(ctx, world_id);
 
-                    // Queue character notification
-                    // we need to wait till Status component is initialized
-                    self.ws_queue.push(character_instance.dump().to_string());
-
                     true
-                } else {
-                    log::warn!("Character '{}' is not found", character);
-                    // TODO display message that character is not found
-                    false
                 }
             }
             Msg::PlayText(text) => {

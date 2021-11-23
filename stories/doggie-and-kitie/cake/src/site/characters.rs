@@ -17,12 +17,12 @@ pub struct Character {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CharacterQRJson {
-    pub character: String,
+    pub character: Option<String>,
     pub world_id: Uuid,
 }
 
 impl CharacterQRJson {
-    pub fn new(character: String, world_id: Uuid) -> Self {
+    pub fn new(character: Option<String>, world_id: Uuid) -> Self {
         Self {
             character,
             world_id,

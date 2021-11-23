@@ -27,7 +27,7 @@ impl Component for ActionJoin {
                 log::info!("QR active");
 
                 let character = ctx.props().character.clone();
-                let character_code = character.code.as_ref().as_ref().unwrap().to_string();
+                let character_code: Option<String> = character.code.as_ref().clone();
                 let data =
                     characters::CharacterQRJson::new(character_code, ctx.props().world_id.clone());
                 let data = Rc::new(serde_json::to_vec(&data).unwrap());

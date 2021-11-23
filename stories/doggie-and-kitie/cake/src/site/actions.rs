@@ -147,6 +147,7 @@ impl Component for Actions {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
+        let props = ctx.props();
         let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
         let render_action = move |item: Rc<action_event::ActionEventItem>| {
             let idx = item.idx;
@@ -160,8 +161,8 @@ impl Component for Actions {
         let cloned_link = ctx.link().clone();
         let qr_scans = move |character: Rc<characters::Character>| {
             let scan_cb = cloned_link.callback(move |_| Msg::QRCodeScanShow);
-            let qr_code_text = get_message("qr_code", &ctx.props().lang, None);
-            let qr_code_scan_text = get_message("qr_code_scan", &ctx.props().lang, None);
+            let qr_code_text = get_message("qr_code", &props.lang, None);
+            let qr_code_scan_text = get_message("qr_code_scan", &props.lang, None);
             html! {
                 <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
                     <div class="card-content">
@@ -186,25 +187,19 @@ impl Component for Actions {
                 </div>
             }
         };
-        let characters: Vec<_> = ctx
-            .props()
+        let characters: Vec<_> = props
             .available_characters
             .iter()
-            .filter(|e| e.code.is_some() && (ctx.props().selected_character == e.code))
+            .filter(|e| e.code.is_some() && (props.selected_character == e.code))
             .collect();
 
-        let joinable_characters: Vec<_> = if ctx.props().selected_character.is_none() {
-            ctx.props()
-                .available_characters
-                .iter()
-                .filter(|e| e.code.is_some())
-                .collect()
+        let joinable_characters: Vec<_> = if props.selected_character.is_none() {
+            ctx.props().available_characters.iter().collect()
         } else {
             vec![]
         };
-
-        let events: Vec<_> = if ctx.props().selected_character.is_none() {
-            ctx.props().events.clone().into_iter().collect()
+        let events: Vec<_> = if props.selected_character.is_none() {
+            props.events.clone().into_iter().collect()
         } else {
             vec![]
         };
@@ -226,7 +221,7 @@ impl Component for Actions {
 
         let link = ctx.link().clone();
         let render_join = |character: &Rc<characters::Character>| {
-            let world_id = ctx.props().world_id.clone();
+            let world_id = props.world_id.clone();
             let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
             html! {
                 <action_join::ActionJoin
@@ -237,13 +232,13 @@ impl Component for Actions {
             }
         };
 
-        let items = ctx.props().owned_items.clone();
+        let items = props.owned_items.clone();
 
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
                     { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
-                    { for joinable_characters.iter().map(|e| render_join(e.clone())) }
+                    { for joinable_characters.iter().map(|e| render_join(&e)) }
                     { for items.iter().map(render_item) }
                     <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_scope.clone()} />
                     { for events.into_iter().map(render_action) }
