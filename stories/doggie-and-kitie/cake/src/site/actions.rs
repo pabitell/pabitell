@@ -24,6 +24,7 @@ pub struct Props {
     pub trigger_scanned_event: Callback<Value>,
     pub world_id: Uuid,
     pub actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
+    pub finished: bool,
 }
 
 impl PartialEq for Props {
@@ -193,7 +194,7 @@ impl Component for Actions {
             .filter(|e| e.code.is_some() && (props.selected_character == e.code))
             .collect();
 
-        let joinable_characters: Vec<_> = if props.selected_character.is_none() {
+        let joinable_characters: Vec<_> = if props.selected_character.is_none() && !props.finished {
             ctx.props().available_characters.iter().collect()
         } else {
             vec![]

@@ -466,6 +466,12 @@ impl Component for App {
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
+            let finished = if let Some(world) = self.world.as_ref() {
+                world.finished()
+            } else {
+                false
+            };
+
             let fixed_character: Option<String> =
                 storage::LocalStorage::get("fixed_character").ok();
 
@@ -523,6 +529,7 @@ impl Component for App {
                           trigger_scanned_event={ trigger_scanned_event_callback }
                           world_id={self.world_id.unwrap_or_default().clone()}
                           actions_scope={self.actions_scope.clone()}
+                          { finished }
                         />
                         { self.view_scene(ctx) }
                         <Messages shared_scope={ self.messages_scope.clone() }/>
