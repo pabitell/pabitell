@@ -5,7 +5,9 @@ use std::{any::Any, cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response};
+use web_sys::{
+    OrientationLockType, Request, RequestInit, RequestMode, Response, ScreenOrientation,
+};
 use yew::prelude::*;
 
 use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
@@ -40,6 +42,7 @@ pub enum Msg {
     StatusReady,
     ShowPrint(bool),
     Void(bool),
+    ScreenOrientationLocked(Option<JsValue>),
 }
 
 pub struct App {
@@ -53,6 +56,7 @@ pub struct App {
     ws_queue: Vec<String>,
     loading: Rc<RefCell<bool>>,
     show_print: bool,
+    orientation_lock: Option<JsValue>,
 }
 
 async fn make_request(
@@ -92,6 +96,21 @@ impl Component for App {
             None
         };
 
+        // Screen orientation locking
+        let screen_orientation = web_sys::window().unwrap().screen().unwrap().orientation();
+        ctx.link().send_future(async move {
+            let res = if let Ok(promise) = screen_orientation.lock(OrientationLockType::Any) {
+                if let Ok(value) = JsFuture::from(promise).await {
+                    Some(value)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            Msg::ScreenOrientationLocked(res)
+        });
+
         let mut res = Self {
             world_id,
             world: None,
@@ -103,6 +122,7 @@ impl Component for App {
             ws_queue: vec![],
             loading: Rc::new(RefCell::new(false)),
             show_print: false,
+            orientation_lock: None,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -361,6 +381,10 @@ impl Component for App {
                 } else {
                     false
                 }
+            }
+            Msg::ScreenOrientationLocked(value) => {
+                self.orientation_lock = value;
+                false
             }
         }
     }
