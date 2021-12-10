@@ -188,11 +188,15 @@ impl Component for Actions {
                 </div>
             }
         };
-        let characters: Vec<_> = props
-            .available_characters
-            .iter()
-            .filter(|e| e.code.is_some() && (props.selected_character == e.code))
-            .collect();
+        let characters: Vec<_> = if !props.finished {
+            props
+                .available_characters
+                .iter()
+                .filter(|e| e.code.is_some() && (props.selected_character == e.code))
+                .collect()
+        } else {
+            vec![]
+        };
 
         let joinable_characters: Vec<_> = if props.selected_character.is_none() && !props.finished {
             ctx.props().available_characters.iter().collect()
