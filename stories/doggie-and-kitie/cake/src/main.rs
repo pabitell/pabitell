@@ -5,9 +5,9 @@ pub mod events;
 pub mod items;
 pub mod narrator;
 pub mod scenes;
-#[cfg(feature = "with_webapp")]
-pub mod site;
 pub mod translations;
+#[cfg(feature = "with_webapp")]
+pub mod webapp;
 pub mod world;
 
 #[cfg(feature = "with_webapp")]
@@ -21,7 +21,7 @@ fn main() {
     #[cfg(debug_assertions)]
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    yew::start_app::<site::app::App>();
+    yew::start_app::<webapp::app::App>();
 }
 
 #[cfg(not(feature = "with_webapp"))]
