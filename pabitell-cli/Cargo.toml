@@ -12,10 +12,10 @@ with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
 
 [dependencies]
 actix = "0.12"
-actix-web = "4.0.0-beta.9"
-actix-web-actors = "4.0.0-beta.7"
+actix-web = "4.0.0-beta.14"
+actix-web-actors = "4.0.0-beta.8"
 anyhow = "1"
-clap = "3.0.0-beta.2"
+clap = { version = "3.0.0-beta.rc.4", features = ["env", "cargo"]}
 futures = "0.3"
 pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
 rand = "0.8"
@@ -25,7 +25,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["sync", "rt", "rt-multi-thread"]}
 tracing = "0.1"
-tracing-actix-web = "0.5.0-beta.1"
+#tracing-actix-web = "0.5.0-beta.4"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "0.8", features = ["serde"] }
 

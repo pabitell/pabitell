@@ -64,7 +64,7 @@ pub fn main() {
             App::new("web").arg(
                 Arg::new("port")
                     .env("PORT")
-                    .about("Port which will be used for the web server")
+                    .help("Port which will be used for the web server")
                     .long("port")
                     .takes_value(true)
                     .required(false)

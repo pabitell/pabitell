@@ -45,7 +45,7 @@ lazy_static = { version = "~1.4.0" }
 log = "~0.4.14"
 pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
 qrcode = { version = "0.11", features = ["svg"] }
-reqwasm = { git = "https://github.com/hamza1311/reqwasm.git", branch = "master", optional = true }
+reqwasm = { version = "0.3.1", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "0.8", features = [ 'v4', 'stdweb' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
@@ -53,7 +53,7 @@ wee_alloc = { version = "~0.4.5", optional = true }
 wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
 wasm-bindgen-futures  = { version = "0.4", optional = true}
 wasm-logger = { version = "0.2", optional = true }
-yew = { git = "https://github.com/yewstack/yew.git", branch = "master", optional = true }
+yew = { version = "0.19.0", optional = true }
 
 [dependencies.web-sys]
 version = "0.3"
