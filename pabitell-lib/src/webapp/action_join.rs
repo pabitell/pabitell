@@ -1,8 +1,7 @@
+use super::characters;
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::{html, prelude::*};
-
-use super::{characters, qrcode};
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {

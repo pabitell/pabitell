@@ -1,12 +1,10 @@
-use pabitell_lib::{data, World};
+use pabitell_lib::{data, webapp::print::PrintItem, World};
 use serde_json::Value;
 use std::rc::Rc;
 
 use crate::translations::get_message;
 
-use super::print::PrintItem;
-
-pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
+pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     let mut res = vec![];
 
     // sand cake
@@ -14,7 +12,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     let data = serde_json::to_value(data::PickData::new("pick", "", "sand_cake")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(item.short(world)))
+            .title(Some(item.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", item.name()))),
     );
 
@@ -23,7 +21,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     let data = serde_json::to_value(data::MoveData::new("move_to_kitchen", "", "kitchen")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(scene.short(world)))
+            .title(Some(scene.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
@@ -44,7 +42,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
             let data = serde_json::to_value(data::PickData::new(event_name, "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-                    .title(Some(e.short(world)))
+                    .title(Some(e.short(world.as_ref())))
                     .img_url(Some(format!("images/{}.svg", e.name()))),
             );
         });
@@ -77,7 +75,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(scene.short(world)))
+            .title(Some(scene.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
@@ -90,7 +88,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
             let data = serde_json::to_value(data::PickData::new("play", "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-                    .title(Some(e.short(world)))
+                    .title(Some(e.short(world.as_ref())))
                     .img_url(Some(format!("images/{}.svg", e.name()))),
             );
         });
@@ -100,7 +98,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     let data = serde_json::to_value(data::MoveData::new("move_to_garden", "", "garden")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(scene.short(world)))
+            .title(Some(scene.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
@@ -109,7 +107,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     let data = serde_json::to_value(data::PickData::new("find", "", "bad_dog")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(item.short(world)))
+            .title(Some(item.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", item.name()))),
     );
 
@@ -123,7 +121,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
     .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(scene.short(world)))
+            .title(Some(scene.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
@@ -137,7 +135,7 @@ pub fn make_print_items(world: &dyn World) -> Vec<PrintItem> {
                 serde_json::to_value(data::VoidData::new("eat", "", Some(e.name()))).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-                    .title(Some(e.short(world)))
+                    .title(Some(e.short(world.as_ref())))
                     .img_url(Some(format!("images/{}.svg", e.name()))),
             );
         });

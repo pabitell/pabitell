@@ -6,8 +6,6 @@ use uuid::Uuid;
 use wasm_bindgen_futures::spawn_local;
 use yew::{html, prelude::*};
 
-use super::{characters, qrcode};
-
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub world_id: Option<Uuid>,

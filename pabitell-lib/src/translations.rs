@@ -1,9 +1,30 @@
 use anyhow::{anyhow, Result};
 use fluent_bundle::{bundle::FluentBundle, FluentArgs, FluentResource};
-use include_dir::{Dir, DirEntry};
+use include_dir::{include_dir, Dir, DirEntry};
 use intl_memoizer::concurrent::IntlLangMemoizer;
-use std::str::{from_utf8, FromStr};
+use lazy_static::lazy_static;
+use std::{
+    collections::HashMap,
+    str::{from_utf8, FromStr},
+};
 use unic_langid::LanguageIdentifier;
+
+pub static RESOURCES: Dir = include_dir!("resources/");
+
+lazy_static! {
+    static ref BUNDLES: HashMap<String, FluentBundle<FluentResource, IntlLangMemoizer>> = {
+        let mut res = HashMap::new();
+        for lang in get_available_locales(&RESOURCES).expect("failed to list translations") {
+            match get_bundle(&RESOURCES, lang.clone(), "global") {
+                Err(err) => panic!("failed to load translations: {}", err),
+                Ok(bundle) => {
+                    res.insert(lang.to_string(), bundle);
+                }
+            }
+        }
+        res
+    };
+}
 
 pub fn read_language_data(
     resoure_dir: &Dir,
@@ -68,4 +89,12 @@ pub fn get_message(
     Ok(bundle
         .format_pattern(pattern, args.as_ref(), &mut errors)
         .into())
+}
+
+pub fn get_message_global(msgid: &str, langid: &str, args: Option<FluentArgs>) -> String {
+    if let Some(bundle) = BUNDLES.get(langid) {
+        get_message(bundle, msgid, args).unwrap_or(msgid.to_string())
+    } else {
+        msgid.to_string()
+    }
 }

@@ -1,11 +1,9 @@
-use serde_json::Value;
-use std::{cell::RefCell, rc::Rc};
-use yew::{html, prelude::*};
-
 use super::{
-    characters, items, qrcode,
+    items,
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
+use std::{cell::RefCell, rc::Rc};
+use yew::{html, prelude::*};
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {

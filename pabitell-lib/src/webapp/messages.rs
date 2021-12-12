@@ -1,13 +1,12 @@
 use data_url::{mime, DataUrl};
-use pabitell_lib::{Character, Description, World, WorldBuilder};
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use yew::prelude::*;
 
-use crate::{translations::get_message, world::CakeWorld};
+use crate::{Character, Description, World, WorldBuilder};
 
 use super::{
-    characters, message,
+    message,
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };

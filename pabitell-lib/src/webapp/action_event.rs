@@ -1,7 +1,6 @@
+use super::characters;
 use std::{cell::RefCell, rc::Rc};
 use yew::{html, prelude::*};
-
-use super::{characters, qrcode};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionEventItem {

@@ -1,11 +1,3 @@
-# General
-narrator = Vypravěč
-qr_code = QR kód
-qr_code_scan = Naskenuj QR kód aby se mohla provést akce.
-event = Událost
-restart = Pustit znovu
-end = Konec.
-
 # Description
 doggie_and_kitie-cake-short = Jak si pejsek s kočičkou dělali k svátku dort
 doggie_and_kitie-cake-long =

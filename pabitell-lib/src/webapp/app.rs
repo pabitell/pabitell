@@ -1,30 +1,28 @@
 use gloo::storage::{self, Storage};
-use pabitell_lib::{events, Description, Dumpable, Id, Named, Narrator, World, WorldBuilder};
 use serde_json::Value;
-use std::{any::Any, cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{
-    OrientationLockType, Request, RequestInit, RequestMode, Response, ScreenOrientation,
-};
+use web_sys::{OrientationLockType, Request, RequestInit, RequestMode, Response};
 use yew::prelude::*;
 
-use crate::{narrator, translations, world::CakeWorld, world::CakeWorldBuilder};
-
-use super::{
-    action_event::ActionEventItem,
-    actions::{Actions, Msg as ActionsMsg},
-    character_switch::CharacterSwitch,
-    characters::{self, make_characters},
-    intro::Intro,
-    items::{self, make_owned_items},
-    message::{Kind as MessageKind, MessageItem},
-    messages::{Messages, Msg as MessagesMsg},
-    print::Print,
-    print_items::make_print_items,
-    speech::{Msg as SpeechMsg, Speech},
-    status::{Msg as StatusMsg, Status},
+use crate::{
+    events, translations,
+    webapp::{
+        action_event::ActionEventItem,
+        actions::{Actions, Msg as ActionsMsg},
+        character_switch::CharacterSwitch,
+        characters,
+        intro::Intro,
+        items::Item,
+        message::{Kind as MessageKind, MessageItem},
+        messages::{Messages, Msg as MessagesMsg},
+        print::{Print, PrintItem},
+        speech::{Msg as SpeechMsg, Speech},
+        status::{Msg as StatusMsg, Status},
+    },
+    Narrator, World,
 };
 
 pub enum Msg {
@@ -37,7 +35,7 @@ pub enum Msg {
     Reset,
     CreateNewWorld,
     NewWorldIdFetched(Uuid),
-    WorldUpdateFetched(CakeWorld),
+    WorldUpdateFetched(Box<dyn World>),
     RefreshWorld,
     StatusReady,
     ShowPrint(bool),
@@ -47,7 +45,7 @@ pub enum Msg {
 
 pub struct App {
     world_id: Option<Uuid>,
-    world: Option<CakeWorld>,
+    world: Option<Box<dyn World>>,
     selected_character: Rc<Option<String>>,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
     speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
@@ -81,8 +79,38 @@ async fn make_request(
     Ok((res.into_serde().ok(), resp.status()))
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Properties)]
-pub struct Props {}
+#[derive(Properties)]
+pub struct Props {
+    pub make_characters: Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>,
+    pub make_narrator: Option<Box<dyn Fn() -> Box<dyn Narrator>>>,
+    pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
+    pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>>,
+    pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
+}
+
+impl PartialEq for Props {
+    fn eq(&self, other: &Self) -> bool {
+        true
+    }
+}
+
+impl Default for Props {
+    fn default() -> Self {
+        Self {
+            make_characters: None,
+            make_narrator: None,
+            make_world: None,
+            make_owned_items: None,
+            make_print_items: None,
+        }
+    }
+}
+
+impl Clone for Props {
+    fn clone(&self) -> Self {
+        Self::default()
+    }
+}
 
 impl Component for App {
     type Message = Msg;
@@ -143,7 +171,8 @@ impl Component for App {
                         let character = world.characters().get(character).unwrap();
                         let scene_name = character.scene().as_ref().unwrap();
                         let scene = world.scenes().get(scene_name).unwrap();
-                        ctx.link().send_message(Msg::PlayText(scene.long(world)));
+                        ctx.link()
+                            .send_message(Msg::PlayText(scene.long(world.as_ref())));
                     }
                     true
                 } else {
@@ -152,12 +181,12 @@ impl Component for App {
             }
             Msg::TriggerEvent(idx) => {
                 if let Some(world) = self.world.as_mut() {
-                    let narrator = narrator::Cake::default();
-                    let mut events = narrator.available_events(world);
+                    let narrator = ctx.props().make_narrator.as_ref().unwrap()();
+                    let mut events = narrator.available_events(world.as_ref());
                     let event = &mut events[idx];
                     let message = MessageItem::new(
-                        translations::get_message("event", world.lang(), None),
-                        event.success_text(world),
+                        translations::get_message_global("event", world.lang(), None),
+                        event.success_text(world.as_ref()),
                         MessageKind::Success,
                         Some("fas fa-cogs".to_string()),
                     );
@@ -180,7 +209,7 @@ impl Component for App {
                 }
             }
             Msg::TriggerScannedEvent(json_value) => {
-                let narrator = narrator::Cake::default();
+                let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Some(world) = self.world.as_mut() {
                     if let Some(mut event) = narrator.parse_event(&json_value) {
                         // Update initiator
@@ -188,17 +217,17 @@ impl Component for App {
                             event.set_initiator(character.to_string());
                         }
 
-                        let message = if event.can_be_triggered(world) {
+                        let message = if event.can_be_triggered(world.as_ref()) {
                             MessageItem::new(
-                                translations::get_message("event", world.lang(), None),
-                                event.success_text(world),
+                                translations::get_message_global("event", world.lang(), None),
+                                event.success_text(world.as_ref()),
                                 MessageKind::Success,
                                 Some("fas fa-cogs".to_string()),
                             )
                         } else {
                             MessageItem::new(
-                                translations::get_message("event", world.lang(), None),
-                                event.fail_text(world),
+                                translations::get_message_global("event", world.lang(), None),
+                                event.fail_text(world.as_ref()),
                                 MessageKind::Warning,
                                 Some("fas fa-cogs".to_string()),
                             )
@@ -229,7 +258,7 @@ impl Component for App {
             }
             Msg::TriggerScannedCharacter(character, world_id) => {
                 // check whether character exists in the world
-                let world = Self::make_world();
+                let world = ctx.props().make_world.as_ref().unwrap()("cs");
                 if let Some(character) = character {
                     if let Some(character_instance) = world.characters().get(&character) {
                         storage::LocalStorage::set("world_id", world_id).unwrap();
@@ -254,7 +283,6 @@ impl Component for App {
                     }
                 } else {
                     self.world_id = Some(world_id);
-                    // Narrator
                     ctx.link()
                         .send_message(Msg::UpdateSelectedCharacter(Rc::new(None)));
 
@@ -312,7 +340,7 @@ impl Component for App {
                 true
             }
             Msg::NotificationRecieved(data) => {
-                let narrator = narrator::Cake::default();
+                let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Ok(json) = serde_json::from_str(&data) {
                     let json: Value = json;
                     if let Some(event) = narrator.parse_event(&json) {
@@ -328,10 +356,10 @@ impl Component for App {
                         }
 
                         if let Some(world) = self.world.as_ref() {
-                            if event.can_be_triggered(world) {
+                            if event.can_be_triggered(world.as_ref()) {
                                 let message = MessageItem::new(
-                                    translations::get_message("event", world.lang(), None),
-                                    event.success_text(world),
+                                    translations::get_message_global("event", world.lang(), None),
+                                    event.success_text(world.as_ref()),
                                     MessageKind::Success,
                                     Some("fas fa-cogs".to_string()),
                                 );
@@ -358,7 +386,6 @@ impl Component for App {
             }
             Msg::StatusReady => {
                 // Send notification to other connected clients
-                //
                 // Note that notification needs to be send once
                 // status_scope in initialized by the subcomponent
                 let status_scope = self.status_scope.clone();
@@ -411,18 +438,24 @@ impl Component for App {
         if self.show_print {
             let close_cb = link.callback(|_| Msg::ShowPrint(false));
             return html! {
-                <Print {close_cb} items={make_print_items(&Self::make_world())}/>
+                <Print {close_cb} items={
+                    ctx.props().make_print_items.as_ref().unwrap()(
+                        ctx.props().make_world.as_ref().unwrap()("cs")
+                    )
+                  }
+                />
             };
         }
 
         if let Some(world) = &self.world {
-            let available_characters = make_characters(&world);
+            let available_characters =
+                ctx.props().make_characters.as_ref().unwrap()(world.as_ref());
             let set_character_callback = link
                 .callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
-            let narrator = narrator::Cake::default();
-            let events = narrator.available_events(world);
+            let narrator = ctx.props().make_narrator.as_ref().unwrap()();
+            let events = narrator.available_events(world.as_ref());
             let characters_map: HashMap<String, Rc<characters::Character>> =
-                make_characters(&world)
+                ctx.props().make_characters.as_ref().unwrap()(world.as_ref())
                     .iter()
                     .map(|c| (c.name.to_string(), c.clone()))
                     .collect();
@@ -446,7 +479,7 @@ impl Component for App {
                     };
                     Rc::new(ActionEventItem::new(
                         idx,
-                        e.action_text(world),
+                        e.action_text(world.as_ref()),
                         characters_map.get(&e.initiator()).unwrap().clone(),
                         None,
                         image,
@@ -480,14 +513,14 @@ impl Component for App {
                     <section class="hero is-small is-light">
                       <div class="hero-body">
                           <p class="title">
-                            {world.description().short(world)}
+                            {world.description().short(world.as_ref())}
                           </p>
                           <div class="subtitle is-flex">
                               <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
                                   <div class="has-text-centered">
                                       <Speech
                                         lang={lang.clone()}
-                                        start_text={world.description().short(world)}
+                                        start_text={world.description().short(world.as_ref())}
                                         shared_scope={self.speech_scope.clone()}
                                         world_name={world.name()}
                                       />
@@ -522,7 +555,7 @@ impl Component for App {
                         <Actions
                           lang={ lang }
                           available_characters={ available_characters }
-                          owned_items={ make_owned_items(world, self.selected_character.as_ref()) }
+                          owned_items={ ctx.props().make_owned_items.as_ref().unwrap()(world.as_ref(), self.selected_character.as_ref()) }
                           selected_character={ self.selected_character.clone() }
                           events={ events }
                           trigger_event={ trigger_event_callback }
@@ -549,14 +582,14 @@ impl Component for App {
             });
             let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
 
-            let world = Self::make_world();
+            let world = ctx.props().make_world.as_ref().unwrap()("cs");
 
             html! {
                 <>
                     <Intro
                         new_world={new_world_cb}
-                        story_name={world.description().short(&world)}
-                        story_detail={world.description().long(&world)}
+                        story_name={world.description().short(world.as_ref())}
+                        story_detail={world.description().long(world.as_ref())}
                         character_scanned={character_scanned_cb}
                         show_print={show_print_cb}
                     />
@@ -568,16 +601,16 @@ impl Component for App {
 }
 
 impl App {
-    fn screen_text<W>(world: &Option<W>, selected_character: &Option<String>) -> Option<String>
-    where
-        W: World,
-    {
+    fn screen_text(
+        world: &Option<Box<dyn World>>,
+        selected_character: &Option<String>,
+    ) -> Option<String> {
         let world = world.as_ref()?;
         if let Some(character) = selected_character.as_ref() {
             let character = world.characters().get(character).unwrap();
             let scene_name = character.scene().as_ref().unwrap();
             let scene = world.scenes().get(scene_name).unwrap();
-            Some(scene.long(world))
+            Some(scene.long(world.as_ref()))
         } else {
             None
         }
@@ -586,8 +619,8 @@ impl App {
     fn view_scene(&self, ctx: &Context<Self>) -> Html {
         if let Some(world) = &self.world {
             let onclick = ctx.link().callback(|_| Msg::Reset);
-            let restart_text = translations::get_message("restart", world.lang(), None);
-            let end_text = translations::get_message("end", world.lang(), None);
+            let restart_text = translations::get_message_global("restart", world.lang(), None);
+            let end_text = translations::get_message_global("end", world.lang(), None);
             let restart = html! {
                 <article class="message is-info">
                     <div class="message-header">
@@ -616,11 +649,11 @@ impl App {
 
                 html! {
                     <>
-                        <h1 class="title">{ scene.short(world) }</h1>
+                        <h1 class="title">{ scene.short(world.as_ref()) }</h1>
                         <p class="subtitle">
                             <article class="message">
                                 <div class="message-body">
-                                    { scene.long(world) }
+                                    { scene.long(world.as_ref()) }
                                 </div>
                             </article>
                         </p>
@@ -645,13 +678,6 @@ impl App {
         } else {
             html! {}
         }
-    }
-
-    fn make_world() -> CakeWorld {
-        let mut world = CakeWorldBuilder::make_world().unwrap();
-        world.setup();
-        world.set_lang("cs");
-        world
     }
 
     fn request_to_create_new_world(&mut self, ctx: &Context<Self>) {
@@ -693,33 +719,31 @@ impl App {
     fn request_to_get_world(&mut self, ctx: &Context<Self>, world_id: Uuid) {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
+        let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
         ctx.link().send_future(async move {
             let url = format!("/api/some_namespace/doggie_and_kitie_cake/{}/", world_id);
             let res = make_request(&url, "GET", None).await;
             *loading.borrow_mut() = false;
             match res {
-                Ok((Some(json), status)) => {
-                    let mut world = Self::make_world();
-                    match status {
-                        404 => {
-                            log::warn!("World with id {} was not found on the server", world_id);
-                            Msg::Reset
-                        }
-                        e if 200 <= e && e < 300 => {
-                            if let Err(e) = world.load(json) {
-                                log::warn!("Fetched world in wrong format: {:?}", e);
-                                Msg::Void(true)
-                            } else {
-                                log::debug!("World {} updated", world_id);
-                                Msg::WorldUpdateFetched(world)
-                            }
-                        }
-                        _ => {
-                            log::warn!("Wrong server response when downloading world {}", world_id);
+                Ok((Some(json), status)) => match status {
+                    404 => {
+                        log::warn!("World with id {} was not found on the server", world_id);
+                        Msg::Reset
+                    }
+                    e if 200 <= e && e < 300 => {
+                        if let Err(e) = world.load(json) {
+                            log::warn!("Fetched world in wrong format: {:?}", e);
                             Msg::Void(true)
+                        } else {
+                            log::debug!("World {} updated", world_id);
+                            Msg::WorldUpdateFetched(world)
                         }
                     }
-                }
+                    _ => {
+                        log::warn!("Wrong server response when downloading world {}", world_id);
+                        Msg::Void(true)
+                    }
+                },
                 Ok((None, _)) => {
                     log::warn!("No JSON response from the server when creating new world");
                     Msg::Void(true)

@@ -14,6 +14,7 @@ with_webapp = [
 	'getrandom/js',
 	'gloo',
 	'js-sys',
+	'pabitell-lib/with_webapp',
 	'reqwasm',
 	'uuid/v4',
 	'uuid/stdweb',

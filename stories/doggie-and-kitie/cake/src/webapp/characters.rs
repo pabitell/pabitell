@@ -1,43 +1,20 @@
-use pabitell_lib::{Description, World};
-use serde::{Deserialize, Serialize};
+use pabitell_lib::{
+    translations::get_message_global,
+    webapp::characters::{Character, CharacterQRJson},
+    Description, World,
+};
 use std::rc::Rc;
-use uuid::Uuid;
 
-use crate::{translations, world::CakeWorld};
+use crate::translations;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Character {
-    pub code: Rc<Option<String>>,
-    pub name: Rc<String>,
-    pub character_url: Rc<String>,
-    pub short: Rc<String>,
-    pub long: Rc<String>,
-    pub icon: Rc<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CharacterQRJson {
-    pub character: Option<String>,
-    pub world_id: Uuid,
-}
-
-impl CharacterQRJson {
-    pub fn new(character: Option<String>, world_id: Uuid) -> Self {
-        Self {
-            character,
-            world_id,
-        }
-    }
-}
-
-pub fn make_characters(world: &CakeWorld) -> Rc<Vec<Rc<Character>>> {
+pub fn make_characters(world: &dyn World) -> Rc<Vec<Rc<Character>>> {
     Rc::new(vec![
         Rc::new(Character {
             code: Rc::new(None),
             name: Rc::new("narrator".to_string()),
             character_url: Rc::new("images/book.svg".to_string()),
-            short: Rc::new(translations::get_message("narrator", world.lang(), None)),
-            long: Rc::new(translations::get_message("narrator", world.lang(), None)),
+            short: Rc::new(get_message_global("narrator", world.lang(), None)),
+            long: Rc::new(get_message_global("narrator", world.lang(), None)),
             icon: Rc::new("fas fa-book".to_string()),
         }),
         Rc::new(Character {

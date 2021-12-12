@@ -21,7 +21,7 @@ fn main() {
     #[cfg(debug_assertions)]
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    yew::start_app::<webapp::app::App>();
+    yew::start_app::<webapp::root::Root>();
 }
 
 #[cfg(not(feature = "with_webapp"))]

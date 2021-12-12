@@ -1,17 +1,15 @@
 use data_url::{mime, DataUrl};
-use pabitell_lib::{Character, Description, World, WorldBuilder};
 use serde_json::Value;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::prelude::*;
-
-use crate::{translations::get_message, world::CakeWorld};
 
 use super::{
     action_event, action_item, action_join, characters, items,
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
+use crate::{translations::get_message_global, Character, Description, World, WorldBuilder};
 
 #[derive(Clone, Debug, Default, Properties)]
 pub struct Props {
@@ -162,8 +160,8 @@ impl Component for Actions {
         let cloned_link = ctx.link().clone();
         let qr_scans = move |character: Rc<characters::Character>| {
             let scan_cb = cloned_link.callback(move |_| Msg::QRCodeScanShow);
-            let qr_code_text = get_message("qr_code", &props.lang, None);
-            let qr_code_scan_text = get_message("qr_code_scan", &props.lang, None);
+            let qr_code_text = get_message_global("qr_code", &props.lang, None);
+            let qr_code_scan_text = get_message_global("qr_code_scan", &props.lang, None);
             html! {
                 <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
                     <div class="card-content">

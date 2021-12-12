@@ -3,8 +3,6 @@ use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::{html, prelude::*, utils, Html};
 
-use super::{characters, qrcode};
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct PrintItem {
     title: Option<String>,

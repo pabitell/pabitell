@@ -1,19 +1,12 @@
-use data_url::{mime, DataUrl};
-use std::{
-    cell::RefCell,
-    convert::TryInto,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
-
-use super::{
-    characters::CharacterQRJson,
-    qrscanner::{Msg as QRScannerMsg, QRScanner},
-};
-use js_sys::{ArrayBuffer, Function, Uint8Array};
-use serde::Deserialize;
+use data_url::DataUrl;
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::{html, prelude::*};
+
+use super::{
+    characters,
+    qrscanner::{Msg as QRScannerMsg, QRScanner},
+};
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
@@ -62,9 +55,9 @@ impl Component for Intro {
                 match DataUrl::process(&content) {
                     Ok(data_url) => match data_url.decode_to_vec() {
                         Ok((data, _)) => {
-                            match serde_json::from_slice::<CharacterQRJson>(&data[..]) {
+                            match serde_json::from_slice::<characters::CharacterQRJson>(&data[..]) {
                                 Ok(character_json) => {
-                                    let CharacterQRJson {
+                                    let characters::CharacterQRJson {
                                         character,
                                         world_id,
                                     } = character_json;

@@ -1,12 +1,6 @@
-use pabitell_lib::{Character, Description, World, WorldBuilder};
-use std::rc::Rc;
-use wasm_bindgen::{closure::Closure, JsCast, JsValue};
-use web_sys::{EventTarget, HtmlSelectElement};
-use yew::prelude::*;
-
-use crate::{translations::get_message, world::CakeWorld};
-
 use super::characters;
+use std::rc::Rc;
+use yew::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {

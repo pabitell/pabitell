@@ -4,6 +4,8 @@ pub mod events;
 #[cfg(feature = "with_translations")]
 pub mod translations;
 pub mod updates;
+#[cfg(feature = "with_webapp")]
+pub mod webapp;
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
