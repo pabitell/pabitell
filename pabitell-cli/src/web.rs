@@ -136,7 +136,7 @@ async fn event_world(
         });
 
         // TODO think of some reasonable retval
-        Ok(HttpResponse::Ok().json(serde_json::json!({})))
+        Ok(HttpResponse::Ok().json(serde_json::json!({"event_count": world.event_count()})))
     } else {
         Err(error::ErrorBadRequest("Event can't be triggered"))
     }
