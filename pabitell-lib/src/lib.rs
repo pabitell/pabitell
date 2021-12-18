@@ -123,7 +123,8 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     }
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.get_world_update().as_ref() {
-            (world_update)(self.as_any(), world)
+            (world_update)(self.as_any(), world);
+            world.event_inc();
         }
     }
     fn perform(&mut self, world: &mut dyn World) -> bool {
@@ -219,6 +220,8 @@ pub trait World: Id + Named + Dumpable {
             .for_each(|e| e.set_id(Uuid::new_v4()));
     }
     fn finished(&self) -> bool;
+    fn event_count(&self) -> usize;
+    fn event_inc(&mut self);
 }
 
 pub trait Narrator {
@@ -540,6 +543,7 @@ pub mod test {
         items: HashMap<String, Box<dyn Item>>,
         scenes: HashMap<String, Box<dyn Scene>>,
         characters: HashMap<String, Box<dyn Character>>,
+        event_count: usize,
     }
 
     impl Id for TestWorld {
@@ -604,6 +608,14 @@ pub mod test {
         fn finished(&self) -> bool {
             true
         }
+
+        fn event_count(&self) -> usize {
+            self.event_count
+        }
+
+        fn event_inc(&mut self) {
+            self.event_count += 1;
+        }
     }
 
     impl Dumpable for TestWorld {
@@ -612,6 +624,7 @@ pub mod test {
                 "characters": self.characters.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
                 "items": self.items.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
                 "scenes": self.scenes.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+                "event_count": self.event_count
             })
         }
         fn load(&mut self, data: serde_json::Value) -> Result<()> {
@@ -655,6 +668,17 @@ pub mod test {
                                             .get_mut(&name)
                                             .ok_or_else(|| anyhow!(""))?;
                                         scene.load(data)?;
+                                    }
+                                } else {
+                                    return Err(anyhow!(""));
+                                }
+                            }
+                            (k, v) if k == "event_count" => {
+                                if let serde_json::Value::Number(num) = v {
+                                    if let Some(count) = num.as_u64() {
+                                        self.event_count = count as usize;
+                                    } else {
+                                        return Err(anyhow!(""));
                                     }
                                 } else {
                                     return Err(anyhow!(""));

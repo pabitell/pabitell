@@ -20,6 +20,7 @@ pub struct CakeWorld {
     items: HashMap<String, Box<dyn Item>>,
     characters: HashMap<String, Box<dyn Character>>,
     scenes: HashMap<String, Box<dyn Scene>>,
+    event_count: usize,
 }
 
 struct CakeWorldDescription;
@@ -252,6 +253,18 @@ impl World for CakeWorld {
         doggie.scene().clone() == Some("way_home".to_string())
             && kitie.scene().clone() == Some("way_home".to_string())
     }
+
+    fn event_count(&self) -> usize {
+        self.event_count
+    }
+
+    fn event_inc(&mut self) {
+        self.event_count += 1;
+    }
+
+    fn extra_clean(&mut self) {
+        self.event_count = 0;
+    }
 }
 
 impl Dumpable for CakeWorld {
@@ -260,6 +273,7 @@ impl Dumpable for CakeWorld {
             "characters": self.characters.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
             "items": self.items.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
             "scenes": self.scenes.iter().map(|(k, v)| (k.clone(), v.dump())).collect::<HashMap<String, serde_json::Value>>(),
+            "event_count": self.event_count,
         })
     }
     fn load(&mut self, data: serde_json::Value) -> Result<()> {
@@ -303,6 +317,17 @@ impl Dumpable for CakeWorld {
                                         .get_mut(&name)
                                         .ok_or_else(|| anyhow!("missing scene '{}'", name))?;
                                     scene.load(data)?;
+                                }
+                            } else {
+                                return Err(anyhow!(""));
+                            }
+                        }
+                        (k, v) if k == "event_count" => {
+                            if let serde_json::Value::Number(num) = v {
+                                if let Some(count) = num.as_u64() {
+                                    self.event_count = count as usize;
+                                } else {
+                                    return Err(anyhow!(""));
                                 }
                             } else {
                                 return Err(anyhow!(""));

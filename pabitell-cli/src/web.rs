@@ -87,59 +87,58 @@ async fn event_world(
 ) -> std::result::Result<HttpResponse, Error> {
     let (namespace, story, world_id) = path.into_inner();
 
-    if let Some((mut world, narrator)) = make_world(&namespace, &story) {
-        if backend::load(
-            &mut data.as_ref().0.clone(),
-            &story,
-            &world_id,
-            world.as_mut(),
-        )
-        .is_err()
-        {
-            return Ok(HttpResponse::NotFound().json(serde_json::json!({
-                "msg": format!("world not found (id={})", world_id)
-            })));
+    let (mut world, narrator) = make_world(&namespace, &story).ok_or(error::ErrorNotFound(
+        serde_json::json!({"msg": "story not found"}),
+    ))?;
+
+    if backend::load(
+        &mut data.as_ref().0.clone(),
+        &story,
+        &world_id,
+        world.as_mut(),
+    )
+    .is_err()
+    {
+        return Ok(HttpResponse::NotFound().json(serde_json::json!({
+            "msg": format!("world not found (id={})", world_id)
+        })));
+    }
+
+    // read payload
+    let mut body = web::BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk?;
+        if (body.len() + chunk.len()) > MAX_SIZE {
+            return Err(error::ErrorBadRequest("overflow"));
         }
+        body.extend_from_slice(&chunk);
+    }
 
-        // read payload
-        let mut body = web::BytesMut::new();
-        while let Some(chunk) = payload.next().await {
-            let chunk = chunk?;
-            if (body.len() + chunk.len()) > MAX_SIZE {
-                return Err(error::ErrorBadRequest("overflow"));
-            }
-            body.extend_from_slice(&chunk);
-        }
+    // Test whether the data are JSON
+    let value =
+        &serde_json::from_slice(&body).map_err(|_| error::ErrorBadRequest("Expected JSON"))?;
 
-        // Test whether it matches available_events
-        if let Ok(value) = &serde_json::from_slice(&body) {
-            if let Some(mut event) = narrator.parse_event(value) {
-                if event.can_be_triggered(world.as_ref()) {
-                    event.trigger(world.as_mut());
-                    backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
+    // Test whether it can be parsed as event
+    let mut event = narrator
+        .parse_event(value)
+        .ok_or(error::ErrorBadRequest("Wrong event data"))?;
 
-                    let ws_manager = data.as_ref().1.clone();
-                    debug!("Sending;dump={}", event.dump());
-                    ws_manager.do_send(WsClientMessage {
-                        world_id,
-                        data: event.dump().to_string(),
-                    });
+    // Test whether event can be triggered
+    if event.can_be_triggered(world.as_ref()) {
+        event.trigger(world.as_mut());
+        backend::store(&mut data.as_ref().0.clone(), &story, world.as_ref()).unwrap();
 
-                    // TODO think of some reasonable retval
-                    Ok(HttpResponse::Ok().json(serde_json::json!({})))
-                } else {
-                    Err(error::ErrorBadRequest("Event can't be triggered"))
-                }
-            } else {
-                Err(error::ErrorBadRequest("Wrong event data"))
-            }
-        } else {
-            Err(error::ErrorBadRequest("Expected JSON"))
-        }
+        let ws_manager = data.as_ref().1.clone();
+        debug!("Sending;dump={}", event.dump());
+        ws_manager.do_send(WsClientMessage {
+            world_id,
+            data: event.dump().to_string(),
+        });
+
+        // TODO think of some reasonable retval
+        Ok(HttpResponse::Ok().json(serde_json::json!({})))
     } else {
-        Err(error::ErrorNotFound(
-            serde_json::json!({"msg": "story not found"}),
-        ))
+        Err(error::ErrorBadRequest("Event can't be triggered"))
     }
 }
 
