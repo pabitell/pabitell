@@ -13,7 +13,7 @@ use std::{
     time::Instant,
 };
 use tracing::{debug, info, Level};
-// use tracing_actix_web::TracingLogger; TODO uncomment when it bumps version
+use tracing_actix_web::TracingLogger;
 use tracing_subscriber::{self, filter::LevelFilter, EnvFilter};
 use uuid::Uuid;
 
@@ -175,7 +175,7 @@ async fn start(db_path: &str, port: &str) -> anyhow::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new((db.clone(), ws_manager.to_owned())))
-            // .wrap(TracingLogger::default())  TODO uncomment once they bump version
+            .wrap(TracingLogger::default())
             .service(create_world)
             .service(get_world)
             .service(event_world)
