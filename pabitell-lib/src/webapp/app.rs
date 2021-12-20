@@ -55,6 +55,7 @@ pub struct App {
     loading: Rc<RefCell<bool>>,
     show_print: bool,
     orientation_lock: Option<JsValue>,
+    event_count: usize,
 }
 
 async fn make_request(
@@ -151,6 +152,7 @@ impl Component for App {
             loading: Rc::new(RefCell::new(false)),
             show_print: false,
             orientation_lock: None,
+            event_count: 0,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -184,25 +186,11 @@ impl Component for App {
                     let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                     let mut events = narrator.available_events(world.as_ref());
                     let event = &mut events[idx];
-                    let message = MessageItem::new(
-                        translations::get_message_global("event", world.lang(), None),
-                        event.success_text(world.as_ref()),
-                        MessageKind::Success,
-                        Some("fas fa-cogs".to_string()),
-                    );
-                    let text = message.text.clone();
-                    self.messages_scope
-                        .as_ref()
-                        .borrow()
-                        .clone()
-                        .unwrap()
-                        .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                     self.request_to_trigger_event(
                         ctx,
                         self.world_id.unwrap().clone(),
                         event.dump(),
                     );
-                    ctx.link().send_message(Msg::PlayText(text.to_string()));
                     true
                 } else {
                     false
@@ -217,29 +205,23 @@ impl Component for App {
                             event.set_initiator(character.to_string());
                         }
 
-                        let message = if event.can_be_triggered(world.as_ref()) {
-                            MessageItem::new(
-                                translations::get_message_global("event", world.lang(), None),
-                                event.success_text(world.as_ref()),
-                                MessageKind::Success,
-                                Some("fas fa-cogs".to_string()),
-                            )
-                        } else {
-                            MessageItem::new(
+                        // Render events which can be triggered immediately
+                        if !event.can_be_triggered(world.as_ref()) {
+                            let message = MessageItem::new(
                                 translations::get_message_global("event", world.lang(), None),
                                 event.fail_text(world.as_ref()),
                                 MessageKind::Warning,
                                 Some("fas fa-cogs".to_string()),
-                            )
-                        };
-                        let text = message.text.clone();
-                        self.messages_scope
-                            .as_ref()
-                            .borrow()
-                            .clone()
-                            .unwrap()
-                            .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                        ctx.link().send_message(Msg::PlayText(text.to_string()));
+                            );
+
+                            self.messages_scope
+                                .as_ref()
+                                .borrow()
+                                .clone()
+                                .unwrap()
+                                .send_message(MessagesMsg::AddMessage(Rc::new(message)));
+                        }
+
                         self.request_to_trigger_event(
                             ctx,
                             self.world_id.unwrap().clone(),
@@ -343,7 +325,19 @@ impl Component for App {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Ok(json) = serde_json::from_str(&data) {
                     let json: Value = json;
-                    if let Some(event) = narrator.parse_event(&json) {
+                    // Now we should determine which type of notification this really is
+                    if let Some(event) = narrator.parse_event(&json["event"]) {
+                        if let Value::Number(number) = &json["event_count"] {
+                            if let Some(count) = number.as_u64() {
+                                self.event_count = count as usize;
+                            } else {
+                                log::warn!("Event notification is not positive integer");
+                                return false;
+                            }
+                        } else {
+                            log::warn!("Malformed event notification count");
+                            return false;
+                        }
                         log::info!("New event arrived from ws");
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             log::debug!("Hiding QR code of actions");

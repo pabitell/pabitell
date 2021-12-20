@@ -132,7 +132,11 @@ async fn event_world(
         debug!("Sending;dump={}", event.dump());
         ws_manager.do_send(WsClientMessage {
             world_id,
-            data: event.dump().to_string(),
+            data: serde_json::json!({
+                "event": event.dump(),
+                "event_count":  world.event_count()
+            })
+            .to_string(),
         });
 
         // TODO think of some reasonable retval
