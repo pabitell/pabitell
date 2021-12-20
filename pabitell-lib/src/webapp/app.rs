@@ -301,6 +301,7 @@ impl Component for App {
             }
             Msg::WorldUpdateFetched(world) => {
                 let old_screen_text = App::screen_text(&self.world, &self.selected_character);
+                self.event_count = world.event_count();
                 self.world = Some(world);
                 let new_screen_text = App::screen_text(&self.world, &self.selected_character);
                 if new_screen_text != old_screen_text {
@@ -533,6 +534,7 @@ impl Component for App {
                                         refresh_world={refresh_world_cb}
                                         reset_world={reset_cb}
                                         status_scope={self.status_scope.clone()}
+                                        event_count={self.event_count}
                                       />
                                   </div>
                               </div>

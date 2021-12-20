@@ -16,6 +16,7 @@ pub struct Props {
     pub refresh_world: Callback<()>,
     pub reset_world: Callback<()>,
     pub status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
+    pub event_count: usize,
 }
 
 impl PartialEq<Self> for Props {
@@ -198,6 +199,9 @@ impl Component for Status {
 
         html! {
             <>
+                <button class="button is-outlined is-medium is-static">
+                    {ctx.props().event_count}
+                </button>
                 <button class="button is-outlined is-medium" onclick={ refresh_world_cb }>
                     <span class="icon has-text-info">
                         <i class="fas fa-sync"></i>
