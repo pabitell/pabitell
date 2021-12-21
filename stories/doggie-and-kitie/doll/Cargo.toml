@@ -1,0 +1,106 @@
+[package]
+name = "doggie_and_kitie_doll"
+version = "0.1.0"
+authors = ["Stepan Henek <stepan@henek.name>"]
+edition = "2018"
+
+[features]
+default = [ 'with_webapp' ]
+with_webapp = [
+	'base64',
+	'console_error_panic_hook',
+	'data-url',
+	'image',
+	'getrandom/js',
+	'gloo',
+	'js-sys',
+	'pabitell-lib/with_webapp',
+	'reqwasm',
+	'uuid/v4',
+	'uuid/stdweb',
+	'web-sys/MediaDevices',
+	'web-sys/MediaStreamConstraints',
+	'web-sys/HtmlSelectElement',
+	'web-sys/Document',
+	'wasm-logger',
+	'wasm-bindgen/serde-serialize',
+	'wasm-bindgen-futures',
+	'wee_alloc',
+	'yew',
+]	
+
+[dependencies]
+anyhow = "1"
+base64 = { version = "0.13", optional = true }
+data-url = { version = "0.1", optional = true }
+futures = "0.3"
+fluent-bundle = { version = "~0.15.0" }
+console_error_panic_hook = { version = "~0.1.6", optional = true }
+image = { version = "0.23", optional = true, features = ["png"] }
+include_dir = { version = "~0.6.1" }
+intl-memoizer = { version = "~0.5.1" }
+getrandom = { version = "0.2", features = ["js"] }  # add optional once https://github.com/thedodd/trunk/pull/183 is merged
+gloo = { version = "0.3", features = ["futures"], optional = true }
+js-sys = { version = "0.3", optional = true }
+lazy_static = { version = "~1.4.0" }
+log = "~0.4.14"
+pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
+qrcode = { version = "0.11", features = ["svg"] }
+reqwasm = { version = "0.3.1", optional = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "0.8", features = [ 'v4', 'stdweb' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
+wee_alloc = { version = "~0.4.5", optional = true }
+wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
+wasm-bindgen-futures  = { version = "0.4", optional = true}
+wasm-logger = { version = "0.2", optional = true }
+yew = { version = "0.19.0", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+	"Blob",
+	"CanvasRenderingContext2d",
+	"ConstrainBooleanParameters",
+	"DisplayMediaStreamConstraints",
+	"Document",
+	"ImageData",
+	"OrientationLockType",
+	"MediaDevices",
+	"MediaDeviceKind",
+	"MediaDeviceInfo",
+	"MediaStream",
+	"MediaStreamConstraints",
+	"MediaStreamTrack",
+	"MediaTrackSettings",
+	"Window",
+	"Navigator",
+	"Element",
+	"EventTarget",
+	"HtmlMediaElement",
+	"HtmlCanvasElement",
+	"HtmlVideoElement",
+	"HtmlSelectElement",
+	"Screen",
+	"ScreenOrientation",
+	"SpeechSynthesis",
+	"SpeechSynthesisUtterance",
+	"SpeechSynthesisVoice",
+]
+optional = true
+
+
+[dev-dependencies]
+uuid = { version = "0.8", features = ["v4"] }
+
+[profile.release]
+# less code to include into binary
+panic = 'abort' 
+# optimization over all codebase ( better optimization, slower build )
+codegen-units = 1
+# optimization for size ( more aggressive )
+opt-level = 'z' 
+# optimization for size 
+#opt-level = 's' 
+# link time optimization using using whole-program analysis
+lto = true

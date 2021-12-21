@@ -3,10 +3,8 @@ pub mod cli;
 pub mod web;
 pub mod websocket;
 
-use anyhow::{anyhow, Result};
-use clap::{
-    crate_authors, crate_description, crate_name, crate_version, App, Arg, ArgMatches, Values,
-};
+use anyhow::Result;
+use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use pabitell_lib::{Narrator, World, WorldBuilder};
 
 #[cfg(feature = "with_doggie_and_kitie_cake")]
@@ -24,11 +22,19 @@ fn make_story_doggie_and_kitie_cake(
     Ok(Some((world, narrator)))
 }
 
-#[cfg(not(feature = "with_doggie_and_kitie_cake"))]
-fn make_story_doggie_and_kitie_cake(
-    _initial: bool,
+#[cfg(feature = "with_doggie_and_kitie_doll")]
+fn make_story_doggie_and_kitie_doll(
+    initial: bool,
 ) -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
-    Ok(None)
+    let mut world: Box<dyn World> =
+        Box::new(doggie_and_kitie_doll::world::DollWorldBuilder::make_world()?);
+    if initial {
+        world.setup();
+    }
+    let mut narrator: Box<dyn Narrator> =
+        Box::new(doggie_and_kitie_doll::narrator::Doll::default());
+
+    Ok(Some((world, narrator)))
 }
 
 fn exit_on_parse_error(mut app: App) {

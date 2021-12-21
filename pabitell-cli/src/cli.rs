@@ -1,11 +1,14 @@
 use anyhow::{anyhow, Result};
-use pabitell_lib::{Narrator, World, WorldBuilder};
+use pabitell_lib::{Narrator, World};
 use skim::prelude::*;
 use sled::Db;
 use uuid::Uuid;
 
 use crate::backend;
+#[cfg(feature = "with_doggie_and_kitie_cake")]
 use crate::make_story_doggie_and_kitie_cake;
+#[cfg(feature = "with_doggie_and_kitie_doll")]
+use crate::make_story_doggie_and_kitie_doll;
 
 #[derive(Clone)]
 struct PabitellItem {
@@ -28,9 +31,12 @@ impl SkimItem for PabitellItem {
 }
 
 fn select_story(lang: &str) -> Result<Option<PabitellItem>> {
-    let mut stories = vec![];
-    if cfg!(feature = "with_doggie_and_kitie_cake") {
-        let (mut world, _) = make_story_doggie_and_kitie_cake(true)?.unwrap();
+    let mut stories: Vec<PabitellItem> = vec![];
+
+    #[cfg(feature = "with_doggie_and_kitie_cake")]
+    {
+        let (mut world, _): (Box<dyn World>, Box<dyn Narrator>) =
+            make_story_doggie_and_kitie_cake(true)?.unwrap();
         world.set_lang(lang);
         let description = world.description();
         stories.push(PabitellItem {
@@ -39,6 +45,20 @@ fn select_story(lang: &str) -> Result<Option<PabitellItem>> {
             long: description.long(world.as_ref()),
         });
     }
+
+    #[cfg(feature = "with_doggie_and_kitie_doll")]
+    {
+        let (mut world, _): (Box<dyn World>, Box<dyn Narrator>) =
+            make_story_doggie_and_kitie_doll(true)?.unwrap();
+        world.set_lang(lang);
+        let description = world.description();
+        stories.push(PabitellItem {
+            code: "doggie_and_kitie_doll".into(),
+            short: description.short(world.as_ref()),
+            long: description.long(world.as_ref()),
+        });
+    }
+
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
         .preview(Some(""))
@@ -402,8 +422,11 @@ fn select_stored_world(db: &Db, story: &str) -> Result<Option<Uuid>> {
 pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
     let story = select_story(default_lang)?.ok_or_else(|| anyhow!("No story picked"))?;
     println!("story: {}", story.short);
-    let (mut world, narrator) = match story.code.as_str() {
+    let (mut world, narrator): (Box<dyn World>, Box<dyn Narrator>) = match story.code.as_str() {
+        #[cfg(feature = "with_doggie_and_kitie_cake")]
         "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake(true)?.unwrap(),
+        #[cfg(feature = "with_doggie_and_kitie_doll")]
+        "doggie_and_kitie_doll" => make_story_doggie_and_kitie_doll(true)?.unwrap(),
         _ => unreachable!(),
     };
     let lang = select_language(

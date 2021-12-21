@@ -1,0 +1,47 @@
+// Set your brand colors
+//$purple: #8A4D76;
+//$pink: #FA7C91;
+//$brown: #757763;
+//$beige-light: #D0D1CD;
+//$beige-lighter: #EFF0EB;
+
+@import 'bulma/bulma.sass'
+
+.w-100
+  width: 100%
+
+.w-75
+  width: 75%
+
+.w-50
+  width: 50%
+
+.w-25
+  width: 25%
+
+.is-clickable
+  &:hover
+    img
+      filter: blur(1px)
+
+.rotate
+  animation: spinAround 2000ms infinite linear
+
+.inverted
+  filter: invert(50%)
+
+@media print
+  .card-print
+    page-break-inside: avoid
+  .no-print
+    display: none
+
+.print-table
+  table
+    table-layout: fixed
+    width: 100%
+  td
+    width: 25%
+
+.simple-border
+  border-style: solid

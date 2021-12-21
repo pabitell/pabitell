@@ -17,8 +17,10 @@ use tracing_actix_web::TracingLogger;
 use tracing_subscriber::{self, filter::LevelFilter, EnvFilter};
 use uuid::Uuid;
 
+#[cfg(feature = "with_doggie_and_kitie_cake")]
+use crate::make_story_doggie_and_kitie_cake;
 use crate::{
-    backend, make_story_doggie_and_kitie_cake,
+    backend,
     websocket::{ClientMessage as WsClientMessage, WsConnection, WsManager},
 };
 
@@ -32,6 +34,7 @@ struct NewWorld {
 
 fn make_world(_namespace: &str, story: &str) -> Option<(Box<dyn World>, Box<dyn Narrator>)> {
     match story {
+        #[cfg(feature = "with_doggie_and_kitie_cake")]
         "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake(true).unwrap(),
         _ => None,
     }
