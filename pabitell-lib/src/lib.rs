@@ -107,7 +107,12 @@ pub trait Character: Id + Named + Tagged + AsAny + Description + Dumpable + fmt:
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {}
+pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+    fn dialog(&self) -> Option<usize> {
+        None
+    }
+    fn next_dialog(&mut self) {}
+}
 
 pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn kind(&self) -> &str {

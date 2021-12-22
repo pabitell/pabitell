@@ -12,144 +12,181 @@ fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
     .unwrap()
 }
 
-// TODO talk event
+pub fn make_talk(
+    data: data::VoidData,
+    scene: &str,
+    characters: &[&str],
+    dialog: usize,
+) -> events::Void {
+    let mut event = events::Void::new(data);
+    let characters: Vec<String> = characters.iter().map(|e| e.to_string()).collect();
+    let scene = scene.to_owned();
 
-/*
-pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
-    let mut event = events::Pick::new(pick_data);
+    event.set_tags(vec!["talk".to_string()]);
+    let scene_cloned = scene.clone();
+    event.set_condition(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Void>().unwrap();
+        if !characters.contains(&event.character().to_string()) {
+            return false;
+        }
+        if !conditions::same_scene(
+            world,
+            &characters
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<String>>(),
+            &[],
+        )
+        .unwrap()
+        {
+            return false;
+        }
+        if !conditions::in_scenes(
+            world,
+            event.character().to_string(),
+            &[scene_cloned.clone()],
+        )
+        .unwrap()
+        {
+            return false;
+        }
+        if !conditions::scene_dialog(world, &scene_cloned, dialog).unwrap() {
+            return false;
+        }
+        true
+    })));
 
-    event.set_tags(vec!["pick".to_string()]);
+    let scene_cloned = scene.clone();
+    event.set_world_update(Some(Box::new(move |_, world| {
+        updates::next_scene_dialog(world, scene_cloned.clone()).unwrap();
+    })));
+
+    let scene_cloned = scene.clone();
+    event.set_make_action_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Void>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_{}_says-{}-action",
+                world.name(),
+                scene_cloned,
+                event.character(),
+                dialog,
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    let scene_cloned = scene.clone();
+    event.set_make_success_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Void>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_{}_says-{}-success",
+                world.name(),
+                scene_cloned,
+                event.character(),
+                dialog,
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    let scene_cloned = scene.clone();
+    event.set_make_fail_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Void>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_{}_says-{}-fail",
+                world.name(),
+                scene_cloned,
+                event.character(),
+                dialog,
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+
+    event
+}
+
+pub fn make_move(
+    data: data::MoveData,
+    character: &str,
+    from_scene: &str,
+    from_dialog: usize,
+) -> events::Move {
+    let mut event = events::Move::new(data);
+    let character = character.to_owned();
+    let from_scene = from_scene.to_owned();
+
+    event.set_tags(vec!["move".to_string()]);
+
+    event.set_condition(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Move>().unwrap();
+        if event.character() != character {
+            return false;
+        }
+        if !conditions::in_scenes(world, event.character().to_string(), &[from_scene.clone()])
+            .unwrap()
+        {
+            return false;
+        }
+        if !conditions::scene_dialog(world, &from_scene, from_dialog).unwrap() {
+            return false;
+        }
+        true
+    })));
 
     event.set_world_update(Some(Box::new(move |event, world| {
-        let event = event.downcast_ref::<events::Pick>().unwrap();
-        updates::assign_item(
+        let event = event.downcast_ref::<events::Move>().unwrap();
+        updates::move_character(
             world,
-            event.item().to_string(),
-            if consume {
-                ItemState::Unassigned
-            } else {
-                ItemState::Owned(event.character().to_string())
-            },
+            event.character().to_string(),
+            Some(event.scene().to_string()),
         )
         .unwrap();
     })));
 
-    event.set_condition(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Pick>().unwrap();
-        let item = if let Some(item) = world.items().get(event.item()) {
-            item
-        } else {
-            return false;
-        };
-        let ingredient_cond = if item.get_tags().contains(&"batch2".to_string()) {
-            // All batch1 items done
-            conditions::all_items_with_tags_in_state(
-                world,
-                &["batch1".to_string()],
-                ItemState::Unassigned,
-            )
-        } else if item.get_tags().contains(&"batch3".to_string()) {
-            // All batch1, batch2 items done
-            conditions::all_items_with_tags_in_state(
-                world,
-                &["batch1".to_string(), "batch2".to_string()],
-                ItemState::Unassigned,
-            )
-        } else if item.get_tags().contains(&"batch4".to_string()) {
-            // All batch1, batch2, batch3 items done
-            conditions::all_items_with_tags_in_state(
-                world,
-                &[
-                    "batch1".to_string(),
-                    "batch2".to_string(),
-                    "batch3".to_string(),
-                ],
-                ItemState::Unassigned,
-            )
-        } else if item.get_tags().contains(&"batch5".to_string()) {
-            // All batch1, batch2, batch3, batch4 items done
-            conditions::all_items_with_tags_in_state(
-                world,
-                &[
-                    "batch1".to_string(),
-                    "batch2".to_string(),
-                    "batch3".to_string(),
-                    "batch4".to_string(),
-                ],
-                ItemState::Unassigned,
-            )
-        } else if item.get_tags().contains(&"batch6".to_string()) {
-            // All batch1, batch2, batch3, batch4, batch5 items done
-            conditions::all_items_with_tags_in_state(
-                world,
-                &[
-                    "batch1".to_string(),
-                    "batch2".to_string(),
-                    "batch3".to_string(),
-                    "batch4".to_string(),
-                    "batch5".to_string(),
-                ],
-                ItemState::Unassigned,
-            )
-        } else {
-            // not ingredient
-            true
-        };
-
-        ingredient_cond
-            && conditions::same_scene(
-                world,
-                &vec![event.character().to_string()],
-                &vec![event.item().to_string()],
-            )
-            .unwrap()
-            && doggie_and_kitie_in_same_scene(world)
-    })));
-
-    event.set_make_action_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Pick>().unwrap();
+    event.set_make_action_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Move>().unwrap();
         get_message(
             &format!(
-                "{}-{}_{}_{}-action",
+                "{}-{}_move_to_{}-action",
                 world.name(),
                 event.character(),
-                event.name(),
-                event.item()
+                event.scene(),
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_success_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Move>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_move_to_{}-success",
+                world.name(),
+                event.character(),
+                event.scene(),
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_fail_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::Move>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_move_to_{}-fail",
+                world.name(),
+                event.character(),
+                event.scene(),
             ),
             world.lang(),
             None,
         )
     })));
 
-    event.set_make_success_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Pick>().unwrap();
-        get_message(
-            &format!(
-                "{}-{}_{}_{}-success",
-                world.name(),
-                event.character(),
-                event.name(),
-                event.item()
-            ),
-            world.lang(),
-            None,
-        )
-    })));
-
-    event.set_make_fail_text(Some(Box::new(|event, world| {
-        let event = event.downcast_ref::<events::Pick>().unwrap();
-        get_message(
-            &format!(
-                "{}-{}_{}_{}-fail",
-                world.name(),
-                event.character(),
-                event.name(),
-                event.item()
-            ),
-            world.lang(),
-            None,
-        )
-    })));
     event
 }
-*/

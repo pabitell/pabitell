@@ -1,5 +1,5 @@
 use crate::{ItemState, World};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::collections::HashSet;
 
 pub fn same_scene(world: &dyn World, characters: &[String], items: &[String]) -> Result<bool> {
@@ -73,4 +73,14 @@ pub fn all_items_with_tags_in_state(world: &dyn World, tags: &[String], state: I
         .values()
         .filter(|e| e.get_tags().iter().any(|t| tags.contains(t)))
         .all(|e| e.state() == &state)
+}
+
+pub fn scene_dialog(world: &dyn World, scene: &str, dialog: usize) -> Result<bool> {
+    Ok(world
+        .scenes()
+        .get(scene)
+        .ok_or_else(|| anyhow!("Scene {} not found", scene))?
+        .dialog()
+        .ok_or_else(|| anyhow!("Scene {} doesn't have dialogs", scene))?
+        == dialog)
 }

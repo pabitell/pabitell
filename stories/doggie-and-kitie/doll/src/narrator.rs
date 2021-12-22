@@ -30,63 +30,66 @@ impl Narrator for Doll {
 
         match (doggie.scene().as_ref(), kitie.scene().as_ref()) {
             (Some(d), Some(k)) if d == "home" && k == "home" => {
-                /*
-                let sand_cake = world.items().get("sand_cake").unwrap();
-                match sand_cake.state() {
-                    ItemState::Unassigned => {
-                        let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                            data::MoveData::new("move_to_kitchen", "doggie", "kitchen"),
-                        ));
-                        res.push(event);
-                        let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                            data::MoveData::new("move_to_kitchen", "kitie", "kitchen"),
-                        ));
-                        res.push(event);
+                let scene = world.scenes().get("home").unwrap();
+                match scene.dialog().unwrap() {
+                    0 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        0,
+                    )) as Box<dyn Event>),
+                    1 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        1,
+                    ))),
+                    2 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        2,
+                    )) as Box<dyn Event>),
+                    3 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        3,
+                    ))),
+                    4 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        4,
+                    )) as Box<dyn Event>),
+                    5 => {
+                        ["doggie", "kitie"].iter().for_each(|c| {
+                            res.push(Box::new(events::make_move(
+                                data::MoveData::new("move_to_walk", c, "walk"),
+                                c,
+                                "home",
+                                5,
+                            )) as Box<dyn Event>);
+                        });
                     }
-                    ItemState::Owned(e) if e == "doggie" => {
-                        let event: Box<dyn Event> = Box::new(events::make_give_sand_cake(
-                            data::GiveData::new("give_sand_cake", "doggie", "kitie", "sand_cake"),
-                        ));
-                        res.push(event);
-                    }
-                    ItemState::Owned(e) if e == "kitie" => {
-                        let event: Box<dyn Event> = Box::new(events::make_give_sand_cake(
-                            data::GiveData::new("give_sand_cake", "kitie", "doggie", "sand_cake"),
-                        ));
-                        res.push(event);
-                    }
-                    ItemState::InScene(e) if e == "playground" => {
-                        let event: Box<dyn Event> = Box::new(events::make_pick(
-                            data::PickData::new("pick", "kitie", "sand_cake"),
-                            false,
-                        ));
-                        res.push(event);
-
-                        let event: Box<dyn Event> = Box::new(events::make_pick(
-                            data::PickData::new("pick", "doggie", "sand_cake"),
-                            false,
-                        ));
-                        res.push(event);
-                    }
-                    _ => {}
+                    _ => unimplemented!(),
                 }
-                */
             }
             (Some(d), Some(k)) if d == "walk" && k == "home" => {
-                /*
-                let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                    data::MoveData::new("move_to_kitchen", "doggie", "kitchen"),
-                ));
-                res.push(event);
-                */
+                res.push(Box::new(events::make_move(
+                    data::MoveData::new("move_to_walk", "kitie", "walk"),
+                    "kitie",
+                    "home",
+                    5,
+                )) as Box<dyn Event>);
             }
             (Some(d), Some(k)) if d == "home" && k == "walk" => {
-                /*
-                let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                    data::MoveData::new("move_to_kitchen", "kitie", "kitchen"),
-                ));
-                res.push(event);
-                */
+                res.push(Box::new(events::make_move(
+                    data::MoveData::new("move_to_walk", "doggie", "walk"),
+                    "doggie",
+                    "home",
+                    5,
+                )) as Box<dyn Event>);
             }
             _ => unreachable!(),
         }
@@ -97,7 +100,7 @@ impl Narrator for Doll {
     fn parse_event(&self, value: &Value) -> Option<Box<dyn Event>> {
         // TODO validate characters, items, scenes
         match &value["name"] {
-            Value::String(name) if name == "go_for_a_walk" => {
+            Value::String(name) if name == "talk_in_home" => {
                 /*
                 if let Value::String(character) = &value["character"] {
                     let data = data::MoveData::new(name, character, "kitchen");
@@ -106,6 +109,11 @@ impl Narrator for Doll {
                     None
                 }
                 */
+                None
+            }
+            Value::String(name) if name == "move_to_walk" => {
+                /*
+                 */
                 None
             }
             _ => None,

@@ -88,7 +88,8 @@ impl WorldBuilder<DollWorld> for DollWorldBuilder {
 
     fn make_world() -> Result<DollWorld> {
         Self::default()
-            //.scene(Box::new(scenes::PlayGround::default()))
+            .scene(Box::new(scenes::Home::default()))
+            .scene(Box::new(scenes::Walk::default()))
             .character(Box::new(characters::Kitie::default()))
             .character(Box::new(characters::Doggie::default()))
             //.item(Box::new(items::SandDoll::default()))
@@ -163,11 +164,11 @@ impl World for DollWorld {
     fn setup(&mut self) {
         self.randomize_ids();
 
-        /*
         self.characters_mut()
             .values_mut()
-            .for_each(|c| c.set_scene(Some("playground".into())));
+            .for_each(|c| c.set_scene(Some("home".into())));
 
+        /*
         self.items_mut().values_mut().for_each(|i| {
             i.set_state(match i.name() {
                 "sand_doll" => ItemState::InScene("playground".into()),

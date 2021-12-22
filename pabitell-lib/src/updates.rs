@@ -52,3 +52,12 @@ pub fn move_character(
         .set_scene(scene);
     Ok(())
 }
+
+pub fn next_scene_dialog(world: &mut dyn World, scene: String) -> Result<()> {
+    world
+        .scenes_mut()
+        .get_mut(&scene)
+        .ok_or_else(|| anyhow!("Scene {} not found", scene))?
+        .next_dialog();
+    Ok(())
+}
