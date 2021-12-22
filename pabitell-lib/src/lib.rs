@@ -1,6 +1,8 @@
 pub mod conditions;
 pub mod data;
 pub mod events;
+pub mod items;
+pub mod scenes;
 #[cfg(feature = "with_translations")]
 pub mod translations;
 pub mod updates;
