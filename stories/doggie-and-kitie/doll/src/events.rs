@@ -190,3 +190,61 @@ pub fn make_move(
 
     event
 }
+
+pub fn make_find_doll(data: data::UseItemData) -> events::UseItem {
+    let mut event = events::UseItem::new(data);
+
+    event.set_tags(vec!["find".to_string()]);
+
+    event.set_condition(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::UseItem>().unwrap();
+        if !&["doggie", "kitie"].contains(&event.character()) {
+            return false;
+        }
+        if !conditions::same_scene(
+            world,
+            &["doggie".to_string(), "kitie".to_string()],
+            &["doll".to_string()],
+        )
+        .unwrap()
+        {
+            return false;
+        }
+        if !conditions::scene_dialog(world, "walk", 4).unwrap() {
+            return false;
+        }
+        true
+    })));
+
+    event.set_world_update(Some(Box::new(move |_, world| {
+        updates::assign_item(world, "doll".to_owned(), ItemState::Unassigned).unwrap();
+        updates::next_scene_dialog(world, "walk".to_owned()).unwrap();
+    })));
+
+    event.set_make_action_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::UseItem>().unwrap();
+        get_message(
+            &format!("{}-{}_find_doll-action", world.name(), event.character(),),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_success_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::UseItem>().unwrap();
+        get_message(
+            &format!("{}-{}_find_doll-success", world.name(), event.character(),),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_fail_text(Some(Box::new(move |event, world| {
+        let event = event.downcast_ref::<events::UseItem>().unwrap();
+        get_message(
+            &format!("{}-{}_find_doll-fail", world.name(), event.character(),),
+            world.lang(),
+            None,
+        )
+    })));
+
+    event
+}

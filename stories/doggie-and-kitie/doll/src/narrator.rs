@@ -91,6 +91,70 @@ impl Narrator for Doll {
                     5,
                 )) as Box<dyn Event>);
             }
+            (Some(d), Some(k)) if d == "walk" && k == "walk" => {
+                let scene = world.scenes().get("walk").unwrap();
+                match scene.dialog().unwrap() {
+                    0 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        0,
+                    )) as Box<dyn Event>),
+                    1 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        1,
+                    ))),
+                    2 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        2,
+                    ))),
+                    3 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        3,
+                    ))),
+                    4 => {
+                        res.push(Box::new(events::make_find_doll(data::UseItemData::new(
+                            "found_doll",
+                            "kitie",
+                            "doll",
+                        ))));
+                        res.push(Box::new(events::make_find_doll(data::UseItemData::new(
+                            "found_doll",
+                            "doggie",
+                            "doll",
+                        ))));
+                    }
+                    5 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        5,
+                    ))),
+                    6 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                        "walk",
+                        &["doggie", "kitie"],
+                        6,
+                    ))),
+                    7 => {
+                        ["doggie", "kitie"].iter().for_each(|c| {
+                            res.push(Box::new(events::make_move(
+                                data::MoveData::new("move_back_home", c, "back_home"),
+                                c,
+                                "walk",
+                                7,
+                            )) as Box<dyn Event>);
+                        });
+                    }
+                    _ => unimplemented!(),
+                }
+            }
             _ => unreachable!(),
         }
 

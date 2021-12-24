@@ -92,7 +92,7 @@ impl WorldBuilder<DollWorld> for DollWorldBuilder {
             .scene(Box::new(scenes::Walk::default()))
             .character(Box::new(characters::Kitie::default()))
             .character(Box::new(characters::Doggie::default()))
-            //.item(Box::new(items::SandDoll::default()))
+            .item(Box::new(items::Doll::default()))
             .build()
     }
 }
@@ -168,10 +168,10 @@ impl World for DollWorld {
             .values_mut()
             .for_each(|c| c.set_scene(Some("home".into())));
 
-        /*
         self.items_mut().values_mut().for_each(|i| {
             i.set_state(match i.name() {
-                "sand_doll" => ItemState::InScene("playground".into()),
+                "doll" => ItemState::InScene("walk".into()),
+                /*
                 "bad_dog" => ItemState::InScene("garden".into()),
                 _ => {
                     if i.get_tags().contains(&"ingredient".to_string()) {
@@ -184,9 +184,10 @@ impl World for DollWorld {
                         ItemState::Unassigned
                     }
                 }
+                */
+                _ => ItemState::Unassigned,
             })
         });
-        */
     }
 
     fn finished(&self) -> bool {
