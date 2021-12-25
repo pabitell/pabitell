@@ -55,7 +55,7 @@ impl Narrator for Doll {
                         "home",
                         &["doggie", "kitie"],
                         3,
-                    ))),
+                    )) as Box<dyn Event>),
                     4 => res.push(Box::new(events::make_talk(
                         data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
                         "home",
@@ -68,28 +68,145 @@ impl Narrator for Doll {
                                 data::MoveData::new("move_to_walk", c, "walk"),
                                 c,
                                 "home",
-                                5,
+                                Some(5),
+                                false,
                             )) as Box<dyn Event>);
                         });
                     }
+                    6 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        6,
+                    )) as Box<dyn Event>),
+                    7 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        7,
+                    )) as Box<dyn Event>),
+                    8 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        8,
+                    )) as Box<dyn Event>),
+                    9 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        9,
+                    )) as Box<dyn Event>),
+                    10 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        10,
+                    )) as Box<dyn Event>),
+                    11 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        11,
+                    )) as Box<dyn Event>),
+                    12 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        12,
+                    )) as Box<dyn Event>),
+                    13 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        13,
+                    )) as Box<dyn Event>),
+                    14 => res.push(Box::new(events::make_talk(
+                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                        "home",
+                        &["doggie", "kitie"],
+                        14,
+                    )) as Box<dyn Event>),
+                    15 => {
+                        res.push(Box::new(events::make_move(
+                            data::MoveData::new("move_to_doggie_search", "doggie", "doggie_search"),
+                            "doggie",
+                            "home",
+                            Some(15),
+                            false,
+                        )) as Box<dyn Event>);
+                    }
+                    16 => {
+                        res.push(Box::new(events::make_move(
+                            data::MoveData::new("move_to_kitie_search", "kitie", "kitie_search"),
+                            "kitie",
+                            "home",
+                            Some(16),
+                            false,
+                        )) as Box<dyn Event>);
+                    }
+                    17 => {
+                        for c in &["doggie", "kitie"] {
+                            let items = world
+                                .items()
+                                .values()
+                                .filter(|v| {
+                                    v.get_tags().contains(&format!("{}_pick", c))
+                                        && v.state() == &ItemState::Owned(c.to_string())
+                                })
+                                .collect::<Vec<_>>();
+                            for item in items {
+                                res.push(Box::new(events::make_lay_down(data::UseItemData::new(
+                                    "lay_down",
+                                    c,
+                                    item.name(),
+                                ))) as Box<dyn Event>);
+                            }
+                        }
+                    }
+                    18 => {} // final dialog
                     _ => unimplemented!(),
                 }
             }
             (Some(d), Some(k)) if d == "walk" && k == "home" => {
-                res.push(Box::new(events::make_move(
-                    data::MoveData::new("move_to_walk", "kitie", "walk"),
-                    "kitie",
-                    "home",
-                    5,
-                )) as Box<dyn Event>);
+                if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
+                    // way back
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_back_home", "doggie", "home"),
+                        "doggie",
+                        "walk",
+                        Some(7),
+                        true,
+                    )) as Box<dyn Event>);
+                } else {
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_to_walk", "kitie", "walk"),
+                        "kitie",
+                        "home",
+                        Some(5),
+                        false,
+                    )) as Box<dyn Event>);
+                }
             }
             (Some(d), Some(k)) if d == "home" && k == "walk" => {
-                res.push(Box::new(events::make_move(
-                    data::MoveData::new("move_to_walk", "doggie", "walk"),
-                    "doggie",
-                    "home",
-                    5,
-                )) as Box<dyn Event>);
+                if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
+                    // way back
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_back_home", "kitie", "home"),
+                        "kitie",
+                        "walk",
+                        Some(7),
+                        true,
+                    )) as Box<dyn Event>);
+                } else {
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_to_walk", "doggie", "walk"),
+                        "doggie",
+                        "home",
+                        Some(5),
+                        false,
+                    )) as Box<dyn Event>);
+                }
             }
             (Some(d), Some(k)) if d == "walk" && k == "walk" => {
                 let scene = world.scenes().get("walk").unwrap();
@@ -145,14 +262,69 @@ impl Narrator for Doll {
                     7 => {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
-                                data::MoveData::new("move_back_home", c, "back_home"),
+                                data::MoveData::new("move_back_home", c, "home"),
                                 c,
                                 "walk",
-                                7,
+                                Some(7),
+                                true,
                             )) as Box<dyn Event>);
                         });
                     }
                     _ => unimplemented!(),
+                }
+            }
+            (Some(d), Some(_)) if d == "doggie_search" => {
+                let mut items = world
+                    .items()
+                    .values()
+                    .filter(|v| {
+                        v.get_tags().contains(&"doggie_pick".to_owned())
+                            && v.state() == &ItemState::InScene("doggie_search".to_string())
+                    })
+                    .collect::<Vec<_>>();
+                if items.is_empty() {
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_back_home", "doggie", "home"),
+                        "doggie",
+                        "doggie_search",
+                        None,
+                        true,
+                    )) as Box<dyn Event>);
+                } else {
+                    for item in items {
+                        res.push(Box::new(events::make_pick(data::PickData::new(
+                            "pick",
+                            "doggie",
+                            item.name(),
+                        ))) as Box<dyn Event>);
+                    }
+                }
+            }
+            (Some(_), Some(k)) if k == "kitie_search" => {
+                let mut items = world
+                    .items()
+                    .values()
+                    .filter(|v| {
+                        v.get_tags().contains(&"kitie_pick".to_owned())
+                            && v.state() == &ItemState::InScene("kitie_search".to_string())
+                    })
+                    .collect::<Vec<_>>();
+                if items.is_empty() {
+                    res.push(Box::new(events::make_move(
+                        data::MoveData::new("move_back_home", "kitie", "home"),
+                        "doggie",
+                        "doggie_search",
+                        None,
+                        true,
+                    )) as Box<dyn Event>);
+                } else {
+                    for item in items {
+                        res.push(Box::new(events::make_pick(data::PickData::new(
+                            "pick",
+                            "kitie",
+                            item.name(),
+                        ))) as Box<dyn Event>);
+                    }
                 }
             }
             _ => unreachable!(),

@@ -90,9 +90,13 @@ impl WorldBuilder<DollWorld> for DollWorldBuilder {
         Self::default()
             .scene(Box::new(scenes::Home::default()))
             .scene(Box::new(scenes::Walk::default()))
+            .scene(Box::new(scenes::DoggieSeach::default()))
+            .scene(Box::new(scenes::KitieSeach::default()))
             .character(Box::new(characters::Kitie::default()))
             .character(Box::new(characters::Doggie::default()))
             .item(Box::new(items::Doll::default()))
+            .item(Box::new(items::Ball::default()))
+            .item(Box::new(items::Bucket::default()))
             .build()
     }
 }
@@ -169,50 +173,20 @@ impl World for DollWorld {
             .for_each(|c| c.set_scene(Some("home".into())));
 
         self.items_mut().values_mut().for_each(|i| {
-            i.set_state(match i.name() {
-                "doll" => ItemState::InScene("walk".into()),
-                /*
-                "bad_dog" => ItemState::InScene("garden".into()),
-                _ => {
-                    if i.get_tags().contains(&"ingredient".to_string()) {
-                        ItemState::InScene("kitchen".into())
-                    } else if i.get_tags().contains(&"toy".to_string()) {
-                        ItemState::InScene("children_garden".into())
-                    } else if i.get_tags().contains(&"meal".to_string()) {
-                        ItemState::InScene("children_house".into())
-                    } else {
-                        ItemState::Unassigned
-                    }
-                }
-                */
-                _ => ItemState::Unassigned,
+            i.set_state(if i.name() == "doll" {
+                ItemState::InScene("walk".into())
+            } else if i.get_tags().contains(&"doggie_pick".to_owned()) {
+                ItemState::InScene("doggie_search".into())
+            } else if i.get_tags().contains(&"kitie_pick".to_owned()) {
+                ItemState::InScene("kitie_search".into())
+            } else {
+                ItemState::Unassigned
             })
         });
     }
 
     fn finished(&self) -> bool {
-        // test if doggie and kitie are ready to go
-        let doggie = self
-            .characters()
-            .get("doggie")
-            .unwrap()
-            .as_any()
-            .downcast_ref::<characters::Doggie>()
-            .unwrap();
-
-        let kitie = self
-            .characters()
-            .get("kitie")
-            .unwrap()
-            .as_any()
-            .downcast_ref::<characters::Kitie>()
-            .unwrap();
-
-        false
-        /*
-        doggie.scene().clone() == Some("way_home".to_string())
-            && kitie.scene().clone() == Some("way_home".to_string())
-        */
+        self.scenes().get("home").unwrap().dialog() == Some(18)
     }
 
     fn event_count(&self) -> usize {

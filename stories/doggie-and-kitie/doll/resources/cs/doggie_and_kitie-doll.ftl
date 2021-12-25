@@ -212,8 +212,113 @@ doggie_and_kitie-doll-walk-long-7 =
     s sebou domů. Panenka už neplakala a byla ráda, že už se nemusí bát
     tak sama v mokré trávě a v kopřivách.
 
-doggie_and_kitie-doll-back_home-long-0 =
+doggie_and_kitie-doll-home-long-6 =
     „Tak,“ radovali se pejsek s kočičkou, „teď máme naši panenku, tu
     jsme si našli, to bude teď naše děťátko!“
+    Kočička svlékla panenku z mokrých šatečků, vyprala je, jak byly
+    zamazané od hlíny, a dala je na sluníčko usušit, aby zas byly čisté a suché.
+    Pejsek uložil panenku do postýlky, aby se zahřála, a přinesl jí rohlíček
+    a hrneček mléka. Panenka se najedla a pak v postýlce pěkně usnula.
+    Pejsek s kočičkou chodili po špičkách kolem, aby panenku neprobu-
+    dili, a těšili se z toho, že teď mají svoje děťátko.
+
+doggie_and_kitie-doll-home-long-7 =
+    A kočička řekla pejskovi: „Něco ti, pejsku, povím: teď,
+    když máme tohle naše děťátko, tak se o ně musíme starat.“
+
+doggie_and_kitie-doll-home-long-8 =
+    „To budeme,“ řekl pejsek, „a budeme se o ni o mnoho lépe starat než
+    ta její nehodná maminka, než ta nepořádná holčička, co tu panenku tak
+    pohodila! Ta panenka se bude divit a bude se jí to líbit, jak se bude
+    u nás mít dobře. My, panečku, ji nikde takhle nepohodíme!“
+
+doggie_and_kitie-doll-home-long-9 =
+    „A budeme ji držet pěkně čisťounkou,“ řekla kočička. „To víš, my kočičky
+    se pořád myjeme a češeme, to já si už u ní vezmu na starost. Ale
+    oho, pejsku, na něco jsme zapomněli! Vždyť my pro ni nemáme žádné
+    hračky a ona si přece bude chtít s něčím hrát. A kde my pro ni nějaké
+    hračky vezmeme, když žádné nemáme?“
+
+doggie_and_kitie-doll-home-long-10 =
+    „Hm, to nemáme,“ řekl pejsek,„s hračkami to bude u nás těžká věc.“
+
+doggie_and_kitie-doll-home-long-11 =
+    „To bude,“ řekla kočička; „musíme o tom přemýšlet.“ Tak o tom pejsek
+    s kočičkou přemýšleli, jak by přišli k nějakým hračkám pro tu panenku.
+    Žádné neměli, udělat hračky, to přece neuměli, to ani děti nedovedou, tak
+    jak by to měli umět pejskové a kočičky, a ukrást potají nějaké hračky
+    dětem, když si děti hrají, to ne, to by náš pejsek a kočička nikdy neudělali!
+
+doggie_and_kitie-doll-home-long-12 =
+    Pejsek přemýšlel a přemýšlel, až to vymyslil. „Už to mám!“ křičel
+    radostně, „už jsem na to přišel!“
+
+doggie_and_kitie-doll-home-long-13 =
+    „Nekřič tak,“ šeptala kočička, „vždyť nám probudíš tu naši panenku,
+    to naše děťátko.“
+
+doggie_and_kitie-doll-home-long-14 =
+    „Tak koukej, kočičko, já ti to povím,“ šeptal pejsek kočičce. „Přece
+    zrovna včera jsme mluvili o tom, co děti mívají hraček, a nedovedou si
+    jich vážit, a co jich poházejí a poztrácejí. A zrovna dneska jsme našli tu
+    pohozenou chudinku, malou panenku. A tak já budu hledat, jestli ještě
+    nenajdu někde nějakou hračku, kterou děti také ztratily nebo pohodily,
+    a tu dáme té naší panence!“
+
+doggie_and_kitie-doll-home-long-15 =
+    „Tak je to dobře,“ zaradovala se kočička, „tak jdi a koukej a hledej
+    a snad někde najdeš nějakou pohozenou hračku, kterou bychom dali té
+    naší panence.“
+    Pejsek šel, koukal, do všech koutů vlezl, všecko prošťáral,
+    a to si, děti, ani nedovedete představit, co on tam všechno našel!
+
+doggie_and_kitie-doll-doggie_search-long =
+    To vy, děti, ani nevíte, jakých hraček jste už zkazily, poztrácely a
+    pohodily! Vy na to hned zapomenete, ale pejsek je všechny našel.
+    Tady v trávě našel míček, jinde našel ztracené formičky a bábovečky
+    na písek a našel korálky, barevné kostečky a nějaké nádobíčko,
+    které děti poztrácely, našel pohozená kamínka a židličku do kuchyňky,
+    našel plno obrázků a jednu píšťalku také našel a také lžíci a lopatku
+    na písek a našel poztrácené dřevěné domečky a stromečky a nějaká dřevěná
+    zvířátka taky našel a našel toho tolik, že to ani unést nemohl.
+
+doggie_and_kitie-doll-home-long-16 =
+    „Jemine,“ tak se divil a radoval, „to bude mít ta naše panenka hraček!“
+    Donesl to všechno domů a kočička byla překvapená, co toho je. „Bože, co
+    ty děti toho tak rozházejí a poztrácejí!“ spráskla pacičkama a řekla: „To já
+    se také ještě půjdu podívat. To víš, pejsku, já umím proslídit a prosmejčit
+    všecko, kam ani ty nevlezeš. A jistě toho také dost najdu.“
+    Kočička šla, hledala, všechny koutečky prolezla a prosmejčila. A jéjej,
+    děti, co ona toho ještě našla! Co vy těch hraček pohodíte, zapomenete a
+    poztrácíte!
+
+doggie_and_kitie-doll-kitie_search-long =
+    Někde v plotě našla kbelíček a jinde pomačkanou kropicí konévku,
+    v kopřivách našla pohozené kostečky ze stavebnice,
+    v trávníčku našla střevíčky a punčošky ztracené z všelijakých panenek
+    a našla také jednu knížku s pohádkou a obrázky a kapesníček a barevné
+    hadříčky našla a nitě a jinde zas našla vyšíváníčko a taky našla jehlu
+    kulatou, nepíchavou, a našla jednu panenečku docela malinkou panence
+    na hraní a míček s peříčky a barevné papírky a házecí kroužek a ještě
+    k tomu nějaké nádobíčko, no, našla vám toho pohozeného a poztráceného,
+    že to ani pobrat nemohla!
+
+doggie_and_kitie-doll-home-long-17 =
+    Donesla to všechno domů a bylo toho tolik, že si z toho mohla
+    s pejskem udělat krám na prodávání hraček. A to všechno postavili
+    kolem postýlky té pohozené panence.
+
+doggie_and_kitie-doll-home-long-18 =
+    Panenka se probudila a měla velikou radost, když kolem sebe viděla tolik
+    hraček, a moc se jí to u pejska a kočičky líbilo. Hrála si a hrála, hrála
+    si s kočičkou a pejskem se všemi těmi hračkami a bylo jich tolik, že si ani
+    dost se všemi vyhrát nemohla. Pejsek a kočička jí dali jméno Járinka a měli
+    ji moc rádi a ona měla zas moc ráda je; tak se tam u nich dobře měla,
+    že na svou dřívější maminku, na tu nepořádnou holčičku, která ji do kopřiv
+    hodila, ani už nikdy nevzpomněla. A na všechny ty hračky, které jí pejsek
+    s kočičkounašli, dávala pěkně pozor, žádnou z nich nezkazila, žádnou nikde
+    nezapomněla, neztratila ani nepohodila.
+    A tak to tedy bylo, že ubohá pohozená panenka měla ze všech dětí
+    a panenek na světě nejvíc hraček.
 
 # Customs
