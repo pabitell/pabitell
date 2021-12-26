@@ -312,8 +312,8 @@ impl Narrator for Doll {
                 if items.is_empty() {
                     res.push(Box::new(events::make_move(
                         data::MoveData::new("move_back_home", "kitie", "home"),
-                        "doggie",
-                        "doggie_search",
+                        "kitie",
+                        "kitie_search",
                         None,
                         true,
                     )) as Box<dyn Event>);

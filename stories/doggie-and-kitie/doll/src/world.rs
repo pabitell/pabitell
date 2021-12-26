@@ -95,7 +95,7 @@ impl WorldBuilder<DollWorld> for DollWorldBuilder {
             .character(Box::new(characters::Kitie::default()))
             .character(Box::new(characters::Doggie::default()))
             .item(Box::new(items::Doll::default()))
-            .item(Box::new(items::Ball::default()))
+            .item(Box::new(items::SmallBall::default()))
             .item(Box::new(items::Bucket::default()))
             .build()
     }

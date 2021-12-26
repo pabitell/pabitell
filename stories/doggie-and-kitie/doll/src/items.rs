@@ -9,6 +9,6 @@ use crate::translations::get_message;
 
 simple_item!(Doll, "doll", []);
 
-simple_item!(Ball, "ball", ["doggie_pick"]);
+simple_item!(SmallBall, "small_ball", ["doggie_pick"]);
 
 simple_item!(Bucket, "bucket", ["kitie_pick"]);

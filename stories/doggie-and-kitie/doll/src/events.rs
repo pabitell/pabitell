@@ -382,7 +382,7 @@ pub fn make_lay_down(use_item_data: data::UseItemData) -> events::UseItem {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         get_message(
             &format!(
-                "{}-{}_lay_down_{}-action",
+                "{}-{}_lay_down_{}-success",
                 world.name(),
                 event.character(),
                 event.item(),
@@ -395,7 +395,7 @@ pub fn make_lay_down(use_item_data: data::UseItemData) -> events::UseItem {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
         get_message(
             &format!(
-                "{}-{}_lay_down_{}-action",
+                "{}-{}_lay_down_{}-fail",
                 world.name(),
                 event.character(),
                 event.item(),

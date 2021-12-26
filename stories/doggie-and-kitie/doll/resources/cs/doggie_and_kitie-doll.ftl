@@ -9,6 +9,12 @@ doggie_and_kitie-doll-doggie-short = Pejsek
 doggie_and_kitie-doll-doggie-long = { doggie_and_kitie-doll-doggie-short } 
 
 # Items
+doggie_and_kitie-doll-doll-short = Panenka
+doggie_and_kitie-doll-doll-long = { doggie_and_kitie-doll-doll-short }, která tence plakala.
+doggie_and_kitie-doll-small_ball-short = Míček
+doggie_and_kitie-doll-small_ball-long = { doggie_and_kitie-doll-small_ball-short }
+doggie_and_kitie-doll-bucket-short = Kbelíček
+doggie_and_kitie-doll-bucket-long = { doggie_and_kitie-doll-bucket-short }
 
 # Events
 doggie_and_kitie-doll-home_doggie_says-0-common =
@@ -139,7 +145,133 @@ doggie_and_kitie-doll-walk_kitie_says-6-success =
 doggie_and_kitie-doll-walk_kitie_says-6-fail =
     Kočička nechce rozhodnout, jestli si panenku vezmou domů.
 
+doggie_and_kitie-doll-kitie_move_to_home-action =
+    Kočička se vrátí domů.
+doggie_and_kitie-doll-kitie_move_to_home-success =
+    Kočička se vrátila domů.
+doggie_and_kitie-doll-kitie_move_to_home-fail =
+    Kočička se nemůže vrátit domů.
+
+doggie_and_kitie-doll-doggie_move_to_home-action =
+    Pejsek se vrátí domů.
+doggie_and_kitie-doll-doggie_move_to_home-success =
+    Pejsek se vrátil domů.
+doggie_and_kitie-doll-doggie_move_to_home-fail =
+    Pejsek se nemůže vrátit domů.
+
+doggie_and_kitie-doll-home_doggie_says-7-common =
+    že se budou o panenku dobře starat.
+doggie_and_kitie-doll-home_doggie_says-7-action = 
+    Pejsek slíbí, { doggie_and_kitie-doll-home_doggie_says-7-common }
+doggie_and_kitie-doll-home_doggie_says-7-success = 
+    Pejsek slíbil, { doggie_and_kitie-doll-home_doggie_says-7-common }
+doggie_and_kitie-doll-home_doggie_says-7-fail = 
+    Pejsek nemůže slíbit, { doggie_and_kitie-doll-home_doggie_says-7-common }
+
+doggie_and_kitie-doll-home_kitie_says-8-common =
+    že si panenka nebude mít s čím hrát.
+doggie_and_kitie-doll-home_kitie_says-8-action =
+    Kočička se bojí, { doggie_and_kitie-doll-home_kitie_says-8-common }
+doggie_and_kitie-doll-home_kitie_says-8-success =
+    Kočička se bála, { doggie_and_kitie-doll-home_kitie_says-8-common }
+doggie_and_kitie-doll-home_kitie_says-8-fail =
+    Kočička se nebojí, { doggie_and_kitie-doll-home_kitie_says-8-common }
+
+doggie_and_kitie-doll-home_doggie_says-9-common = 
+    že nemají hračky.
+doggie_and_kitie-doll-home_doggie_says-9-action = 
+    Pejsek řekne, { doggie_and_kitie-doll-home_doggie_says-9-common }
+doggie_and_kitie-doll-home_doggie_says-9-success = 
+    Pejsek řekl, { doggie_and_kitie-doll-home_doggie_says-9-common }
+doggie_and_kitie-doll-home_doggie_says-9-fail = 
+    Pejsek nemůže říct, { doggie_and_kitie-doll-home_doggie_says-9-common }
+
+doggie_and_kitie-doll-home_kitie_says-10-common =
+    že hračkami musí něco vymyslet.
+doggie_and_kitie-doll-home_kitie_says-10-action =
+    Kočička řekne, { doggie_and_kitie-doll-home_kitie_says-10-common }
+doggie_and_kitie-doll-home_kitie_says-10-success =
+    Kočička řekla, { doggie_and_kitie-doll-home_kitie_says-10-common }
+doggie_and_kitie-doll-home_kitie_says-10-fail =
+    Kočička nechce říct, { doggie_and_kitie-doll-home_kitie_says-10-common }
+
+doggie_and_kitie-doll-home_doggie_says-11-common = 
+    že už ho něco napadlo.
+doggie_and_kitie-doll-home_doggie_says-11-action = 
+    Pejsek zakřičí radostně, { doggie_and_kitie-doll-home_doggie_says-11-common }
+doggie_and_kitie-doll-home_doggie_says-11-success = 
+    Pejsek zakřičel radostně, { doggie_and_kitie-doll-home_doggie_says-11-common }
+doggie_and_kitie-doll-home_doggie_says-11-fail = 
+    Pejsek nemůže zakřičet radostně, { doggie_and_kitie-doll-home_doggie_says-11-common }
+
+doggie_and_kitie-doll-home_kitie_says-12-common =
+    aby pejsek tolik neřičel.
+doggie_and_kitie-doll-home_kitie_says-12-action =
+    Kočička zašeptá, { doggie_and_kitie-doll-home_kitie_says-12-common }
+doggie_and_kitie-doll-home_kitie_says-12-success =
+    Kočička zašeptala, { doggie_and_kitie-doll-home_kitie_says-12-common }
+doggie_and_kitie-doll-home_kitie_says-12-fail =
+    Kočička nechce zašeptat, { doggie_and_kitie-doll-home_kitie_says-12-common }
+
+doggie_and_kitie-doll-home_doggie_says-13-common = 
+    že chce jít hledat zapomenuté hračky ven.
+doggie_and_kitie-doll-home_doggie_says-13-action = 
+    Pejsek zašeptá, { doggie_and_kitie-doll-home_doggie_says-13-common }
+doggie_and_kitie-doll-home_doggie_says-13-success = 
+    Pejsek zašeptal, { doggie_and_kitie-doll-home_doggie_says-13-common }
+doggie_and_kitie-doll-home_doggie_says-13-fail = 
+    Pejsek nechce zašeptat, { doggie_and_kitie-doll-home_doggie_says-13-common }
+
+doggie_and_kitie-doll-home_kitie_says-14-common =
+    a pošle pejska hledat pohozené hračky.
+doggie_and_kitie-doll-home_kitie_says-14-action =
+    Kočička se zaraduje { doggie_and_kitie-doll-home_kitie_says-14-common }
+doggie_and_kitie-doll-home_kitie_says-14-success =
+    Kočička se zaradovala { doggie_and_kitie-doll-home_kitie_says-14-common }
+doggie_and_kitie-doll-home_kitie_says-14-fail =
+    Kočička se nechce zaradovat { doggie_and_kitie-doll-home_kitie_says-14-common }
+
+doggie_and_kitie-doll-doggie_move_to_doggie_search-common = 
+    hledat hračky.
+doggie_and_kitie-doll-doggie_move_to_doggie_search-action = 
+    Pejsek odejde { doggie_and_kitie-doll-doggie_move_to_doggie_search-common }
+doggie_and_kitie-doll-doggie_move_to_doggie_search-success = 
+    Pejsek odešel { doggie_and_kitie-doll-doggie_move_to_doggie_search-common }
+doggie_and_kitie-doll-doggie_move_to_doggie_search-fail = 
+    Pejsek nemůže odejít { doggie_and_kitie-doll-doggie_move_to_doggie_search-common }
+
+doggie_and_kitie-doll-doggie_pick_small_ball-action = Pejsek vezme míček.
+doggie_and_kitie-doll-doggie_pick_small_ball-success = Pejsek vzal míček.
+doggie_and_kitie-doll-doggie_pick_small_ball-fail = Pejsek nemůže vzít míček.
+
+doggie_and_kitie-doll-kitie_move_to_kitie_search-common = 
+    hledat hračky.
+doggie_and_kitie-doll-kitie_move_to_kitie_search-action = 
+    Kočička odejde { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
+doggie_and_kitie-doll-kitie_move_to_kitie_search-success = 
+    Kočička odešela { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
+doggie_and_kitie-doll-kitie_move_to_kitie_search-fail = 
+    Kočička nemůže odejít { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
+
+doggie_and_kitie-doll-kitie_pick_bucket-action = Kočička vezme kbelíček.
+doggie_and_kitie-doll-kitie_pick_bucket-success = Kočička vzala kbelíček.
+doggie_and_kitie-doll-kitie_pick_bucket-fail = Kočička nemůže vzít kbelíček.
+
+doggie_and_kitie-doll-doggie_lay_down_small_ball-action = Pejsek postaví k postýlce míček.
+doggie_and_kitie-doll-doggie_lay_down_small_ball-success = Pejsek postavil k postýlce míček.
+doggie_and_kitie-doll-doggie_lay_down_small_ball-fail = Pejsek nemůže postavit k postýlce míček.
+
+doggie_and_kitie-doll-kitie_lay_down_bucket-action = Pejsek postaví k postýlce kbelíček.
+doggie_and_kitie-doll-kitie_lay_down_bucket-success = Pejsek postavil k postýlce kbelíček.
+doggie_and_kitie-doll-kitie_lay_down_bucket-fail = Pejsek nemůže postavit k postýlce kbelíček.
+
+
 # Scenes
+doggie_and_kitie-doll-home-short = U pejska a kočičky doma
+doggie_and_kitie-doll-walk-short = Na procházce
+doggie_and_kitie-doll-doggie_search-short = Pejsek hledá hračky
+doggie_and_kitie-doll-kitie_search-short = Kočička hledá hračky
+
 doggie_and_kitie-doll-home-long-0 =
     Jednou celý den pršelo, všude bylo mokro a studeno a pejsek s kočičkou
     nemohli ven a neměli co dělat. A tak si povídali.
@@ -185,8 +317,6 @@ doggie_and_kitie-doll-walk-long-3 =
 
 doggie_and_kitie-doll-walk-long-4 =
     „Anebo třeba nějaká zlomená květinka,“ řekla kočička.
-
-doggie_and_kitie-doll-walk-long-5 =
     I hledali a hledali a koukali se dokola, odkud to tak tence pláče.
     A teď viděli, co to plakalo tak jemně a tenounce. Docela v koutě ve
     vysoké trávě – a ta tráva byla po dešti ještě mokrá – ležela pod kopřivami
@@ -194,6 +324,8 @@ doggie_and_kitie-doll-walk-long-5 =
     a panenka tam ležela už několik dní, napršelo tam na ni, až měla šatečky
     celé mokré, hlavičku měla trochu natlučenou a měla hlad a trochu kašel
     a bála se tam tak sama.
+
+doggie_and_kitie-doll-walk-long-5 =
     „Proč tak pláčeš, malá panenko?“ ptali se jí pejsek s kočičkou.
     A panenka řekla: „Já pláču, protože mně je líto, že mne moje holčička
     tady tak pohodila, ztratila a zapomněla a že mám hlad a že se mně tu
@@ -272,7 +404,7 @@ doggie_and_kitie-doll-home-long-15 =
     Pejsek šel, koukal, do všech koutů vlezl, všecko prošťáral,
     a to si, děti, ani nedovedete představit, co on tam všechno našel!
 
-doggie_and_kitie-doll-doggie_search-long =
+doggie_and_kitie-doll-doggie_search-long-start =
     To vy, děti, ani nevíte, jakých hraček jste už zkazily, poztrácely a
     pohodily! Vy na to hned zapomenete, ale pejsek je všechny našel.
     Tady v trávě našel míček, jinde našel ztracené formičky a bábovečky
@@ -282,17 +414,19 @@ doggie_and_kitie-doll-doggie_search-long =
     na písek a našel poztrácené dřevěné domečky a stromečky a nějaká dřevěná
     zvířátka taky našel a našel toho tolik, že to ani unést nemohl.
 
-doggie_and_kitie-doll-home-long-16 =
+doggie_and_kitie-doll-doggie_search-long-end =
     „Jemine,“ tak se divil a radoval, „to bude mít ta naše panenka hraček!“
-    Donesl to všechno domů a kočička byla překvapená, co toho je. „Bože, co
-    ty děti toho tak rozházejí a poztrácejí!“ spráskla pacičkama a řekla: „To já
-    se také ještě půjdu podívat. To víš, pejsku, já umím proslídit a prosmejčit
-    všecko, kam ani ty nevlezeš. A jistě toho také dost najdu.“
-    Kočička šla, hledala, všechny koutečky prolezla a prosmejčila. A jéjej,
-    děti, co ona toho ještě našla! Co vy těch hraček pohodíte, zapomenete a
-    poztrácíte!
+    Donesl to všechno domů a kočička byla překvapená, co toho je. 
 
-doggie_and_kitie-doll-kitie_search-long =
+doggie_and_kitie-doll-home-long-16 =
+    „Bože, co ty děti toho tak rozházejí a poztrácejí!“ spráskla pacičkama
+    a řekla: „To já se také ještě půjdu podívat. To víš, pejsku, já umím
+    proslídit a prosmejčit všecko, kam ani ty nevlezeš. A jistě toho také
+    dost najdu.“ Kočička šla, hledala, všechny koutečky prolezla a prosmejčila.
+    A jéjej, děti, co ona toho ještě našla! Co vy těch hraček pohodíte,
+    zapomenete a poztrácíte!
+
+doggie_and_kitie-doll-kitie_search-long-start =
     Někde v plotě našla kbelíček a jinde pomačkanou kropicí konévku,
     v kopřivách našla pohozené kostečky ze stavebnice,
     v trávníčku našla střevíčky a punčošky ztracené z všelijakých panenek
@@ -303,10 +437,12 @@ doggie_and_kitie-doll-kitie_search-long =
     k tomu nějaké nádobíčko, no, našla vám toho pohozeného a poztráceného,
     že to ani pobrat nemohla!
 
-doggie_and_kitie-doll-home-long-17 =
+doggie_and_kitie-doll-kitie_search-long-end =
     Donesla to všechno domů a bylo toho tolik, že si z toho mohla
-    s pejskem udělat krám na prodávání hraček. A to všechno postavili
-    kolem postýlky té pohozené panence.
+    s pejskem udělat krám na prodávání hraček.
+
+doggie_and_kitie-doll-home-long-17 =
+    A to všechno postavili kolem postýlky té pohozené panence.
 
 doggie_and_kitie-doll-home-long-18 =
     Panenka se probudila a měla velikou radost, když kolem sebe viděla tolik
