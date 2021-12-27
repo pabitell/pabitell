@@ -1,4 +1,7 @@
-use crate::{data, AsAny, Event, Tagged, World};
+use crate::{
+    data::{self, EventData},
+    AsAny, Event, Tagged, World,
+};
 use std::{any::Any, fmt};
 
 #[derive(Default)]
@@ -14,7 +17,7 @@ pub struct Pick {
 
 impl fmt::Debug for Pick {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct(&format!("Pick({})", self.name()))
+        f.debug_struct(&format!("({})", self.name()))
             .field("character", &self.data.character)
             .field("item", &self.data.item)
             .finish()
@@ -56,11 +59,11 @@ impl Event for Pick {
     }
 
     fn initiator(&self) -> String {
-        self.data.character.clone()
+        self.data.initiator()
     }
 
     fn set_initiator(&mut self, initiator: String) {
-        self.data.character = initiator;
+        self.data.set_initiator(initiator)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -184,11 +187,11 @@ impl Event for Give {
     }
 
     fn initiator(&self) -> String {
-        self.data.to_character.clone()
+        self.data.initiator()
     }
 
     fn set_initiator(&mut self, initiator: String) {
-        self.data.to_character = initiator;
+        self.data.set_initiator(initiator);
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -316,11 +319,11 @@ impl Event for UseItem {
     }
 
     fn initiator(&self) -> String {
-        self.data.character.clone()
+        self.data.initiator()
     }
 
     fn set_initiator(&mut self, initiator: String) {
-        self.data.character = initiator;
+        self.data.set_initiator(initiator)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -443,11 +446,11 @@ impl Event for Move {
     }
 
     fn initiator(&self) -> String {
-        self.data.character.clone()
+        self.data.initiator()
     }
 
     fn set_initiator(&mut self, initiator: String) {
-        self.data.character = initiator;
+        self.data.set_initiator(initiator)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -570,11 +573,11 @@ impl Event for Void {
     }
 
     fn initiator(&self) -> String {
-        self.data.character.clone()
+        self.data.initiator()
     }
 
     fn set_initiator(&mut self, initiator: String) {
-        self.data.character = initiator;
+        self.data.set_initiator(initiator)
     }
 
     fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
@@ -639,6 +642,138 @@ impl Void {
 
     pub fn item(&self) -> &Option<String> {
         &self.data.item
+    }
+}
+
+#[derive(Default)]
+pub struct Talk {
+    data: data::TalkData,
+    tags: Vec<String>,
+    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
+    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
+    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+}
+
+impl fmt::Debug for Talk {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct(&format!("Talk({})", self.name()))
+            .field("character", &self.data.character)
+            .field("item", &self.data.scene)
+            .field("dialog", &self.data.dialog)
+            .finish()
+    }
+}
+
+impl Tagged for Talk {
+    fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
+
+    fn get_tags(&self) -> Vec<String> {
+        self.tags.clone()
+    }
+}
+
+impl AsAny for Talk {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+impl PartialEq<[u8]> for Talk {
+    fn eq(&self, other: &[u8]) -> bool {
+        if let Ok(other_data) = serde_json::from_slice::<data::TalkData>(&other) {
+            self.data == other_data
+        } else {
+            false
+        }
+    }
+}
+
+impl Event for Talk {
+    fn name(&self) -> &str {
+        &self.data.name
+    }
+
+    fn initiator(&self) -> String {
+        self.data.initiator()
+    }
+
+    fn set_initiator(&mut self, initiator: String) {
+        self.data.set_initiator(initiator)
+    }
+
+    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+        self.world_update = update;
+    }
+
+    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+        self.condition = condition;
+    }
+
+    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_action_text = text;
+    }
+
+    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_success_text = text;
+    }
+    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+        self.make_fail_text = text;
+    }
+
+    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+        &self.world_update
+    }
+
+    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+        &self.condition
+    }
+
+    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_action_text
+    }
+
+    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_success_text
+    }
+
+    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+        &self.make_fail_text
+    }
+
+    fn dump(&self) -> serde_json::Value {
+        serde_json::to_value(self.data.clone()).unwrap()
+    }
+
+    fn matches(&self, value: &serde_json::Value) -> bool {
+        &self.dump() == value
+    }
+}
+
+impl Talk {
+    pub fn new(data: data::TalkData) -> Self {
+        Self {
+            data,
+            ..Default::default()
+        }
+    }
+
+    pub fn character(&self) -> &str {
+        &self.data.character
+    }
+
+    pub fn scene(&self) -> &str {
+        &self.data.scene
+    }
+
+    pub fn dialog(&self) -> usize {
+        self.data.dialog
     }
 }
 

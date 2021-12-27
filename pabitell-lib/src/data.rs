@@ -1,7 +1,10 @@
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-pub trait EventData<'a>: Serialize + Deserialize<'a> {}
+pub trait EventData: Serialize + DeserializeOwned + PartialEq {
+    fn initiator(&self) -> String;
+
+    fn set_initiator(&mut self, initiator: String);
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct PickData {
@@ -24,7 +27,14 @@ impl PickData {
         }
     }
 }
-impl<'a> EventData<'a> for PickData {}
+impl EventData for PickData {
+    fn initiator(&self) -> String {
+        self.character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.character = initiator;
+    }
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct GiveData {
@@ -50,7 +60,14 @@ impl GiveData {
         }
     }
 }
-impl<'a> EventData<'a> for GiveData {}
+impl EventData for GiveData {
+    fn initiator(&self) -> String {
+        self.to_character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.to_character = initiator;
+    }
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct UseItemData {
@@ -73,7 +90,14 @@ impl UseItemData {
         }
     }
 }
-impl<'a> EventData<'a> for UseItemData {}
+impl EventData for UseItemData {
+    fn initiator(&self) -> String {
+        self.character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.character = initiator;
+    }
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct MoveData {
@@ -96,7 +120,14 @@ impl MoveData {
         }
     }
 }
-impl<'a> EventData<'a> for MoveData {}
+impl EventData for MoveData {
+    fn initiator(&self) -> String {
+        self.character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.character = initiator;
+    }
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct VoidData {
@@ -119,4 +150,43 @@ impl VoidData {
         }
     }
 }
-impl<'a> EventData<'a> for VoidData {}
+impl EventData for VoidData {
+    fn initiator(&self) -> String {
+        self.character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.character = initiator;
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct TalkData {
+    pub name: String,
+    pub character: String,
+    pub scene: String,
+    pub dialog: usize,
+}
+
+impl TalkData {
+    pub fn new<SN, SC, SS>(name: SN, character: SC, scene: SS, dialog: usize) -> Self
+    where
+        SN: ToString,
+        SS: ToString,
+        SC: ToString,
+    {
+        Self {
+            name: name.to_string(),
+            character: character.to_string(),
+            scene: scene.to_string(),
+            dialog,
+        }
+    }
+}
+impl EventData for TalkData {
+    fn initiator(&self) -> String {
+        self.character.clone()
+    }
+    fn set_initiator(&mut self, initiator: String) {
+        self.character = initiator;
+    }
+}

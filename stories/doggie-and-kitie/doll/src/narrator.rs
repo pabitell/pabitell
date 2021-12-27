@@ -32,36 +32,36 @@ impl Narrator for Doll {
             (Some(d), Some(k)) if d == "home" && k == "home" => {
                 let scene = world.scenes().get("home").unwrap();
                 match scene.dialog().unwrap() {
-                    0 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    0 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         0,
-                    )) as Box<dyn Event>),
-                    1 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    1 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         1,
-                    ))),
-                    2 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    )))),
+                    2 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         2,
-                    )) as Box<dyn Event>),
-                    3 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    3 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         3,
-                    )) as Box<dyn Event>),
-                    4 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    4 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         4,
-                    )) as Box<dyn Event>),
+                    ))) as Box<dyn Event>),
                     5 => {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
@@ -73,60 +73,60 @@ impl Narrator for Doll {
                             )) as Box<dyn Event>);
                         });
                     }
-                    6 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    6 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         6,
-                    )) as Box<dyn Event>),
-                    7 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    7 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         7,
-                    )) as Box<dyn Event>),
-                    8 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    8 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         8,
-                    )) as Box<dyn Event>),
-                    9 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    9 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         9,
-                    )) as Box<dyn Event>),
-                    10 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    10 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         10,
-                    )) as Box<dyn Event>),
-                    11 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    11 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         11,
-                    )) as Box<dyn Event>),
-                    12 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    12 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         12,
-                    )) as Box<dyn Event>),
-                    13 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "doggie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    13 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "doggie",
                         "home",
-                        &["doggie", "kitie"],
                         13,
-                    )) as Box<dyn Event>),
-                    14 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_in_home", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    14 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_in_home",
+                        "kitie",
                         "home",
-                        &["doggie", "kitie"],
                         14,
-                    )) as Box<dyn Event>),
+                    ))) as Box<dyn Event>),
                     15 => {
                         res.push(Box::new(events::make_move(
                             data::MoveData::new("move_to_doggie_search", "doggie", "doggie_search"),
@@ -211,30 +211,30 @@ impl Narrator for Doll {
             (Some(d), Some(k)) if d == "walk" && k == "walk" => {
                 let scene = world.scenes().get("walk").unwrap();
                 match scene.dialog().unwrap() {
-                    0 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                    0 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "doggie",
                         "walk",
-                        &["doggie", "kitie"],
                         0,
-                    )) as Box<dyn Event>),
-                    1 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                    ))) as Box<dyn Event>),
+                    1 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "kitie",
                         "walk",
-                        &["doggie", "kitie"],
                         1,
-                    ))),
-                    2 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                    )))),
+                    2 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "doggie",
                         "walk",
-                        &["doggie", "kitie"],
                         2,
-                    ))),
-                    3 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                    )))),
+                    3 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "kitie",
                         "walk",
-                        &["doggie", "kitie"],
                         3,
-                    ))),
+                    )))),
                     4 => {
                         res.push(Box::new(events::make_find_doll(data::UseItemData::new(
                             "found_doll",
@@ -247,18 +247,18 @@ impl Narrator for Doll {
                             "doll",
                         ))));
                     }
-                    5 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "doggie", None as Option<String>),
+                    5 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "doggie",
                         "walk",
-                        &["doggie", "kitie"],
                         5,
-                    ))),
-                    6 => res.push(Box::new(events::make_talk(
-                        data::VoidData::new("talk_on_walk", "kitie", None as Option<String>),
+                    )))),
+                    6 => res.push(Box::new(events::make_talk(data::TalkData::new(
+                        "talk_on_walk",
+                        "doggie",
                         "walk",
-                        &["doggie", "kitie"],
                         6,
-                    ))),
+                    )))),
                     7 => {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
@@ -301,7 +301,7 @@ impl Narrator for Doll {
                 }
             }
             (Some(_), Some(k)) if k == "kitie_search" => {
-                let mut items = world
+                let items = world
                     .items()
                     .values()
                     .filter(|v| {
