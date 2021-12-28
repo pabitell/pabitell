@@ -255,7 +255,7 @@ impl Narrator for Doll {
                     )))),
                     6 => res.push(Box::new(events::make_talk(data::TalkData::new(
                         "talk_on_walk",
-                        "doggie",
+                        "kitie",
                         "walk",
                         6,
                     )))),
