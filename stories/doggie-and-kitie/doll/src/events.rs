@@ -86,22 +86,17 @@ pub fn make_talk(data: data::TalkData) -> events::Talk {
 
 pub fn make_move(
     data: data::MoveData,
-    character: &str,
     from_scene: &str,
     from_dialog: Option<usize>,
     increase_dialog: bool,
 ) -> events::Move {
     let mut event = events::Move::new(data);
-    let character = character.to_owned();
     let from_scene = from_scene.to_owned();
 
     event.set_tags(vec!["move".to_string()]);
 
     event.set_condition(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
-        if event.character() != character {
-            return false;
-        }
         if !conditions::in_scenes(world, event.character().to_string(), &[from_scene.clone()])
             .unwrap()
         {

@@ -9,6 +9,80 @@ use crate::{characters, events, world::DollWorld};
 #[derive(Default, Debug)]
 pub struct Doll;
 
+impl Doll {
+    fn parse_talk(value: &Value, name: &str, scene: &str) -> Option<Box<dyn Event>> {
+        let character = if let Value::String(character) = &value["character"] {
+            Some(character)
+        } else {
+            None
+        }?;
+        let parsed_scene = if let Value::String(parsed_scene) = &value["scene"] {
+            Some(parsed_scene)
+        } else {
+            None
+        }?;
+        if parsed_scene != scene {
+            return None;
+        }
+        let dialog = if let Value::Number(dialog) = &value["dialog"] {
+            if let Some(dialog) = dialog.as_u64() {
+                Some(dialog)
+            } else {
+                None
+            }
+        } else {
+            None
+        }?;
+        let data = data::TalkData::new(name, character, scene, dialog as usize);
+        Some(Box::new(events::make_talk(data)))
+    }
+
+    fn parse_move_to(
+        value: &Value,
+        name: &str,
+        from_scene: &str,
+        to_scene: &str,
+        from_dialog: Option<usize>,
+        incr_dialog: bool,
+    ) -> Option<Box<dyn Event>> {
+        let character = if let Value::String(character) = &value["character"] {
+            Some(character)
+        } else {
+            None
+        }?;
+        let scene = if let Value::String(scene) = &value["scene"] {
+            Some(scene)
+        } else {
+            None
+        }?;
+        if scene != to_scene {
+            return None;
+        }
+        let data = data::MoveData::new(name, character, scene);
+        Some(Box::new(events::make_move(
+            data,
+            from_scene,
+            from_dialog,
+            incr_dialog,
+        )))
+    }
+
+    fn parse_pick(value: &Value, name: &str) -> Option<Box<dyn Event>> {
+        let character = if let Value::String(character) = &value["character"] {
+            Some(character)
+        } else {
+            None
+        }?;
+        let item = if let Value::String(item) = &value["item"] {
+            Some(item)
+        } else {
+            None
+        }?;
+        let data = data::PickData::new(name, character, item);
+        Some(Box::new(events::make_pick(data)) as Box<dyn Event>)
+    }
+}
+
 impl Narrator for Doll {
     fn available_events(&self, world: &dyn World) -> Vec<Box<dyn Event>> {
         let mut res = vec![];
@@ -66,7 +140,6 @@ impl Narrator for Doll {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
                                 data::MoveData::new("move_to_walk", c, "walk"),
-                                c,
                                 "home",
                                 Some(5),
                                 false,
@@ -130,7 +203,6 @@ impl Narrator for Doll {
                     15 => {
                         res.push(Box::new(events::make_move(
                             data::MoveData::new("move_to_doggie_search", "doggie", "doggie_search"),
-                            "doggie",
                             "home",
                             Some(15),
                             false,
@@ -139,7 +211,6 @@ impl Narrator for Doll {
                     16 => {
                         res.push(Box::new(events::make_move(
                             data::MoveData::new("move_to_kitie_search", "kitie", "kitie_search"),
-                            "kitie",
                             "home",
                             Some(16),
                             false,
@@ -172,16 +243,14 @@ impl Narrator for Doll {
                 if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
                     // way back
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home", "doggie", "home"),
-                        "doggie",
+                        data::MoveData::new("move_back_home_from_walk", "doggie", "home"),
                         "walk",
                         Some(7),
                         true,
                     )) as Box<dyn Event>);
                 } else {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_to_walk", "kitie", "walk"),
-                        "kitie",
+                        data::MoveData::new("move_back_home_from_walk", "kitie", "walk"),
                         "home",
                         Some(5),
                         false,
@@ -192,8 +261,7 @@ impl Narrator for Doll {
                 if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
                     // way back
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home", "kitie", "home"),
-                        "kitie",
+                        data::MoveData::new("move_back_home_from_walk", "kitie", "home"),
                         "walk",
                         Some(7),
                         true,
@@ -201,7 +269,6 @@ impl Narrator for Doll {
                 } else {
                     res.push(Box::new(events::make_move(
                         data::MoveData::new("move_to_walk", "doggie", "walk"),
-                        "doggie",
                         "home",
                         Some(5),
                         false,
@@ -262,8 +329,7 @@ impl Narrator for Doll {
                     7 => {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
-                                data::MoveData::new("move_back_home", c, "home"),
-                                c,
+                                data::MoveData::new("move_back_home_from_walk", c, "home"),
                                 "walk",
                                 Some(7),
                                 true,
@@ -284,8 +350,7 @@ impl Narrator for Doll {
                     .collect::<Vec<_>>();
                 if items.is_empty() {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home", "doggie", "home"),
-                        "doggie",
+                        data::MoveData::new("move_back_home_from_doggie_search", "doggie", "home"),
                         "doggie_search",
                         None,
                         true,
@@ -311,8 +376,7 @@ impl Narrator for Doll {
                     .collect::<Vec<_>>();
                 if items.is_empty() {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home", "kitie", "home"),
-                        "kitie",
+                        data::MoveData::new("move_back_home_from_kitie_search", "kitie", "home"),
                         "kitie_search",
                         None,
                         true,
@@ -335,22 +399,67 @@ impl Narrator for Doll {
 
     fn parse_event(&self, value: &Value) -> Option<Box<dyn Event>> {
         // TODO validate characters, items, scenes
+        dbg!(&value);
         match &value["name"] {
-            Value::String(name) if name == "talk_in_home" => {
-                /*
-                if let Value::String(character) = &value["character"] {
-                    let data = data::MoveData::new(name, character, "kitchen");
-                    Some(Box::new(events::make_move_to_kitchen(data)))
+            Value::String(name) if name == "talk_in_home" => Self::parse_talk(value, name, "home"),
+            Value::String(name) if name == "move_to_walk" => {
+                Self::parse_move_to(value, name, "home", "walk", Some(5), true)
+            }
+            Value::String(name) if name == "talk_on_walk" => Self::parse_talk(value, name, "walk"),
+            Value::String(name) if name == "found_doll" => {
+                let character = if let Value::String(character) = &value["character"] {
+                    Some(character)
                 } else {
                     None
-                }
-                */
-                None
+                }?;
+                let data = data::UseItemData::new(name, character, "doll");
+                Some(Box::new(events::make_find_doll(data)))
             }
-            Value::String(name) if name == "move_to_walk" => {
-                /*
-                 */
-                None
+            Value::String(name) if name == "move_back_home_from_walk" => {
+                Self::parse_move_to(value, name, "walk", "home", None, true)
+            }
+            Value::String(name) if name == "move_to_doggie_search" => {
+                let character = if let Value::String(character) = &value["character"] {
+                    Some(character)
+                } else {
+                    None
+                }?;
+                if character != "doggie" {
+                    return None;
+                }
+                Self::parse_move_to(value, name, "home", "doggie_search", Some(15), true)
+            }
+            Value::String(name) if name == "move_to_kitie_search" => {
+                let character = if let Value::String(character) = &value["character"] {
+                    Some(character)
+                } else {
+                    None
+                }?;
+                if character != "kitie" {
+                    return None;
+                }
+                Self::parse_move_to(value, name, "home", "kitie_search", Some(16), true)
+            }
+            Value::String(name) if name == "pick" => Self::parse_pick(value, name),
+            Value::String(name) if name == "move_back_home_from_doggie_search" => {
+                Self::parse_move_to(value, name, "doggie_search", "home", None, true)
+            }
+            Value::String(name) if name == "move_back_home_from_kitie_search" => {
+                Self::parse_move_to(value, name, "kitie_search", "home", None, true)
+            }
+            Value::String(name) if name == "lay_down" => {
+                let character = if let Value::String(character) = &value["character"] {
+                    Some(character)
+                } else {
+                    None
+                }?;
+                let item = if let Value::String(item) = &value["item"] {
+                    Some(item)
+                } else {
+                    None
+                }?;
+                let data = data::UseItemData::new("lay_down", character, item);
+                Some(Box::new(events::make_lay_down(data)) as Box<dyn Event>)
             }
             _ => None,
         }

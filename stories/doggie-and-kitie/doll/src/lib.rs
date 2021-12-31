@@ -39,48 +39,26 @@ pub mod tests {
     #[test]
     fn setup() {
         let world = prepare_world();
-        /*
         assert_eq!(
             world.characters().get("kitie").unwrap().scene(),
-            &Some("playground".into())
+            &Some("home".into())
         );
         assert_eq!(
             world.characters().get("doggie").unwrap().scene(),
-            &Some("playground".into())
+            &Some("home".into())
         );
         assert_eq!(
-            world.items().get("sand_cake").unwrap().state(),
-            &ItemState::InScene("playground".into())
+            world.items().get("doll").unwrap().state(),
+            &ItemState::InScene("walk".into())
         );
         assert_eq!(
-            world.items().get("milk").unwrap().state(),
-            &ItemState::InScene("kitchen".into())
+            world.items().get("small_ball").unwrap().state(),
+            &ItemState::InScene("doggie_search".into())
         );
         assert_eq!(
-            world.items().get("jam").unwrap().state(),
-            &ItemState::InScene("kitchen".into())
+            world.items().get("bucket").unwrap().state(),
+            &ItemState::InScene("kitie_search".into())
         );
-        assert_eq!(
-            world.items().get("bread").unwrap().state(),
-            &ItemState::InScene("kitchen".into())
-        );
-        assert_eq!(
-            world.items().get("raisins").unwrap().state(),
-            &ItemState::InScene("kitchen".into())
-        );
-        assert_eq!(
-            world.items().get("ball").unwrap().state(),
-            &ItemState::InScene("children_garden".into())
-        );
-        assert_eq!(
-            world.items().get("bad_dog").unwrap().state(),
-            &ItemState::InScene("garden".into())
-        );
-        assert_eq!(
-            world.items().get("dumplings").unwrap().state(),
-            &ItemState::InScene("children_house".into())
-        );
-        */
     }
 
     fn reload_world(world: DollWorld) -> DollWorld {
@@ -116,141 +94,133 @@ pub mod tests {
 
         let narrator = narrator::Doll::default();
 
-        /*
+        // Talk at home
+        for _ in 0..5 {
+            let events = narrator.available_events(&world);
+            let mut events = reload_events(&world, &narrator, events);
+            assert_eq!(events.len(), 1);
+            assert_eq!(events[0].name(), "talk_in_home");
+            assert!(events[0].can_be_triggered(&world));
+            assert!(events[0].perform(&mut world));
+        }
 
-        // pick sand cake
+        // move characters to walk
+        let events = narrator.available_events(&world);
+        let events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 2);
+        for mut event in events {
+            assert!(event.can_be_triggered(&world));
+            assert!(event.perform(&mut world));
+        }
+
+        // Talk on walk
+        for _ in 0..2 {
+            let events = narrator.available_events(&world);
+            let mut events = reload_events(&world, &narrator, events);
+            assert_eq!(events.len(), 1);
+            assert!(events[0].can_be_triggered(&world));
+            assert!(events[0].perform(&mut world));
+        }
+
+        // Find doll
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
-        assert!(events.iter().all(|e| e.name() == "pick"));
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
         assert!(!events[1].can_be_triggered(&world));
         assert!(!events[1].perform(&mut world));
-        world = reload_world(world);
 
-        // give and consume sand cake
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 1);
-        assert!(events.iter().all(|e| e.name() == "give_sand_cake"));
-        assert!(events[0].can_be_triggered(&world));
-        assert!(events[0].perform(&mut world));
-        world = reload_world(world);
-
-        // move both characters to kitchen
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 2);
-        assert!(events[0].can_be_triggered(&world));
-        assert!(events[0].perform(&mut world));
-        world = reload_world(world);
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 1);
-        assert!(events[0].can_be_triggered(&world));
-        assert!(events[0].perform(&mut world));
-        world = reload_world(world);
-
-        // 6 batches of ingredient pick
-        for _ in 1..=6 {
+        // Talk on walk
+        for _ in 0..2 {
             let events = narrator.available_events(&world);
             let mut events = reload_events(&world, &narrator, events);
-            for event in events.iter_mut() {
-                if event.get_tags().contains(&"pick".to_string()) {
-                    // Put thinkgs to cake
-                    let cevent = event
-                        .as_any_mut()
-                        .downcast_mut::<lib_events::Pick>()
-                        .unwrap();
-                    if cevent.character() == "kitie" {
-                        assert!(cevent.can_be_triggered(&world));
-                        assert!(cevent.perform(&mut world));
-                        world = reload_world(world);
-                    }
-                }
-            }
-
-            let events = narrator.available_events(&world);
-            let mut events = reload_events(&world, &narrator, events);
-            for event in events.iter_mut() {
-                if event.get_tags().contains(&"use_item".to_string()) {
-                    assert!(event.can_be_triggered(&world));
-                    assert!(event.perform(&mut world));
-                    world = reload_world(world);
-                }
-            }
+            assert_eq!(events.len(), 1);
+            assert_eq!(events[0].name(), "talk_on_walk");
+            assert!(events[0].can_be_triggered(&world));
+            assert!(events[0].perform(&mut world));
         }
 
-        // move both characters to children's garden
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 2);
-        for event in events.iter_mut() {
-            if event.get_tags().contains(&"move".to_string()) {
-                assert!(event.can_be_triggered(&world));
-                assert!(event.perform(&mut world));
-                world = reload_world(world);
-            }
-        }
-
-        // play with children
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        for event in events.iter_mut() {
-            let cevent = event
-                .as_any_mut()
-                .downcast_mut::<lib_events::Pick>()
-                .unwrap();
-            if cevent.character() == "doggie" {
-                assert!(cevent.can_be_triggered(&world));
-                assert!(cevent.perform(&mut world));
-                world = reload_world(world);
-            }
-        }
-
-        // move to garden
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 2);
-        for event in events.iter_mut() {
-            assert!(event.can_be_triggered(&world));
-            assert!(event.perform(&mut world));
-            world = reload_world(world);
-        }
-
-        // find big bad dog
-        let events = narrator.available_events(&world);
-        let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 2);
-        let mut event = events.remove(0);
-        assert!(event.can_be_triggered(&world));
-        assert!(event.perform(&mut world));
-        world = reload_world(world);
-
-        // go to children house
+        // Move back home
         let events = narrator.available_events(&world);
         let events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 2);
-        for event in narrator.available_events(&world).iter_mut() {
+        for mut event in events {
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
-            world = reload_world(world);
         }
 
+        // Talk at home
+        for _ in 0..8 {
+            let events = narrator.available_events(&world);
+            let mut events = reload_events(&world, &narrator, events);
+            assert_eq!(events.len(), 1);
+            assert_eq!(events[0].name(), "talk_in_home");
+            assert!(events[0].can_be_triggered(&world));
+            assert!(events[0].perform(&mut world));
+        }
+
+        // Doggie goes searching
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
-        assert_eq!(events.len(), 8);
-        for event in events.iter_mut() {
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].name(), "move_to_doggie_search");
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+
+        // Doggie finds stuff
+        let events = narrator.available_events(&world);
+        let events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 14);
+        for mut event in events {
+            assert_eq!(event.name(), "pick");
             assert!(event.can_be_triggered(&world));
             assert!(event.perform(&mut world));
-            world = reload_world(world);
         }
 
-        // Make sure that doggie and kitie reached final destination
-        assert!(world.characters().get("doggie").unwrap().scene() == &Some("way_home".into()));
-        assert!(world.characters().get("kitie").unwrap().scene() == &Some("way_home".into()));
-        */
+        // Doggie returns searching
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].name(), "move_back_home_from_doggie_search");
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+
+        // Kitie goes searching
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].name(), "move_to_kitie_search");
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+
+        // Kitie finds stuff
+        let events = narrator.available_events(&world);
+        let events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 16);
+        for mut event in events {
+            assert_eq!(event.name(), "pick");
+            assert!(event.can_be_triggered(&world));
+            assert!(event.perform(&mut world));
+        }
+
+        // Kitie returns searching
+        let events = narrator.available_events(&world);
+        let mut events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].name(), "move_back_home_from_kitie_search");
+        assert!(events[0].can_be_triggered(&world));
+        assert!(events[0].perform(&mut world));
+
+        // Give all stuff to doll
+        let events = narrator.available_events(&world);
+        let events = reload_events(&world, &narrator, events);
+        assert_eq!(events.len(), 30);
+        for mut event in events {
+            assert_eq!(event.name(), "lay_down");
+            assert!(event.can_be_triggered(&world));
+            assert!(event.perform(&mut world));
+        }
 
         assert!(world.finished());
     }
