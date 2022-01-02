@@ -87,6 +87,7 @@ pub struct Props {
     pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
     pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>>,
     pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
+    pub story_name: String,
 }
 
 impl PartialEq for Props {
@@ -103,6 +104,7 @@ impl Default for Props {
             make_world: None,
             make_owned_items: None,
             make_print_items: None,
+            story_name: String::default(),
         }
     }
 }
@@ -199,7 +201,7 @@ impl Component for App {
             Msg::TriggerScannedEvent(json_value) => {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Some(world) = self.world.as_mut() {
-                    if let Some(mut event) = narrator.parse_event(&json_value) {
+                    if let Some(mut event) = narrator.parse_event(world.as_ref(), &json_value) {
                         // Update initiator
                         if let Some(character) = self.selected_character.clone().as_ref() {
                             event.set_initiator(character.to_string());
@@ -326,8 +328,13 @@ impl Component for App {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Ok(json) = serde_json::from_str(&data) {
                     let json: Value = json;
+                    let world = if let Some(world) = self.world.as_ref() {
+                        world
+                    } else {
+                        return false;
+                    };
                     // Now we should determine which type of notification this really is
-                    if let Some(event) = narrator.parse_event(&json["event"]) {
+                    if let Some(event) = narrator.parse_event(world.as_ref(), &json["event"]) {
                         if let Value::Number(number) = &json["event_count"] {
                             if let Some(count) = number.as_u64() {
                                 self.event_count = count as usize;
@@ -528,7 +535,7 @@ impl Component for App {
                                       <Status
                                         world_id={self.world_id.clone()}
                                         namespace={"some_namespace"}
-                                        story={"doggie_and_kitie_cake"}
+                                        story={ctx.props().story_name.clone()}
                                         msg_recieved={notification_cb}
                                         status_ready={status_ready_cb}
                                         refresh_world={refresh_world_cb}
@@ -597,6 +604,10 @@ impl Component for App {
 }
 
 impl App {
+    fn base_url(ctx: &Context<Self>) -> String {
+        format!("/api/some_namespace/{}/", ctx.props().story_name)
+    }
+
     fn screen_text(
         world: &Option<Box<dyn World>>,
         selected_character: &Option<String>,
@@ -679,8 +690,8 @@ impl App {
     fn request_to_create_new_world(&mut self, ctx: &Context<Self>) {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
+        let url = Self::base_url(ctx);
         ctx.link().send_future(async move {
-            let url = "/api/some_namespace/doggie_and_kitie_cake/";
             let res = make_request(&url, "POST", None).await;
             *loading.borrow_mut() = false;
             match res {
@@ -716,8 +727,9 @@ impl App {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
         let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+        let url = Self::base_url(ctx);
         ctx.link().send_future(async move {
-            let url = format!("/api/some_namespace/doggie_and_kitie_cake/{}/", world_id);
+            let url = format!("{}{}/", url, world_id);
             let res = make_request(&url, "GET", None).await;
             *loading.borrow_mut() = false;
             match res {
@@ -755,11 +767,9 @@ impl App {
     fn request_to_trigger_event(&mut self, ctx: &Context<Self>, world_id: Uuid, event_json: Value) {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
+        let url = Self::base_url(ctx);
         ctx.link().send_future(async move {
-            let url = format!(
-                "/api/some_namespace/doggie_and_kitie_cake/{}/event/",
-                world_id
-            );
+            let url = format!("{}{}/event/", url, world_id);
             let res = make_request(&url, "POST", Some(event_json)).await;
             *loading.borrow_mut() = false;
             match res {

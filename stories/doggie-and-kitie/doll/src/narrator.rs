@@ -243,14 +243,14 @@ impl Narrator for Doll {
                 if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
                     // way back
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home_from_walk", "doggie", "home"),
+                        data::MoveData::new("move_to_home", "doggie", "home"),
                         "walk",
                         Some(7),
                         true,
                     )) as Box<dyn Event>);
                 } else {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home_from_walk", "kitie", "walk"),
+                        data::MoveData::new("move_to_walk", "kitie", "walk"),
                         "home",
                         Some(5),
                         false,
@@ -261,7 +261,7 @@ impl Narrator for Doll {
                 if world.items().get("doll").unwrap().state() == &ItemState::Unassigned {
                     // way back
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home_from_walk", "kitie", "home"),
+                        data::MoveData::new("move_to_home", "kitie", "home"),
                         "walk",
                         Some(7),
                         true,
@@ -329,7 +329,7 @@ impl Narrator for Doll {
                     7 => {
                         ["doggie", "kitie"].iter().for_each(|c| {
                             res.push(Box::new(events::make_move(
-                                data::MoveData::new("move_back_home_from_walk", c, "home"),
+                                data::MoveData::new("move_to_home", c, "home"),
                                 "walk",
                                 Some(7),
                                 true,
@@ -350,7 +350,7 @@ impl Narrator for Doll {
                     .collect::<Vec<_>>();
                 if items.is_empty() {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home_from_doggie_search", "doggie", "home"),
+                        data::MoveData::new("move_to_home", "doggie", "home"),
                         "doggie_search",
                         None,
                         true,
@@ -376,7 +376,7 @@ impl Narrator for Doll {
                     .collect::<Vec<_>>();
                 if items.is_empty() {
                     res.push(Box::new(events::make_move(
-                        data::MoveData::new("move_back_home_from_kitie_search", "kitie", "home"),
+                        data::MoveData::new("move_to_home", "kitie", "home"),
                         "kitie_search",
                         None,
                         true,
@@ -397,9 +397,8 @@ impl Narrator for Doll {
         res
     }
 
-    fn parse_event(&self, value: &Value) -> Option<Box<dyn Event>> {
+    fn parse_event(&self, world: &dyn World, value: &Value) -> Option<Box<dyn Event>> {
         // TODO validate characters, items, scenes
-        dbg!(&value);
         match &value["name"] {
             Value::String(name) if name == "talk_in_home" => Self::parse_talk(value, name, "home"),
             Value::String(name) if name == "move_to_walk" => {
@@ -415,8 +414,24 @@ impl Narrator for Doll {
                 let data = data::UseItemData::new(name, character, "doll");
                 Some(Box::new(events::make_find_doll(data)))
             }
-            Value::String(name) if name == "move_back_home_from_walk" => {
-                Self::parse_move_to(value, name, "walk", "home", None, true)
+            Value::String(name) if name == "move_to_home" => {
+                let doggie_picked = world
+                    .items()
+                    .values()
+                    .filter(|e| e.get_tags().contains(&"doggie_pick".to_owned()))
+                    .all(|e| e.state() != &ItemState::InScene("doggie_search".to_owned()));
+                let kitie_picked = world
+                    .items()
+                    .values()
+                    .filter(|e| e.get_tags().contains(&"kitie_pick".to_owned()))
+                    .all(|e| e.state() != &ItemState::InScene("kitie_search".to_owned()));
+                if kitie_picked {
+                    Self::parse_move_to(value, name, "kitie_search", "home", None, true)
+                } else if doggie_picked {
+                    Self::parse_move_to(value, name, "doggie_search", "home", None, true)
+                } else {
+                    Self::parse_move_to(value, name, "walk", "home", Some(7), true)
+                }
             }
             Value::String(name) if name == "move_to_doggie_search" => {
                 let character = if let Value::String(character) = &value["character"] {
@@ -441,12 +456,6 @@ impl Narrator for Doll {
                 Self::parse_move_to(value, name, "home", "kitie_search", Some(16), true)
             }
             Value::String(name) if name == "pick" => Self::parse_pick(value, name),
-            Value::String(name) if name == "move_back_home_from_doggie_search" => {
-                Self::parse_move_to(value, name, "doggie_search", "home", None, true)
-            }
-            Value::String(name) if name == "move_back_home_from_kitie_search" => {
-                Self::parse_move_to(value, name, "kitie_search", "home", None, true)
-            }
             Value::String(name) if name == "lay_down" => {
                 let character = if let Value::String(character) = &value["character"] {
                     Some(character)

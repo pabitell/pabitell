@@ -233,7 +233,7 @@ pub trait World: Id + Named + Dumpable {
 
 pub trait Narrator {
     fn available_events(&self, world: &dyn World) -> Vec<Box<dyn Event>>;
-    fn parse_event(&self, value: &serde_json::Value) -> Option<Box<dyn Event>>;
+    fn parse_event(&self, world: &dyn World, value: &serde_json::Value) -> Option<Box<dyn Event>>;
 }
 
 #[cfg(test)]

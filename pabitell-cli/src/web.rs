@@ -19,6 +19,8 @@ use uuid::Uuid;
 
 #[cfg(feature = "with_doggie_and_kitie_cake")]
 use crate::make_story_doggie_and_kitie_cake;
+#[cfg(feature = "with_doggie_and_kitie_doll")]
+use crate::make_story_doggie_and_kitie_doll;
 use crate::{
     backend,
     websocket::{ClientMessage as WsClientMessage, WsConnection, WsManager},
@@ -36,6 +38,8 @@ fn make_world(_namespace: &str, story: &str) -> Option<(Box<dyn World>, Box<dyn 
     match story {
         #[cfg(feature = "with_doggie_and_kitie_cake")]
         "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake(true).unwrap(),
+        #[cfg(feature = "with_doggie_and_kitie_doll")]
+        "doggie_and_kitie_doll" => make_story_doggie_and_kitie_doll(true).unwrap(),
         _ => None,
     }
 }
@@ -123,7 +127,7 @@ async fn event_world(
 
     // Test whether it can be parsed as event
     let mut event = narrator
-        .parse_event(value)
+        .parse_event(world.as_ref(), value)
         .ok_or(error::ErrorBadRequest("Wrong event data"))?;
 
     // Test whether event can be triggered

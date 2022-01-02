@@ -7,70 +7,40 @@ use crate::translations::get_message;
 pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     let mut res = vec![];
 
-    // sand cake
-    let item = world.items().get("sand_cake").unwrap();
-    let data = serde_json::to_value(data::PickData::new("pick", "", "sand_cake")).unwrap();
-    res.push(
-        PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(item.short(world.as_ref())))
-            .img_url(Some(format!("images/{}.svg", item.name()))),
-    );
-
-    // move to kitchen
-    let scene = world.scenes().get("kitchen").unwrap();
-    let data = serde_json::to_value(data::MoveData::new("move_to_kitchen", "", "kitchen")).unwrap();
+    // move to walk
+    let scene = world.scenes().get("walk").unwrap();
+    let data = serde_json::to_value(data::MoveData::new("move_to_walk", "", "walk")).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world.as_ref())))
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
-    // pick ingredients
-    world
-        .items()
-        .values()
-        .filter(|e| e.get_tags().contains(&"ingredient".to_string()))
-        .for_each(|e| {
-            let event_name = if e.get_tags().contains(&"accepted".to_string()) {
-                "pick_ingredient"
-            } else {
-                // rejected ingredient
-                "pick_disliked_ingredient"
-            }
-            .to_string();
+    // find doll
+    let item = world.items().get("doll").unwrap();
+    let data = serde_json::to_value(data::PickData::new("pick", "", "doll")).unwrap();
 
-            let data = serde_json::to_value(data::PickData::new(event_name, "", e.name())).unwrap();
-            res.push(
-                PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-                    .title(Some(e.short(world.as_ref())))
-                    .img_url(Some(format!("images/{}.svg", e.name()))),
-            );
-        });
-
-    // put into pot
-    let mut data = serde_json::to_value(data::UseItemData::new("add_ingredient", "", "")).unwrap();
-    let data = {
-        if let Value::Object(ref mut map) = data {
-            map.remove("item");
-        }
-        data
-    };
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(get_message(
-                "doggie_and_kitie-cake-large_pot",
-                &world.lang(),
-                None,
-            )))
-            .img_url(Some("images/big-pot.svg".to_owned())),
+            .title(Some(item.short(world.as_ref())))
+            .img_url(Some(format!("images/{}.svg", item.name()))),
     );
 
-    // move to children garden
-    let scene = world.scenes().get("children_garden").unwrap();
+    // return home
+    let scene = world.scenes().get("home").unwrap();
+    let data = serde_json::to_value(data::MoveData::new("move_to_home", "", "home")).unwrap();
+    res.push(
+        PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
+            .title(Some(scene.short(world.as_ref())))
+            .img_url(Some(format!("images/{}.svg", scene.name()))),
+    );
+
+    // move to doggie search
+    let scene = world.scenes().get("doggie_search").unwrap();
     let data = serde_json::to_value(data::MoveData::new(
-        "move_to_children_garden",
+        "move_to_doggie_search",
         "",
-        "children_garden",
+        "doggie_search",
     ))
     .unwrap();
     res.push(
@@ -79,44 +49,12 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
-    // play with toys
-    world
-        .items()
-        .values()
-        .filter(|e| e.get_tags().contains(&"toy".to_string()))
-        .for_each(|e| {
-            let data = serde_json::to_value(data::PickData::new("play", "", e.name())).unwrap();
-            res.push(
-                PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-                    .title(Some(e.short(world.as_ref())))
-                    .img_url(Some(format!("images/{}.svg", e.name()))),
-            );
-        });
-
-    // move to garden
-    let scene = world.scenes().get("garden").unwrap();
-    let data = serde_json::to_value(data::MoveData::new("move_to_garden", "", "garden")).unwrap();
-    res.push(
-        PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(scene.short(world.as_ref())))
-            .img_url(Some(format!("images/{}.svg", scene.name()))),
-    );
-
-    // find bad dog
-    let item = world.items().get("bad_dog").unwrap();
-    let data = serde_json::to_value(data::PickData::new("find", "", "bad_dog")).unwrap();
-    res.push(
-        PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(item.short(world.as_ref())))
-            .img_url(Some(format!("images/{}.svg", item.name()))),
-    );
-
-    // move to children house
-    let scene = world.scenes().get("children_house").unwrap();
+    // move to doggie search
+    let scene = world.scenes().get("kitie_search").unwrap();
     let data = serde_json::to_value(data::MoveData::new(
-        "move_to_children_house",
+        "move_to_kitie_search",
         "",
-        "children_house",
+        "kitie_search",
     ))
     .unwrap();
     res.push(
@@ -125,14 +63,27 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
             .img_url(Some(format!("images/{}.svg", scene.name()))),
     );
 
-    // eat meals
+    // doggie picks
     world
         .items()
         .values()
-        .filter(|e| e.get_tags().contains(&"meal".to_string()))
+        .filter(|e| e.get_tags().contains(&"doggie_pick".to_string()))
         .for_each(|e| {
-            let data =
-                serde_json::to_value(data::VoidData::new("eat", "", Some(e.name()))).unwrap();
+            let data = serde_json::to_value(data::PickData::new("pick", "", e.name())).unwrap();
+            res.push(
+                PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
+                    .title(Some(e.short(world.as_ref())))
+                    .img_url(Some(format!("images/{}.svg", e.name()))),
+            );
+        });
+
+    // kitie picks
+    world
+        .items()
+        .values()
+        .filter(|e| e.get_tags().contains(&"kitie_pick".to_string()))
+        .for_each(|e| {
+            let data = serde_json::to_value(data::PickData::new("pick", "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world.as_ref())))

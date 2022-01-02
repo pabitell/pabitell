@@ -26,6 +26,7 @@ impl Component for Root {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let story_name = "doggie_and_kitie_cake";
         let make_characters: Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<_>>>>> =
             Some(Box::new(make_characters));
         let make_narrator: Option<Box<dyn Fn() -> Box<dyn Narrator>>> =
@@ -43,6 +44,7 @@ impl Component for Root {
               {make_print_items}
               {make_owned_items}
               {make_world}
+              {story_name}
             >
             </App>
         }
