@@ -78,7 +78,7 @@ pub mod tests {
             .iter()
             .map(|e| {
                 narrator
-                    .parse_event(&e.dump())
+                    .parse_event(world, &e.dump())
                     .ok_or_else(|| anyhow::anyhow!("parse_failed"))
             })
             .collect::<Result<Vec<Box<dyn Event>>, _>>()
@@ -182,7 +182,7 @@ pub mod tests {
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].name(), "move_back_home_from_doggie_search");
+        assert_eq!(events[0].name(), "move_to_home");
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
 
@@ -208,7 +208,7 @@ pub mod tests {
         let events = narrator.available_events(&world);
         let mut events = reload_events(&world, &narrator, events);
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].name(), "move_back_home_from_kitie_search");
+        assert_eq!(events[0].name(), "move_to_home");
         assert!(events[0].can_be_triggered(&world));
         assert!(events[0].perform(&mut world));
 

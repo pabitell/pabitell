@@ -201,10 +201,15 @@ impl Component for Actions {
         } else {
             vec![]
         };
-        let events: Vec<_> = if props.selected_character.is_none() {
-            props.events.clone().into_iter().collect()
+        let events: Vec<_> = if let Some(character) = props.selected_character.as_ref() {
+            props
+                .events
+                .clone()
+                .into_iter()
+                .filter(|e| e.self_triggering && e.character.name.as_ref() == character)
+                .collect()
         } else {
-            vec![]
+            props.events.clone().into_iter().collect()
         };
 
         let link = ctx.link().clone();

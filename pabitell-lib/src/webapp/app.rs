@@ -466,19 +466,25 @@ impl Component for App {
                 .into_iter()
                 .enumerate()
                 .map(|(idx, e)| {
-                    let image = if let Some(event) = e.as_any().downcast_ref::<events::Pick>() {
-                        Some(format!("images/{}.svg", event.item()))
-                    } else if let Some(event) = e.as_any().downcast_ref::<events::Give>() {
-                        Some(format!("images/{}.svg", event.item()))
-                    } else if let Some(event) = e.as_any().downcast_ref::<events::Move>() {
-                        Some(format!("images/{}.svg", event.scene()))
-                    } else if let Some(event) = e.as_any().downcast_ref::<events::UseItem>() {
-                        Some(format!("images/{}.svg", event.item()))
-                    } else if let Some(event) = e.as_any().downcast_ref::<events::Void>() {
-                        event.item().as_ref().map(|e| format!("images/{}.svg", e))
-                    } else {
-                        None
-                    };
+                    let (image, self_triggering) =
+                        if let Some(event) = e.as_any().downcast_ref::<events::Pick>() {
+                            (Some(format!("images/{}.svg", event.item())), false)
+                        } else if let Some(event) = e.as_any().downcast_ref::<events::Give>() {
+                            (Some(format!("images/{}.svg", event.item())), false)
+                        } else if let Some(event) = e.as_any().downcast_ref::<events::Move>() {
+                            (Some(format!("images/{}.svg", event.scene())), false)
+                        } else if let Some(event) = e.as_any().downcast_ref::<events::UseItem>() {
+                            (Some(format!("images/{}.svg", event.item())), false)
+                        } else if let Some(event) = e.as_any().downcast_ref::<events::Void>() {
+                            (
+                                event.item().as_ref().map(|e| format!("images/{}.svg", e)),
+                                false,
+                            )
+                        } else if e.as_any().downcast_ref::<events::Talk>().is_some() {
+                            (Some("images/talk.svg".to_owned()), true)
+                        } else {
+                            (None, false)
+                        };
                     Rc::new(ActionEventItem::new(
                         idx,
                         e.action_text(world.as_ref()),
@@ -486,6 +492,7 @@ impl Component for App {
                         None,
                         image,
                         serde_json::to_vec(&e.dump()).unwrap(),
+                        self_triggering,
                     ))
                 })
                 .collect();

@@ -10,6 +10,7 @@ pub struct ActionEventItem {
     pub action_url: Rc<Option<String>>,
     pub image_url: Rc<Option<String>>,
     pub data: Rc<Vec<u8>>,
+    pub self_triggering: bool,
 }
 
 impl ActionEventItem {
@@ -20,6 +21,7 @@ impl ActionEventItem {
         action_url: Option<String>,
         image_url: Option<String>,
         data: Vec<u8>,
+        self_triggering: bool,
     ) -> Self {
         Self {
             idx,
@@ -28,6 +30,7 @@ impl ActionEventItem {
             action_url: Rc::new(action_url),
             image_url: Rc::new(image_url),
             data: Rc::new(data),
+            self_triggering,
         }
     }
 }
