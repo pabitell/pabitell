@@ -481,7 +481,7 @@ impl Component for App {
                                 false,
                             )
                         } else if e.as_any().downcast_ref::<events::Talk>().is_some() {
-                            (Some("images/talk.svg".to_owned()), true)
+                            (Some("images/comment.svg".to_owned()), true)
                         } else {
                             (None, false)
                         };

@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" id="svg2" viewBox="0 0 60 50" version="1.0">
+  <defs id="defs4">
+    <linearGradient id="linearGradient2546" y2="36.375" gradientUnits="userSpaceOnUse" x2="34.5" gradientTransform="translate(-2 -10.371)" y1="34.75" x1="23.375">
+      <stop id="stop9398" stop-color="#f57900" offset="0"/>
+      <stop id="stop9400" stop-color="#c66100" offset="1"/>
+    </linearGradient>
+    <linearGradient id="linearGradient2552" y2="20" gradientUnits="userSpaceOnUse" x2="18.227" gradientTransform="translate(28.625 -9.9961)" y1="19.075" x1="9.1838">
+      <stop id="stop8344" stop-color="#ef2929" offset="0"/>
+      <stop id="stop8346" stop-color="#b80d0d" offset="1"/>
+    </linearGradient>
+    <linearGradient id="linearGradient2558" y2="23.625" gradientUnits="userSpaceOnUse" x2="19.75" gradientTransform="translate(-2 -10.371)" y1="18.5" x1="8.125">
+      <stop id="stop14268" stop-color="#73d216" offset="0"/>
+      <stop id="stop14270" stop-color="#5ba711" offset="1"/>
+    </linearGradient>
+  </defs>
+  <g id="layer1">
+    <path id="path8364" d="m17.844 10.625c-0.188 0.025-0.369 0.089-0.532 0.187l-14 8c-0.4241 0.245-0.6861 0.698-0.687 1.188v14c-0.0016 0.467 0.2338 0.902 0.625 1.156l12 8c0.435 0.281 0.991 0.293 1.438 0.032l14-8c0.424-0.245 0.686-0.698 0.687-1.188v-14c0.002-0.467-0.234-0.902-0.625-1.156l-12-8c-0.267-0.177-0.588-0.254-0.906-0.219z" fill="#315b09" transform="translate(-2.625 -9.9961)"/>
+    <path id="rect4447" d="m1.375 10.004l12 8v14l-12-8v-14z" fill="#8ae234"/>
+    <path id="path4450" d="m15.375 2.0039l12 8.0001-14 8-12-8 14-8.0001z" fill="url(#linearGradient2558)"/>
+    <path id="path5421" d="m27.375 10.004v14l-14 8v-14l14-8z" fill="#4e9a06"/>
+    <path id="path9344" d="m17.844 10.625c-0.188 0.025-0.369 0.089-0.532 0.187l-14 8c-0.4241 0.245-0.6861 0.698-0.687 1.188v14c-0.0016 0.467 0.2338 0.902 0.625 1.156l12 8c0.435 0.281 0.991 0.293 1.438 0.032l14-8c0.424-0.245 0.686-0.698 0.687-1.188v-14c0.002-0.467-0.234-0.902-0.625-1.156l-12-8c-0.267-0.177-0.588-0.254-0.906-0.219z" fill="#640000" transform="translate(28.625 -9.9961)"/>
+    <path id="path9348" d="m32.625 10.004l12 8v14l-12-8v-14z" fill="#ef2929"/>
+    <path id="path9350" d="m46.625 2.0039l12 8.0001-14 8-12-8 14-8.0001z" fill="url(#linearGradient2552)"/>
+    <path id="path9352" d="m58.625 10.004v14l-14 8v-14l14-8z" fill="#a40000"/>
+    <path id="path9358" d="m17.844 10.625c-0.188 0.025-0.369 0.089-0.532 0.187l-14 8c-0.4241 0.245-0.6861 0.698-0.687 1.188v14c-0.0016 0.467 0.2338 0.902 0.625 1.156l12 8c0.435 0.281 0.991 0.293 1.438 0.032l14-8c0.424-0.245 0.686-0.698 0.687-1.188v-14c0.002-0.467-0.234-0.902-0.625-1.156l-12-8c-0.267-0.177-0.588-0.254-0.906-0.219z" fill="#6e3600" transform="translate(11.901 6.0039)"/>
+    <path id="path9362" d="m15.901 26.004l12 8v14l-12-8v-14z" fill="#fcaf3e"/>
+    <path id="path9364" d="m29.901 18.004l12 8-14 8-12-8 14-8z" fill="url(#linearGradient2546)"/>
+    <path id="path9366" d="m41.901 26.004v14l-14 8v-14l14-8z" fill="#b65100"/>
+  </g>
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title>cubes</dc:title>
+        <dc:date>2008-05-26T11:40:59</dc:date>
+        <dc:description>clip art, clipart, icon, icon, image, media, plugin, plugin, png, public domain, svg, </dc:description>
+        <dc:source>http://openclipart.org/detail/16983/cubes-by-jean_victor_balin</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>jean_victor_balin</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>clip art</rdf:li>
+            <rdf:li>clipart</rdf:li>
+            <rdf:li>icon</rdf:li>
+            <rdf:li>image</rdf:li>
+            <rdf:li>media</rdf:li>
+            <rdf:li>plugin</rdf:li>
+            <rdf:li>png</rdf:li>
+            <rdf:li>public domain</rdf:li>
+            <rdf:li>svg</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>
