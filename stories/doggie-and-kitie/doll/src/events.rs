@@ -80,6 +80,7 @@ pub fn make_talk(data: data::TalkData) -> events::Talk {
             None,
         )
     })));
+    event.set_tags(vec!["no_read".to_string()]);
 
     event
 }

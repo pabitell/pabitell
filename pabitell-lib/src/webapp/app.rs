@@ -372,7 +372,9 @@ impl Component for App {
                                     .clone()
                                     .unwrap()
                                     .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                                ctx.link().send_message(Msg::PlayText(text.to_string()));
+                                if !event.get_tags().contains(&"no_read".to_string()) {
+                                    ctx.link().send_message(Msg::PlayText(text.to_string()));
+                                }
                             }
                         }
                     } else if let Value::String(name) = &json["name"] {
