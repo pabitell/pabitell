@@ -59,6 +59,13 @@ macro_rules! scene_base {
 }
 
 #[macro_export]
+macro_rules! scene_no_music {
+    ($class_name: ident) => {
+        impl Music for $class_name {}
+    };
+}
+
+#[macro_export]
 macro_rules! scene_with_dialog {
     ($class_name: ident, $name: literal, [$( $tag:expr ),* ]) => {
         #[derive(Debug, Default)]

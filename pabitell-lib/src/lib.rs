@@ -87,6 +87,13 @@ pub trait Named {
     fn name(&self) -> &'static str;
 }
 
+pub trait Music {
+    /// Name of background music file
+    fn music(&self) -> Option<String> {
+        None
+    }
+}
+
 pub trait Description: Named {
     fn long(&self, world: &dyn World) -> String;
     fn short(&self, world: &dyn World) -> String;
@@ -107,7 +114,7 @@ pub trait Character: Id + Named + Tagged + AsAny + Description + Dumpable + fmt:
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + Music + fmt::Debug {
     fn dialog(&self) -> Option<usize> {
         None
     }
@@ -239,8 +246,8 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Named, Scene, Tagged,
-        World, WorldBuilder,
+        AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Music, Named, Scene,
+        Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
     use std::{any::Any, collections::HashMap};
@@ -427,6 +434,8 @@ pub mod test {
             Ok(())
         }
     }
+
+    impl Music for TestScene {}
 
     impl Scene for TestScene {}
 

@@ -1,9 +1,12 @@
-use pabitell_lib::{conditions, scene_base, AsAny, Description, ItemState, Named, World};
+use pabitell_lib::{
+    conditions, scene_base, scene_no_music, AsAny, Description, ItemState, Music, Named, World,
+};
 use std::any::Any;
 
 use crate::{characters, translations::get_message};
 
 scene_base!(PlayGround, "playground", []);
+scene_no_music!(PlayGround);
 
 impl Description for PlayGround {
     fn long(&self, world: &dyn World) -> String {
@@ -74,6 +77,7 @@ impl Description for PlayGround {
 }
 
 scene_base!(Kitchen, "kitchen", []);
+scene_no_music!(Kitchen);
 
 impl Description for Kitchen {
     fn long(&self, world: &dyn World) -> String {
@@ -160,6 +164,8 @@ impl Description for Kitchen {
 }
 
 scene_base!(Garden, "garden", []);
+scene_no_music!(Garden);
+
 impl Description for Garden {
     fn long(&self, world: &dyn World) -> String {
         if world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned {
@@ -187,6 +193,8 @@ impl Description for Garden {
 }
 
 scene_base!(ChildrenHouse, "children_house", []);
+scene_no_music!(ChildrenHouse);
+
 impl Description for ChildrenHouse {
     fn long(&self, world: &dyn World) -> String {
         get_message(
@@ -206,6 +214,8 @@ impl Description for ChildrenHouse {
 }
 
 scene_base!(ChildrenGarden, "children_garden", []);
+scene_no_music!(ChildrenGarden);
+
 impl Description for ChildrenGarden {
     fn long(&self, world: &dyn World) -> String {
         if world
@@ -238,6 +248,8 @@ impl Description for ChildrenGarden {
 }
 
 scene_base!(WayHome, "way_home", []);
+scene_no_music!(WayHome);
+
 impl Description for WayHome {
     fn long(&self, world: &dyn World) -> String {
         get_message(

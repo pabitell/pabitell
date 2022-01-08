@@ -22,7 +22,7 @@ use crate::{
         speech::{Msg as SpeechMsg, Speech},
         status::{Msg as StatusMsg, Status},
     },
-    Narrator, World,
+    Music, Narrator, Scene, World,
 };
 
 pub enum Msg {
@@ -660,10 +660,20 @@ impl App {
                 let character = world.characters().get(character).unwrap();
                 let scene_name = character.scene().as_ref().unwrap();
                 let scene = world.scenes().get(scene_name).unwrap();
+                let audio = if let Some(filename) = scene.music() {
+                    html! {
+                        <audio loop=true autoplay=true>
+                            <source src={filename} type="audio/ogg"/>
+                        </audio>
+                    }
+                } else {
+                    html! {}
+                };
 
                 html! {
                     <>
                         <h1 class="title">{ scene.short(world.as_ref()) }</h1>
+                        { audio }
                         <p class="subtitle">
                             <article class="message">
                                 <div class="message-body">
