@@ -27,8 +27,8 @@ use crate::{
 
 pub enum Msg {
     UpdateSelectedCharacter(Rc<Option<String>>),
-    TriggerEvent(usize),
-    TriggerScannedEvent(Value),
+    TriggerEventIdx(usize),
+    TriggerEventData(Value),
     TriggerScannedCharacter(Option<String>, Uuid),
     PlayText(String),
     NotificationRecieved(String),
@@ -183,7 +183,7 @@ impl Component for App {
                     false
                 }
             }
-            Msg::TriggerEvent(idx) => {
+            Msg::TriggerEventIdx(idx) => {
                 if let Some(world) = self.world.as_mut() {
                     let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                     let mut events = narrator.available_events(world.as_ref());
@@ -198,7 +198,7 @@ impl Component for App {
                     false
                 }
             }
-            Msg::TriggerScannedEvent(json_value) => {
+            Msg::TriggerEventData(json_value) => {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Some(world) = self.world.as_mut() {
                     if let Some(mut event) = narrator.parse_event(world.as_ref(), &json_value) {
@@ -495,13 +495,14 @@ impl Component for App {
                         image,
                         serde_json::to_vec(&e.dump()).unwrap(),
                         self_triggering,
+                        self.selected_character.is_none(),
                     ))
                 })
                 .collect();
 
-            let trigger_event_callback = link.callback(|idx| Msg::TriggerEvent(idx));
-            let trigger_scanned_event_callback =
-                link.callback(|json_value| Msg::TriggerScannedEvent(json_value));
+            let trigger_event_idx_callback = link.callback(|idx| Msg::TriggerEventIdx(idx));
+            let trigger_event_data_callback =
+                link.callback(|json_value| Msg::TriggerEventData(json_value));
 
             let lang = world.lang().to_string();
 
@@ -570,8 +571,8 @@ impl Component for App {
                           owned_items={ ctx.props().make_owned_items.as_ref().unwrap()(world.as_ref(), self.selected_character.as_ref()) }
                           selected_character={ self.selected_character.clone() }
                           events={ events }
-                          trigger_event={ trigger_event_callback }
-                          trigger_scanned_event={ trigger_scanned_event_callback }
+                          trigger_event_idx={ trigger_event_idx_callback }
+                          trigger_event_data={ trigger_event_data_callback }
                           world_id={self.world_id.unwrap_or_default().clone()}
                           actions_scope={self.actions_scope.clone()}
                           { finished }

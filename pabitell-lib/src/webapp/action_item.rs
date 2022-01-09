@@ -10,6 +10,7 @@ pub struct Props {
     pub item: Rc<items::Item>,
     pub item_used_event: Callback<(String, String)>,
     pub show_qr_cb: Callback<Rc<Vec<u8>>>,
+    pub trigger_event_cb: Callback<Rc<Vec<u8>>>,
 }
 
 pub struct ActionItem {
@@ -18,8 +19,9 @@ pub struct ActionItem {
 
 pub enum Msg {
     ShowQRCode,
-    QRCodeScanned(String),
+    TriggerEventByScan(String),
     QRCodeScanShow,
+    TriggerEventByClick(Rc<Vec<u8>>),
 }
 
 impl Component for ActionItem {
@@ -32,10 +34,11 @@ impl Component for ActionItem {
             Msg::ShowQRCode => {
                 log::info!("QR active");
                 let item = ctx.props().item.clone();
-                let data = item.data.clone();
-                props.show_qr_cb.emit(data);
+                if let Some(give_data) = item.give_data.as_ref() {
+                    props.show_qr_cb.emit(give_data.clone());
+                }
             }
-            Msg::QRCodeScanned(data) => {
+            Msg::TriggerEventByScan(data) => {
                 props
                     .item_used_event
                     .emit((props.item.code.to_string(), data));
@@ -47,6 +50,9 @@ impl Component for ActionItem {
                     .clone()
                     .unwrap()
                     .send_message(QRScannerMsg::Active(true));
+            }
+            Msg::TriggerEventByClick(data) => {
+                props.trigger_event_cb.emit(data);
             }
         }
         false
@@ -63,8 +69,69 @@ impl Component for ActionItem {
         let link = ctx.link().clone();
 
         let show_qr = link.callback(|_| Msg::ShowQRCode);
-        let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
+        let qr_found_cb = link.callback(move |string| Msg::TriggerEventByScan(string));
         let scan_cb = link.callback(move |_| Msg::QRCodeScanShow);
+        let scan_html = if item.scan {
+            html! {
+                <button class="button is-large card-footer-item" onclick={ scan_cb.clone() }>
+                    <i class="fas fa-qrcode"></i>
+                </button>
+            }
+        } else {
+            html! {}
+        };
+        let use_html = if let Some(use_data) = item.use_data.clone() {
+            let use_cb = link.callback(move |_| Msg::TriggerEventByClick(use_data.clone()));
+            html! {
+                <button class="button is-large card-footer-item" onclick={ use_cb }>
+                    <i class="fas fa-cogs"></i>
+                </button>
+            }
+        } else {
+            html! {}
+        };
+        let give_html = if item.give_data.is_some() {
+            html! {
+                <button class="button is-large card-footer-item" onclick={ show_qr.clone() }>
+                    <i class="fas fa-gift"></i>
+                </button>
+            }
+        } else {
+            html! {}
+        };
+
+        let big_picture = match item.default {
+            items::DefaultAction::Give => {
+                html! {
+                    <figure class="image is-square w-75 is-inline-block is-clickable box"  onclick={ show_qr }>
+                        <img src={ item.image_url.clone() }/>
+                    </figure>
+                }
+            }
+            items::DefaultAction::Scan => {
+                html! {
+                    <figure class="image is-square w-75 is-inline-block is-clickable box" onclick={scan_cb.clone()}>
+                        <img src={ item.image_url.clone() }/>
+                    </figure>
+                }
+            }
+            items::DefaultAction::Use => {
+                if let Some(use_data) = item.use_data.clone() {
+                    let use_cb = link.callback(move |_| Msg::TriggerEventByClick(use_data.clone()));
+                    html! {
+                        <figure class="image is-square w-75 is-inline-block is-clickable box" onclick={use_cb} >
+                            <img src={ item.image_url.clone() }/>
+                        </figure>
+                    }
+                } else {
+                    html! {
+                        <figure class="image is-square w-75 is-inline-block box">
+                            <img src={ item.image_url.clone() }/>
+                        </figure>
+                    }
+                }
+            }
+        };
 
         html! {
             <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
@@ -82,21 +149,16 @@ impl Component for ActionItem {
                     </div>
                 </div>
                 <div class="card-image has-text-centered">
-                    <figure class="image is-square w-75 is-inline-block box"  >
-                        <img src={ item.image_url.clone() }/>
-                    </figure>
+                    { big_picture }
                 </div>
                 <div class="card-content">
                     <div class="content">{item.long.clone()}</div>
                     <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()} />
                 </div>
                 <footer class="card-footer">
-                    <button class="button is-large card-footer-item" onclick={ scan_cb }>
-                        <i class="fas fa-cogs"></i>
-                    </button>
-                    <button class="button is-large card-footer-item" onclick={ show_qr }>
-                        <i class="fas fa-gift"></i>
-                    </button>
+                    { scan_html }
+                    { use_html }
+                    { give_html }
                 </footer>
             </div>
         }

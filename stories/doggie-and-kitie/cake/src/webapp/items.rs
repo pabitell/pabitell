@@ -8,8 +8,6 @@ use pabitell_lib::{
 use serde_json::Value;
 use std::rc::Rc;
 
-use crate::world::CakeWorld;
-
 pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec<Rc<items::Item>>> {
     let res = if let Some(character) = character {
         let owned_state = ItemState::Owned(character.to_string());
@@ -29,7 +27,14 @@ pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec
                     short: i.short(world),
                     long: i.long(world),
                     image_url: format!("images/{}.svg", i.name()),
-                    data: Rc::new(serde_json::to_vec(&data).unwrap()),
+                    give_data: Some(Rc::new(serde_json::to_vec(&data).unwrap())),
+                    use_data: None,
+                    scan: i.name() != "sand_cake",
+                    default: if i.name() == "sand_cake" {
+                        items::DefaultAction::Give
+                    } else {
+                        items::DefaultAction::Scan
+                    },
                 })
             })
             .collect()

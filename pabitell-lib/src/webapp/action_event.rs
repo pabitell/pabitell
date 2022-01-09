@@ -11,6 +11,7 @@ pub struct ActionEventItem {
     pub image_url: Rc<Option<String>>,
     pub data: Rc<Vec<u8>>,
     pub self_triggering: bool,
+    pub show_qr: bool,
 }
 
 impl ActionEventItem {
@@ -22,6 +23,7 @@ impl ActionEventItem {
         image_url: Option<String>,
         data: Vec<u8>,
         self_triggering: bool,
+        show_qr: bool,
     ) -> Self {
         Self {
             idx,
@@ -31,6 +33,7 @@ impl ActionEventItem {
             image_url: Rc::new(image_url),
             data: Rc::new(data),
             self_triggering,
+            show_qr,
         }
     }
 }
@@ -86,7 +89,17 @@ impl Component for ActionEvent {
 
         let data = item.data.clone();
 
-        let show_qr_cb = ctx.link().callback(|_| Msg::ShowQRCode);
+        let qr_button = if item.show_qr {
+            let show_qr_cb = ctx.link().callback(|_| Msg::ShowQRCode);
+            html! {
+                <button class="button" onclick={ show_qr_cb } >
+                    <i class="fas fa-qrcode"></i>
+                </button>
+            }
+        } else {
+            html! {}
+        };
+
         let trigger_event_cb = ctx.link().callback(|_| Msg::TriggerEvent);
         html! {
             <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
@@ -100,9 +113,7 @@ impl Component for ActionEvent {
                         <div class="media-content">
                             <p class="title is-4">{ character.short.to_string() }</p>
                             <p class="subtitle is-6">
-                                <button class="button" onclick={ show_qr_cb } >
-                                    <i class="fas fa-qrcode"></i>
-                                </button>
+                                { qr_button }
                             </p>
                         </div>
                     </div>

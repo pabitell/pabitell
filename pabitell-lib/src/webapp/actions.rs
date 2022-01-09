@@ -18,8 +18,8 @@ pub struct Props {
     pub owned_items: Rc<Vec<Rc<items::Item>>>,
     pub selected_character: Rc<Option<String>>,
     pub events: Vec<Rc<action_event::ActionEventItem>>,
-    pub trigger_event: Callback<usize>,
-    pub trigger_scanned_event: Callback<Value>,
+    pub trigger_event_idx: Callback<usize>,
+    pub trigger_event_data: Callback<Value>,
     pub world_id: Uuid,
     pub actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
     pub finished: bool,
@@ -32,15 +32,16 @@ impl PartialEq for Props {
             && self.owned_items == other.owned_items
             && self.selected_character == other.selected_character
             && self.events == other.events
-            && self.trigger_event == other.trigger_event
-            && self.trigger_scanned_event == other.trigger_scanned_event
+            && self.trigger_event_idx == other.trigger_event_idx
+            && self.trigger_event_data == other.trigger_event_data
             && self.world_id == other.world_id
     }
 }
 
 pub enum Msg {
     QRCodeScanShow,
-    TriggerEvent(usize),
+    TriggerEventIdx(usize),
+    TriggerEventData(Rc<Vec<u8>>),
     QRCodeShow(Rc<Vec<u8>>),
     QRCodeHide,
     QRCodeScanned(String),
@@ -73,7 +74,7 @@ impl Component for Actions {
                             Ok(json) => {
                                 let mut value: Value = json;
                                 value["item"] = Value::String(item);
-                                ctx.props().trigger_scanned_event.emit(value);
+                                ctx.props().trigger_event_data.emit(value);
                             }
                             Err(err) => {
                                 log::warn!("Can't decode scanned data to json: {:?}", err);
@@ -94,7 +95,7 @@ impl Component for Actions {
                     Ok(data_url) => match data_url.decode_to_vec() {
                         Ok((json_str, _)) => match serde_json::from_slice(&json_str[..]) {
                             Ok(json) => {
-                                ctx.props().trigger_scanned_event.emit(json);
+                                ctx.props().trigger_event_data.emit(json);
                             }
                             Err(err) => {
                                 log::warn!("Can't decode scanned data to json: {:?}", err);
@@ -110,8 +111,13 @@ impl Component for Actions {
                 }
                 false
             }
-            Msg::TriggerEvent(idx) => {
-                ctx.props().trigger_event.emit(idx);
+            Msg::TriggerEventIdx(idx) => {
+                ctx.props().trigger_event_idx.emit(idx);
+                true
+            }
+            Msg::TriggerEventData(data) => {
+                let data = serde_json::from_slice(&data).unwrap();
+                ctx.props().trigger_event_data.emit(data);
                 true
             }
             Msg::QRCodeShow(data) => {
@@ -150,7 +156,7 @@ impl Component for Actions {
         let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
         let render_action = move |item: Rc<action_event::ActionEventItem>| {
             let idx = item.idx;
-            let cb = link.clone().callback(move |_| Msg::TriggerEvent(idx));
+            let cb = link.clone().callback(move |_| Msg::TriggerEventIdx(idx));
             let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
 
             html! {
@@ -218,11 +224,13 @@ impl Component for Actions {
                 link.callback(|(item, data)| Msg::QRCodeUseItemScanned(item, data));
 
             let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
+            let trigger_event_cb = link.callback(|data| Msg::TriggerEventData(data));
             html! {
                 <action_item::ActionItem
                   item={item.clone()}
                   item_used_event={use_item_scanned_cb}
                   {show_qr_cb}
+                  {trigger_event_cb}
                 />
             }
         };

@@ -1,6 +1,6 @@
 # Description
 doggie_and_kitie-doll-short = Jak našli panenku, která tence plakala
-doggie_and_kitie-doll-long = {doggie_and_kitie-doll-short}
+doggie_and_kitie-doll-long = Jak pejsek a kočička našli panenku, která tence plakala a rozhodli se, že se o ni budou starat.
 
 # Characters
 doggie_and_kitie-doll-kitie-short = Kočička
