@@ -13,7 +13,7 @@ use crate::{
         action_event::ActionEventItem,
         actions::{Actions, Msg as ActionsMsg},
         character_switch::CharacterSwitch,
-        characters,
+        characters, database,
         intro::Intro,
         items::Item,
         message::{Kind as MessageKind, MessageItem},
@@ -347,6 +347,29 @@ impl Component for App {
                             return false;
                         }
                         log::info!("New event arrived from ws");
+
+                        // Store event to database
+                        let story_name = ctx.props().story_name.clone();
+                        let world_id = self.world_id.clone().unwrap();
+                        let event_count = self.event_count;
+                        let data = event.dump();
+                        ctx.link().send_future(async move {
+                            let db = database::init_database(&story_name).await.unwrap();
+                            database::set_event(&db, &world_id, event_count as u64, data)
+                                .await
+                                .unwrap();
+
+                            Msg::Void(false)
+                        });
+                        // TODO test listing events (this should be removed)
+                        let story_name = ctx.props().story_name.clone();
+                        ctx.link().send_future(async move {
+                            let db = database::init_database(&story_name).await.unwrap();
+                            database::get_events(&db, &world_id).await.unwrap();
+                            Msg::Void(false)
+                        });
+                        /////
+
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             log::debug!("Hiding QR code of actions");
                             actions_scope.send_message(ActionsMsg::QRCodeHide);
@@ -748,6 +771,7 @@ impl App {
         let loading = self.loading.clone();
         let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
         let url = Self::base_url(ctx);
+        let story_name = ctx.props().story_name.clone();
         ctx.link().send_future(async move {
             let url = format!("{}{}/", url, world_id);
             let res = make_request(&url, "GET", None).await;
@@ -764,6 +788,10 @@ impl App {
                             Msg::Void(true)
                         } else {
                             log::debug!("World {} updated", world_id);
+                            let db = database::init_database(&story_name).await.unwrap();
+                            database::set_world(&db, &world_id, world.dump())
+                                .await
+                                .unwrap();
                             Msg::WorldUpdateFetched(world)
                         }
                     }

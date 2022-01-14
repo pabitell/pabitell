@@ -5,6 +5,7 @@ pub mod actions;
 pub mod app;
 pub mod character_switch;
 pub mod characters;
+pub mod database;
 pub mod intro;
 pub mod items;
 pub mod jsQR;
