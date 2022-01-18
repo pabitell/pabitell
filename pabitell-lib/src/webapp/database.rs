@@ -40,7 +40,7 @@ pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(Uuid, Value)>> {
 
     let worlds = transaction.store("worlds")?;
 
-    let worlds = worlds.get_all(None, None, None).await?;
+    let worlds = worlds.get_all(None, None, None, None).await?;
 
     transaction.commit().await?;
     Ok(worlds
@@ -80,6 +80,7 @@ pub async fn get_events(rex: &Rexie, world_id: &Uuid) -> Result<Vec<Value>> {
             Some(&KeyRange::only(&JsValue::from_str(&world_id.to_string()))?),
             None,
             None,
+            None,
         )
         .await?;
 
@@ -99,6 +100,7 @@ pub async fn get_event(rex: &Rexie, world_id: &Uuid, idx: u64) -> Result<Option<
         .index("world_id")?
         .get_all(
             Some(&KeyRange::only(&JsValue::from_str(&world_id.to_string()))?),
+            None,
             None,
             None,
         )
