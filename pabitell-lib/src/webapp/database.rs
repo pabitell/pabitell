@@ -5,7 +5,7 @@ use wasm_bindgen::JsValue;
 
 pub async fn init_database(story_name: &str) -> Result<Rexie> {
     Rexie::builder(story_name)
-        .version(3)
+        .version(1)
         .add_object_store(
             ObjectStore::new("worlds")
                 .key_path("id")

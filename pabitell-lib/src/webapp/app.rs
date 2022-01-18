@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
-use wasm_bindgen_futures::JsFuture;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
 use web_sys::{OrientationLockType, Request, RequestInit, RequestMode, Response};
 use yew::prelude::*;
 
@@ -39,7 +39,6 @@ pub enum Msg {
     RefreshWorld,
     StatusReady,
     ShowPrint(bool),
-    Void(bool),
     ScreenOrientationLocked(Option<JsValue>),
 }
 
@@ -317,7 +316,6 @@ impl Component for App {
                 self.request_to_create_new_world(ctx);
                 true
             }
-            Msg::Void(render) => render,
             Msg::RefreshWorld => {
                 if let Some(world_id) = self.world_id.clone() {
                     self.request_to_get_world(ctx, world_id);
@@ -353,20 +351,17 @@ impl Component for App {
                         let world_id = self.world_id.clone().unwrap();
                         let event_count = self.event_count;
                         let data = event.dump();
-                        ctx.link().send_future(async move {
+                        spawn_local(async move {
                             let db = database::init_database(&story_name).await.unwrap();
                             database::set_event(&db, &world_id, event_count as u64, data)
                                 .await
                                 .unwrap();
-
-                            Msg::Void(false)
                         });
                         // TODO test listing events (this should be removed)
                         let story_name = ctx.props().story_name.clone();
-                        ctx.link().send_future(async move {
+                        spawn_local(async move {
                             let db = database::init_database(&story_name).await.unwrap();
                             database::get_events(&db, &world_id).await.unwrap();
-                            Msg::Void(false)
                         });
                         /////
 
@@ -419,11 +414,10 @@ impl Component for App {
 
                 self.ws_queue.drain(..).for_each(|msg| {
                     let status_scope = status_scope.clone();
-                    ctx.link().send_future(async move {
+                    spawn_local(async move {
                         if let Some(status_scope) = status_scope.as_ref().borrow().as_ref() {
                             status_scope.send_message(StatusMsg::SendMessage(msg));
                         }
-                        Msg::Void(false)
                     });
                 });
                 false
@@ -734,7 +728,8 @@ impl App {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
         let url = Self::base_url(ctx);
-        ctx.link().send_future(async move {
+        let link = ctx.link().clone();
+        spawn_local(async move {
             let res = make_request(&url, "POST", None).await;
             *loading.borrow_mut() = false;
             match res {
@@ -742,12 +737,8 @@ impl App {
                     if let Some(Value::String(id_str)) = json.get("id") {
                         if let Ok(uuid) = Uuid::parse_str(id_str) {
                             log::info!("New World Id: {:?}", &uuid);
-                            Msg::NewWorldIdFetched(uuid)
-                        } else {
-                            Msg::Void(true)
+                            link.send_message(Msg::NewWorldIdFetched(uuid));
                         }
-                    } else {
-                        Msg::Void(true)
                     }
                 }
                 Ok((None, status)) => {
@@ -756,11 +747,9 @@ impl App {
                         "No JSON response from the server when creating new world (http={})",
                         status
                     );
-                    Msg::Void(true)
                 }
                 Err(e) => {
                     log::warn!("Failed to fetch: {:?}", e);
-                    Msg::Void(true)
                 }
             }
         });
@@ -772,7 +761,8 @@ impl App {
         let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
         let url = Self::base_url(ctx);
         let story_name = ctx.props().story_name.clone();
-        ctx.link().send_future(async move {
+        let link = ctx.link().clone();
+        spawn_local(async move {
             let url = format!("{}{}/", url, world_id);
             let res = make_request(&url, "GET", None).await;
             *loading.borrow_mut() = false;
@@ -780,33 +770,29 @@ impl App {
                 Ok((Some(json), status)) => match status {
                     404 => {
                         log::warn!("World with id {} was not found on the server", world_id);
-                        Msg::Reset
+                        link.send_message(Msg::Reset)
                     }
                     e if 200 <= e && e < 300 => {
                         if let Err(e) = world.load(json) {
                             log::warn!("Fetched world in wrong format: {:?}", e);
-                            Msg::Void(true)
                         } else {
                             log::debug!("World {} updated", world_id);
                             let db = database::init_database(&story_name).await.unwrap();
                             database::set_world(&db, &world_id, world.dump())
                                 .await
                                 .unwrap();
-                            Msg::WorldUpdateFetched(world)
+                            link.send_message(Msg::WorldUpdateFetched(world))
                         }
                     }
                     _ => {
                         log::warn!("Wrong server response when downloading world {}", world_id);
-                        Msg::Void(true)
                     }
                 },
                 Ok((None, _)) => {
                     log::warn!("No JSON response from the server when creating new world");
-                    Msg::Void(true)
                 }
                 Err(e) => {
                     log::warn!("Failed to fetch: {:?}", e);
-                    Msg::Void(true)
                 }
             }
         })
@@ -816,7 +802,8 @@ impl App {
         *self.loading.borrow_mut() = true;
         let loading = self.loading.clone();
         let url = Self::base_url(ctx);
-        ctx.link().send_future(async move {
+        let link = ctx.link().clone();
+        spawn_local(async move {
             let url = format!("{}{}/event/", url, world_id);
             let res = make_request(&url, "POST", Some(event_json)).await;
             *loading.borrow_mut() = false;
@@ -825,17 +812,15 @@ impl App {
                     match status {
                         e if 200 <= e && e < 300 => {
                             log::debug!("Event triggered {:?}", resp);
-                            Msg::RefreshWorld
+                            link.send_message(Msg::RefreshWorld);
                         }
                         _ => {
                             // TODO failed to publish event message
-                            Msg::Void(true)
                         }
                     }
                 }
                 Err(e) => {
                     log::warn!("Failed to trigger: {:?}", e);
-                    Msg::Void(true)
                 }
             }
         })
