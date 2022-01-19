@@ -86,7 +86,7 @@ pub struct Props {
     pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
     pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>>,
     pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
-    pub story_name: String,
+    pub name: String,
 }
 
 impl PartialEq for Props {
@@ -103,7 +103,7 @@ impl Default for Props {
             make_world: None,
             make_owned_items: None,
             make_print_items: None,
-            story_name: String::default(),
+            name: String::default(),
         }
     }
 }
@@ -347,23 +347,16 @@ impl Component for App {
                         log::info!("New event arrived from ws");
 
                         // Store event to database
-                        let story_name = ctx.props().story_name.clone();
+                        let name = ctx.props().name.clone();
                         let world_id = self.world_id.clone().unwrap();
                         let event_count = self.event_count;
                         let data = event.dump();
                         spawn_local(async move {
-                            let db = database::init_database(&story_name).await.unwrap();
-                            database::set_event(&db, &world_id, event_count as u64, data)
+                            let db = database::init_database(&name).await;
+                            database::put_event(&db, &world_id, event_count as u64, data)
                                 .await
                                 .unwrap();
                         });
-                        // TODO test listing events (this should be removed)
-                        let story_name = ctx.props().story_name.clone();
-                        spawn_local(async move {
-                            let db = database::init_database(&story_name).await.unwrap();
-                            database::get_events(&db, &world_id).await.unwrap();
-                        });
-                        /////
 
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             log::debug!("Hiding QR code of actions");
@@ -439,6 +432,7 @@ impl Component for App {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
+        let props = ctx.props();
 
         let loading_classes = if *self.loading.borrow() {
             classes!("modal", "is-active")
@@ -460,8 +454,8 @@ impl Component for App {
             let close_cb = link.callback(|_| Msg::ShowPrint(false));
             return html! {
                 <Print {close_cb} items={
-                    ctx.props().make_print_items.as_ref().unwrap()(
-                        ctx.props().make_world.as_ref().unwrap()("cs")
+                    props.make_print_items.as_ref().unwrap()(
+                        props.make_world.as_ref().unwrap()("cs")
                     )
                   }
                 />
@@ -469,14 +463,13 @@ impl Component for App {
         }
 
         if let Some(world) = &self.world {
-            let available_characters =
-                ctx.props().make_characters.as_ref().unwrap()(world.as_ref());
+            let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
             let set_character_callback = link
                 .callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
-            let narrator = ctx.props().make_narrator.as_ref().unwrap()();
+            let narrator = props.make_narrator.as_ref().unwrap()();
             let events = narrator.available_events(world.as_ref());
             let characters_map: HashMap<String, Rc<characters::Character>> =
-                ctx.props().make_characters.as_ref().unwrap()(world.as_ref())
+                props.make_characters.as_ref().unwrap()(world.as_ref())
                     .iter()
                     .map(|c| (c.name.to_string(), c.clone()))
                     .collect();
@@ -562,7 +555,7 @@ impl Component for App {
                                       <Status
                                         world_id={self.world_id.clone()}
                                         namespace={"some_namespace"}
-                                        story={ctx.props().story_name.clone()}
+                                        story={props.name.clone()}
                                         msg_recieved={notification_cb}
                                         status_ready={status_ready_cb}
                                         refresh_world={refresh_world_cb}
@@ -585,7 +578,7 @@ impl Component for App {
                         <Actions
                           lang={ lang }
                           available_characters={ available_characters }
-                          owned_items={ ctx.props().make_owned_items.as_ref().unwrap()(world.as_ref(), self.selected_character.as_ref()) }
+                          owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.selected_character.as_ref()) }
                           selected_character={ self.selected_character.clone() }
                           events={ events }
                           trigger_event_idx={ trigger_event_idx_callback }
@@ -612,12 +605,17 @@ impl Component for App {
             });
             let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
 
-            let world = ctx.props().make_world.as_ref().unwrap()("cs");
+            let world = props.make_world.as_ref().unwrap()("cs");
+            let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
+            let lang = world.lang().to_string();
 
             html! {
                 <>
                     <Intro
                         new_world={new_world_cb}
+                        name={props.name.to_owned()}
+                        {available_characters}
+                        {lang}
                         story_name={world.description().short(world.as_ref())}
                         story_detail={world.description().long(world.as_ref())}
                         character_scanned={character_scanned_cb}
@@ -632,7 +630,7 @@ impl Component for App {
 
 impl App {
     fn base_url(ctx: &Context<Self>) -> String {
-        format!("/api/some_namespace/{}/", ctx.props().story_name)
+        format!("/api/some_namespace/{}/", ctx.props().name)
     }
 
     fn screen_text(
@@ -760,8 +758,9 @@ impl App {
         let loading = self.loading.clone();
         let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
         let url = Self::base_url(ctx);
-        let story_name = ctx.props().story_name.clone();
+        let name = ctx.props().name.clone();
         let link = ctx.link().clone();
+        let selected_character: Option<String> = self.selected_character.as_ref().clone();
         spawn_local(async move {
             let url = format!("{}{}/", url, world_id);
             let res = make_request(&url, "GET", None).await;
@@ -770,6 +769,9 @@ impl App {
                 Ok((Some(json), status)) => match status {
                     404 => {
                         log::warn!("World with id {} was not found on the server", world_id);
+                        // world not found => remove from db
+                        let db = database::init_database(&name).await;
+                        let _ = database::del_world(&db, &world_id).await;
                         link.send_message(Msg::Reset)
                     }
                     e if 200 <= e && e < 300 => {
@@ -777,10 +779,15 @@ impl App {
                             log::warn!("Fetched world in wrong format: {:?}", e);
                         } else {
                             log::debug!("World {} updated", world_id);
-                            let db = database::init_database(&story_name).await.unwrap();
-                            database::set_world(&db, &world_id, world.dump())
-                                .await
-                                .unwrap();
+                            let db = database::init_database(&name).await;
+                            database::put_world(
+                                &db,
+                                &world_id,
+                                selected_character.unwrap_or_else(|| "narrator".to_string()),
+                                world.dump(),
+                            )
+                            .await
+                            .unwrap();
                             link.send_message(Msg::WorldUpdateFetched(world))
                         }
                     }
