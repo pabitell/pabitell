@@ -50,7 +50,7 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
     Ok(Some(world_json))
 }
 
-pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String, Value)>> {
+pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String, bool, Value)>> {
     log::debug!("DB Get worlds '{}'", rex.name());
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadOnly)?;
 
@@ -68,17 +68,25 @@ pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String,
                 .as_str()
                 .map(|e| e.to_string())
                 .unwrap_or_else(|| "narrator".to_string());
+            let fixed_character = data["fixed_character"].as_bool().unwrap_or(false);
             (
                 k.as_string().unwrap().parse::<DateTime<Utc>>().unwrap(),
                 data["id"].as_str().unwrap().parse::<Uuid>().unwrap(),
                 character,
+                fixed_character,
                 data["data"].clone(),
             )
         })
         .collect())
 }
 
-pub async fn put_world(rex: &Rexie, id: &Uuid, character: String, data: Value) -> Result<()> {
+pub async fn put_world(
+    rex: &Rexie,
+    id: &Uuid,
+    character: String,
+    fixed_character: bool,
+    data: Value,
+) -> Result<()> {
     log::debug!("DB Put world '{id}'");
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadWrite)?;
     let worlds = transaction.store("worlds")?;
@@ -87,6 +95,7 @@ pub async fn put_world(rex: &Rexie, id: &Uuid, character: String, data: Value) -
         "id":  world_id,
         "data": data,
         "character": character,
+        "fixed_character": fixed_character,
         "last": Utc::now(),
     });
     worlds

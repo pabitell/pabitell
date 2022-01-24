@@ -26,10 +26,10 @@ use crate::{
 };
 
 pub enum Msg {
-    UpdateSelectedCharacter(Rc<Option<String>>),
+    UpdateCharacter(Rc<Option<String>>),
     TriggerEventIdx(usize),
     TriggerEventData(Value),
-    TriggerScannedCharacter(Option<String>, Uuid),
+    TriggerRestoreCharacter(Option<String>, bool, Uuid),
     PlayText(String),
     NotificationRecieved(String),
     Reset,
@@ -45,7 +45,10 @@ pub enum Msg {
 pub struct App {
     world_id: Option<Uuid>,
     world: Option<Box<dyn World>>,
-    selected_character: Rc<Option<String>>,
+    /// Current character tab
+    character: Rc<Option<String>>,
+    /// If it is sent can't switch to other characters
+    fixed_character: bool,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
     speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
     status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
@@ -144,7 +147,11 @@ impl Component for App {
         let mut res = Self {
             world_id,
             world: None,
-            selected_character: Rc::new(storage::LocalStorage::get("fixed_character").ok()),
+            character: Rc::new(storage::LocalStorage::get("character").ok()),
+            fixed_character: storage::LocalStorage::get("fixed_character")
+                .unwrap_or_else(|_| "false".to_string())
+                .parse()
+                .unwrap_or(false),
             messages_scope: Rc::new(RefCell::new(None)),
             speech_scope: Rc::new(RefCell::new(None)),
             status_scope: Rc::new(RefCell::new(None)),
@@ -167,10 +174,15 @@ impl Component for App {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::UpdateSelectedCharacter(selected_character) => {
-                self.selected_character = selected_character;
+            Msg::UpdateCharacter(character) => {
+                if let Some(character) = character.as_ref() {
+                    storage::LocalStorage::set("character", character).unwrap();
+                } else {
+                    storage::LocalStorage::delete("character");
+                }
+                self.character = character;
                 if let Some(world) = &self.world {
-                    if let Some(character) = self.selected_character.as_ref() {
+                    if let Some(character) = self.character.as_ref() {
                         let character = world.characters().get(character).unwrap();
                         let scene_name = character.scene().as_ref().unwrap();
                         let scene = world.scenes().get(scene_name).unwrap();
@@ -202,7 +214,7 @@ impl Component for App {
                 if let Some(world) = self.world.as_mut() {
                     if let Some(mut event) = narrator.parse_event(world.as_ref(), &json_value) {
                         // Update initiator
-                        if let Some(character) = self.selected_character.clone().as_ref() {
+                        if let Some(character) = self.character.clone().as_ref() {
                             event.set_initiator(character.to_string());
                         }
 
@@ -239,18 +251,26 @@ impl Component for App {
                 }
                 false
             }
-            Msg::TriggerScannedCharacter(character, world_id) => {
+            Msg::TriggerRestoreCharacter(character, fixed_character, world_id) => {
                 // check whether character exists in the world
                 let world = ctx.props().make_world.as_ref().unwrap()("cs");
+
+                // update charactes
+                storage::LocalStorage::set(
+                    "fixed_character",
+                    if fixed_character { "true" } else { "false" },
+                )
+                .unwrap();
+                self.fixed_character = fixed_character;
+
                 if let Some(character) = character {
+                    storage::LocalStorage::set("character", &character).unwrap();
+                    self.character = Rc::new(Some(character.clone()));
+
                     if let Some(character_instance) = world.characters().get(&character) {
                         storage::LocalStorage::set("world_id", world_id).unwrap();
-                        storage::LocalStorage::set("fixed_character", &character).unwrap();
                         self.world_id = Some(world_id);
 
-                        // Set the character
-                        ctx.link()
-                            .send_message(Msg::UpdateSelectedCharacter(Rc::new(Some(character))));
                         // Get the world
                         self.request_to_get_world(ctx, world_id);
 
@@ -266,8 +286,9 @@ impl Component for App {
                     }
                 } else {
                     self.world_id = Some(world_id);
-                    ctx.link()
-                        .send_message(Msg::UpdateSelectedCharacter(Rc::new(None)));
+                    storage::LocalStorage::set("world_id", world_id).unwrap();
+                    storage::LocalStorage::delete("character");
+                    self.character = Rc::new(None);
 
                     // Get the world
                     self.request_to_get_world(ctx, world_id);
@@ -288,6 +309,7 @@ impl Component for App {
                 self.world = None;
                 storage::LocalStorage::delete("world_id");
                 storage::LocalStorage::delete("fixed_character");
+                storage::LocalStorage::delete("character");
                 if let Some(scope) = self.messages_scope.as_ref().borrow().clone() {
                     scope.send_message(MessagesMsg::Clear);
                 }
@@ -301,10 +323,10 @@ impl Component for App {
                 true
             }
             Msg::WorldUpdateFetched(world) => {
-                let old_screen_text = App::screen_text(&self.world, &self.selected_character);
+                let old_screen_text = App::screen_text(&self.world, &self.character);
                 self.event_count = world.event_count();
                 self.world = Some(world);
-                let new_screen_text = App::screen_text(&self.world, &self.selected_character);
+                let new_screen_text = App::screen_text(&self.world, &self.character);
                 if new_screen_text != old_screen_text {
                     if let Some(text) = new_screen_text {
                         ctx.link().send_message(Msg::PlayText(text));
@@ -464,8 +486,7 @@ impl Component for App {
 
         if let Some(world) = &self.world {
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
-            let set_character_callback = link
-                .callback(|selected_character| Msg::UpdateSelectedCharacter(selected_character));
+            let set_character_callback = link.callback(|character| Msg::UpdateCharacter(character));
             let narrator = props.make_narrator.as_ref().unwrap()();
             let events = narrator.available_events(world.as_ref());
             let characters_map: HashMap<String, Rc<characters::Character>> =
@@ -505,7 +526,7 @@ impl Component for App {
                         image,
                         serde_json::to_vec(&e.dump()).unwrap(),
                         self_triggering,
-                        self.selected_character.is_none(),
+                        self.character.is_none(),
                     ))
                 })
                 .collect();
@@ -526,9 +547,6 @@ impl Component for App {
             } else {
                 false
             };
-
-            let fixed_character: Option<String> =
-                storage::LocalStorage::get("fixed_character").ok();
 
             html! {
                 <>
@@ -572,14 +590,14 @@ impl Component for App {
                         <CharacterSwitch
                           available_characters={ available_characters.clone() }
                           set_character={ set_character_callback }
-                          selected_character={ self.selected_character.clone() }
-                          fixed={fixed_character.is_some()}
+                          character={ self.character.clone() }
+                          fixed={self.fixed_character}
                         />
                         <Actions
                           lang={ lang }
                           available_characters={ available_characters }
-                          owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.selected_character.as_ref()) }
-                          selected_character={ self.selected_character.clone() }
+                          owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.character.as_ref()) }
+                          character={ self.character.clone() }
                           events={ events }
                           trigger_event_idx={ trigger_event_idx_callback }
                           trigger_event_data={ trigger_event_data_callback }
@@ -600,8 +618,8 @@ impl Component for App {
             }
         } else {
             let new_world_cb = link.callback(|_| Msg::CreateNewWorld);
-            let character_scanned_cb = link.callback(|(character, world_id)| {
-                Msg::TriggerScannedCharacter(character, world_id)
+            let character_scanned_cb = link.callback(|(character, fixed_character, world_id)| {
+                Msg::TriggerRestoreCharacter(character, fixed_character, world_id)
             });
             let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
 
@@ -633,12 +651,9 @@ impl App {
         format!("/api/some_namespace/{}/", ctx.props().name)
     }
 
-    fn screen_text(
-        world: &Option<Box<dyn World>>,
-        selected_character: &Option<String>,
-    ) -> Option<String> {
+    fn screen_text(world: &Option<Box<dyn World>>, character: &Option<String>) -> Option<String> {
         let world = world.as_ref()?;
-        if let Some(character) = selected_character.as_ref() {
+        if let Some(character) = character.as_ref() {
             let character = world.characters().get(character).unwrap();
             let scene_name = character.scene().as_ref().unwrap();
             let scene = world.scenes().get(scene_name).unwrap();
@@ -674,7 +689,7 @@ impl App {
                 </article>
             };
 
-            let scene_description = if let Some(character) = self.selected_character.as_ref() {
+            let scene_description = if let Some(character) = self.character.as_ref() {
                 let character = world.characters().get(character).unwrap();
                 let scene_name = character.scene().as_ref().unwrap();
                 let scene = world.scenes().get(scene_name).unwrap();
@@ -705,7 +720,7 @@ impl App {
                 html! {}
             };
 
-            let class = if world.finished() || self.selected_character.is_some() {
+            let class = if world.finished() || self.character.is_some() {
                 classes!("section")
             } else {
                 classes!("section", "is-hidden")
@@ -760,7 +775,8 @@ impl App {
         let url = Self::base_url(ctx);
         let name = ctx.props().name.clone();
         let link = ctx.link().clone();
-        let selected_character: Option<String> = self.selected_character.as_ref().clone();
+        let character: Option<String> = self.character.as_ref().clone();
+        let fixed_character = self.fixed_character;
         spawn_local(async move {
             let url = format!("{}{}/", url, world_id);
             let res = make_request(&url, "GET", None).await;
@@ -783,7 +799,8 @@ impl App {
                             database::put_world(
                                 &db,
                                 &world_id,
-                                selected_character.unwrap_or_else(|| "narrator".to_string()),
+                                character.unwrap_or_else(|| "narrator".to_string()),
+                                fixed_character,
                                 world.dump(),
                             )
                             .await

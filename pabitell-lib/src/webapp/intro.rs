@@ -20,7 +20,7 @@ pub struct Props {
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
     pub story_name: String,
     pub story_detail: String,
-    pub character_scanned: Callback<(Option<String>, Uuid)>,
+    pub character_scanned: Callback<(Option<String>, bool, Uuid)>,
     pub lang: String,
 }
 
@@ -29,14 +29,14 @@ pub enum Msg {
     QRCodeScanShow,
     QRCodeScanned(String),
     ShowPrint,
-    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, Uuid)>),
+    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid)>),
     WorldDelete(Uuid),
-    WorldPicked(Uuid, String),
+    WorldPicked(Uuid, String, bool),
 }
 
 pub struct Intro {
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
-    pub worlds: Vec<(DateTime<Utc>, usize, String, Uuid)>,
+    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid)>,
 }
 
 impl Component for Intro {
@@ -83,7 +83,12 @@ impl Component for Intro {
                                         &world_id,
                                         &character
                                     );
-                                    ctx.props().character_scanned.emit((character, world_id));
+                                    let fixed_character = character.is_some();
+                                    ctx.props().character_scanned.emit((
+                                        character,
+                                        fixed_character,
+                                        world_id,
+                                    ));
                                 }
                                 Err(err) => {
                                     log::warn!("Error while processing data: {:?}", err);
@@ -107,13 +112,14 @@ impl Component for Intro {
                 }
                 false
             }
-            Msg::WorldPicked(id, character) => {
+            Msg::WorldPicked(id, character, fixed_character) => {
                 ctx.props().character_scanned.emit((
                     if character == "narrator" {
                         None
                     } else {
                         Some(character)
                     },
+                    fixed_character,
                     id,
                 ));
                 true
@@ -150,49 +156,51 @@ impl Component for Intro {
                 .map(|e| (e.name.to_string(), e))
                 .collect();
             let cloned_link = link.clone();
-            let render_stored_world = |time: DateTime<Utc>, events, character: String, id: Uuid| {
-                let local_time: DateTime<Local> = DateTime::from(time.to_owned());
-                let character = characters.get(&character).unwrap();
-                let characters::Character { name, icon, .. } = character.as_ref().clone();
-                let restore_cb =
-                    cloned_link.callback(move |_| Msg::WorldPicked(id.clone(), name.to_string()));
-                let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
+            let render_stored_world =
+                |time: DateTime<Utc>, events, character: String, fixed_character, id: Uuid| {
+                    let local_time: DateTime<Local> = DateTime::from(time.to_owned());
+                    let character = characters.get(&character).unwrap();
+                    let characters::Character { name, icon, .. } = character.as_ref().clone();
+                    let restore_cb = cloned_link.callback(move |_| {
+                        Msg::WorldPicked(id.clone(), name.to_string(), fixed_character)
+                    });
+                    let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
 
-                html! {
-                    <tr>
-                        <td>
-                            {{
-                                format!(
-                                    "{:04}-{:02}-{:02} {:02}:{:02}",
-                                    local_time.year(),
-                                    local_time.month(),
-                                    local_time.day(),
-                                    local_time.hour(),
-                                    local_time.minute(),
-                                )
-                            }}
-                        </td>
-                        <td class="has-text-centered">{{ events }}</td>
-                        <td class="has-text-centered">
-                            <span class="icon is-small">
-                                <i class={ icon.to_string() }></i>
-                            </span>
-                        </td>
-                        <td class="has-text-centered">
-                            <button class="button is-small is-info is-outlined mr-1">
-                                <span class="icon">
-                                    <i class="fas fa-sign-in-alt" onclick={restore_cb}></i>
+                    html! {
+                        <tr>
+                            <td>
+                                {{
+                                    format!(
+                                        "{:04}-{:02}-{:02} {:02}:{:02}",
+                                        local_time.year(),
+                                        local_time.month(),
+                                        local_time.day(),
+                                        local_time.hour(),
+                                        local_time.minute(),
+                                    )
+                                }}
+                            </td>
+                            <td class="has-text-centered">{{ events }}</td>
+                            <td class="has-text-centered">
+                                <span class="icon is-small">
+                                    <i class={ icon.to_string() }></i>
                                 </span>
-                            </button>
-                            <button class="button is-small is-danger is-outlined ml-1">
-                                <span class="icon">
-                                    <i class="fas fa-trash-alt" onclick={delete_cb}></i>
-                                </span>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            };
+                            </td>
+                            <td class="has-text-centered">
+                                <button class="button is-small is-info is-outlined mr-1">
+                                    <span class="icon">
+                                        <i class="fas fa-sign-in-alt" onclick={restore_cb}></i>
+                                    </span>
+                                </button>
+                                <button class="button is-small is-danger is-outlined ml-1">
+                                    <span class="icon">
+                                        <i class="fas fa-trash-alt" onclick={delete_cb}></i>
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                };
 
             let last_stories = translations::get_message_global("last_stories", &lang, None);
             html! {
@@ -202,8 +210,8 @@ impl Component for Intro {
                       <table class="table is-bordered">
                         {
                             for self.worlds.iter().map(
-                                |(time, events, character, id)|
-                                render_stored_world(time.clone(), events, character.clone(), id.clone())
+                                |(time, events, character, fixed_character, id)|
+                                render_stored_world(time.clone(), events, character.clone(), *fixed_character, id.clone())
                             )
                         }
                       </table>
@@ -277,13 +285,13 @@ impl Intro {
                 Ok(worlds) => Msg::UpdateWorlds(
                     worlds
                         .into_iter()
-                        .filter_map(|(last, id, character, data)| {
+                        .filter_map(|(last, id, character, fixed_character, data)| {
                             let count = if let Some(count) = data["event_count"].as_u64() {
                                 count
                             } else {
                                 return None;
                             };
-                            Some((last, count as usize, character, id.clone()))
+                            Some((last, count as usize, character, fixed_character, id.clone()))
                         })
                         .collect(),
                 ),

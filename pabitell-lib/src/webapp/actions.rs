@@ -16,7 +16,7 @@ pub struct Props {
     pub lang: String,
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
     pub owned_items: Rc<Vec<Rc<items::Item>>>,
-    pub selected_character: Rc<Option<String>>,
+    pub character: Rc<Option<String>>,
     pub events: Vec<Rc<action_event::ActionEventItem>>,
     pub trigger_event_idx: Callback<usize>,
     pub trigger_event_data: Callback<Value>,
@@ -30,7 +30,7 @@ impl PartialEq for Props {
         self.lang == other.lang
             && self.available_characters == other.available_characters
             && self.owned_items == other.owned_items
-            && self.selected_character == other.selected_character
+            && self.character == other.character
             && self.events == other.events
             && self.trigger_event_idx == other.trigger_event_idx
             && self.trigger_event_data == other.trigger_event_data
@@ -196,18 +196,18 @@ impl Component for Actions {
             props
                 .available_characters
                 .iter()
-                .filter(|e| e.code.is_some() && (props.selected_character == e.code))
+                .filter(|e| e.code.is_some() && (props.character == e.code))
                 .collect()
         } else {
             vec![]
         };
 
-        let joinable_characters: Vec<_> = if props.selected_character.is_none() && !props.finished {
+        let joinable_characters: Vec<_> = if props.character.is_none() && !props.finished {
             ctx.props().available_characters.iter().collect()
         } else {
             vec![]
         };
-        let events: Vec<_> = if let Some(character) = props.selected_character.as_ref() {
+        let events: Vec<_> = if let Some(character) = props.character.as_ref() {
             props
                 .events
                 .clone()
