@@ -337,8 +337,8 @@ doggie_and_kitie-doll-doggie_pick_wooden_trees-action = Pejsek vezme dřevěné 
 doggie_and_kitie-doll-doggie_pick_wooden_trees-success = Pejsek vzal dřevěné stromečky.
 doggie_and_kitie-doll-doggie_pick_wooden_trees-fail = Pejsek nemůže vzít dřevěné stromečky.
 doggie_and_kitie-doll-doggie_pick_wooden_animals-action = Pejsek vezme dřevěná zvířátka.
-doggie_and_kitie-doll-doggie_pick_-success = Pejsek vzal dřevěná zvířátka.
-doggie_and_kitie-doll-doggie_pick_-fail = Pejsek nemůže vzít dřevěná zvířátka.
+doggie_and_kitie-doll-doggie_pick_wooden_animals-success = Pejsek vzal dřevěná zvířátka.
+doggie_and_kitie-doll-doggie_pick_wooden_animals-fail = Pejsek nemůže vzít dřevěná zvířátka.
 
 doggie_and_kitie-doll-kitie_move_to_kitie_search-common = 
     hledat hračky.

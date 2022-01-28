@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
+use lazy_static::lazy_static;
 use pabitell_lib::{Narrator, World};
 use skim::prelude::*;
 use sled::Db;
+use std::io::prelude::*;
+use term::color::{self, Color};
 use uuid::Uuid;
 
 use crate::backend;
@@ -15,6 +18,16 @@ struct PabitellItem {
     code: String,
     short: String,
     long: String,
+}
+
+fn println<S>(text_color: Color, text: S)
+where
+    S: std::fmt::Display,
+{
+    let mut t = term::stdout().unwrap();
+    t.fg(text_color).unwrap();
+    writeln!(t, "{text}").unwrap();
+    t.reset().unwrap();
 }
 
 impl SkimItem for PabitellItem {
@@ -142,7 +155,10 @@ impl SkimItem for View {
 }
 
 fn main_menu(world: &dyn World) -> Option<View> {
-    println!("{}", world.description().short(world));
+    println(
+        color::BRIGHT_BLUE,
+        format!("{}", world.description().short(world)),
+    );
 
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
@@ -421,7 +437,7 @@ fn select_stored_world(db: &Db, story: &str) -> Result<Option<Uuid>> {
 
 pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
     let story = select_story(default_lang)?.ok_or_else(|| anyhow!("No story picked"))?;
-    println!("story: {}", story.short);
+    println(color::BRIGHT_MAGENTA, format!("story: {}", story.short));
     let (mut world, narrator): (Box<dyn World>, Box<dyn Narrator>) = match story.code.as_str() {
         #[cfg(feature = "with_doggie_and_kitie_cake")]
         "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake(true)?.unwrap(),
@@ -437,7 +453,7 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
             .collect(),
     )
     .ok_or_else(|| anyhow!("no language selected"))?;
-    println!("lang: {}", lang);
+    println(color::BRIGHT_MAGENTA, format!("lang: {lang}"));
 
     let mut db = sled::open(db_path).unwrap();
 
@@ -491,7 +507,10 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                             .scenes()
                             .get(scene)
                             .ok_or_else(|| anyhow!("Failed to find a scene {}", scene))?;
-                        println!("\n{}\n\n", scene.long(world.as_ref()));
+                        println(
+                            color::BRIGHT_GREEN,
+                            format!("\n{}\n\n", scene.long(world.as_ref())),
+                        );
                     }
                 }
                 if let Some(events) = select_event(world.as_mut(), narrator.as_ref()) {
@@ -499,9 +518,15 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                         let idx = events[0].idx;
                         let mut events = narrator.available_events(world.as_ref());
                         if events[idx].can_be_triggered(world.as_ref()) {
-                            println!("{}", events[idx].success_text(world.as_ref()));
+                            println(
+                                color::BRIGHT_CYAN,
+                                format!("{}", events[idx].success_text(world.as_ref())),
+                            );
                         } else {
-                            println!("{}", events[idx].fail_text(world.as_ref()));
+                            println(
+                                color::BRIGHT_RED,
+                                format!("{}", events[idx].fail_text(world.as_ref())),
+                            );
                         }
                         events[idx].trigger(world.as_mut());
                         backend::store(&mut db, &story.code, world.as_ref()).unwrap();
@@ -525,53 +550,71 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                 state = View::MENU;
             }
             View::DELETE => {
-                println!("Deleting world");
+                println(color::BRIGHT_MAGENTA, "Deleting world");
                 if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
                     backend::delete(&mut db, &story.code, &uuid).unwrap();
-                    println!("World '{}' was deleted", uuid);
+                    println(
+                        color::BRIGHT_MAGENTA,
+                        format!("World '{}' was deleted", uuid),
+                    );
                 } else {
-                    println!("No world selected");
+                    println(color::BRIGHT_MAGENTA, "No world selected");
                 }
                 state = View::CONTROLS;
             }
             View::LOAD => {
-                println!("Loading world");
+                println(color::BRIGHT_MAGENTA, "Loading world");
                 if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
                     if let Err(error) = backend::load(&mut db, &story.code, &uuid, world.as_mut()) {
-                        println!("Failed to load world '{}': {}", uuid, error);
+                        println(
+                            color::BRIGHT_RED,
+                            format!("Failed to load world '{}': {}", uuid, error),
+                        );
                     } else {
-                        println!("World '{}' was loaded", uuid);
+                        println(
+                            color::BRIGHT_MAGENTA,
+                            format!("World '{}' was loaded", uuid),
+                        );
                     }
                     state = View::MENU;
                 } else {
-                    println!("No world selected");
+                    println(color::BRIGHT_MAGENTA, "No world selected");
                     state = View::CONTROLS;
                 }
             }
         }
-        println!(
-            "Selected Character: {}",
-            selected_characters
-                .iter()
-                .map(|e| e.short.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
+        println(
+            color::BRIGHT_MAGENTA,
+            format!(
+                "Selected Character: {}",
+                selected_characters
+                    .iter()
+                    .map(|e| e.short.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         );
-        println!(
-            "Selected Scenes: {}",
-            selected_scenes
-                .iter()
-                .map(|e| e.short.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
+        println(
+            color::BRIGHT_MAGENTA,
+            format!(
+                "Selected Scenes: {}",
+                selected_scenes
+                    .iter()
+                    .map(|e| e.short.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         );
-        println!(
-            "Selected Items: {}",
-            selected_items
-                .iter()
-                .map(|e| e.short.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
+        println(
+            color::BRIGHT_MAGENTA,
+            format!(
+                "Selected Items: {}",
+                selected_items
+                    .iter()
+                    .map(|e| e.short.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         );
     }
 

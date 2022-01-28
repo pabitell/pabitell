@@ -19,7 +19,9 @@ actix-web-actors = "4.0.0-beta.8"
 anyhow = "1"
 clap = { version = "3.0.0-beta.rc.4", features = ["env", "cargo"]}
 futures = "0.3"
+lazy_static = "1"
 pabitell-lib = { path = "../pabitell-lib/", features = ["with_translations"] }
+term = "0.7"
 rand = "0.8"
 skim = "0.9"
 sled = "0.34"
