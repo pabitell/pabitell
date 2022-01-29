@@ -520,12 +520,12 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                         if events[idx].can_be_triggered(world.as_ref()) {
                             println(
                                 color::BRIGHT_CYAN,
-                                format!("{}", events[idx].success_text(world.as_ref())),
+                                format!("{}. {}", world.event_count() + 1, events[idx].success_text(world.as_ref())),
                             );
                         } else {
                             println(
                                 color::BRIGHT_RED,
-                                format!("{}", events[idx].fail_text(world.as_ref())),
+                                events[idx].fail_text(world.as_ref()),
                             );
                         }
                         events[idx].trigger(world.as_mut());
