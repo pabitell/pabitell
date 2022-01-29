@@ -1,32 +1,20 @@
 use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    AsAny, Character, Description, Dumpable, Event, Id, Item, Named, Scene, Tagged, World,
-    WorldBuilder,
+    AsAny, Character, Description, Dumpable, Event, Named, Tagged, World, WorldBuilder,
 };
 use serde_json::{json, Value};
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::translations::get_message;
 
 #[derive(Debug, Default)]
 pub struct Kitie {
-    id: Uuid,
     scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
     pub consumed_dumplings: bool,
     pub consumed_meat: bool,
-}
-
-impl Id for Kitie {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
 }
 
 impl Tagged for Kitie {
@@ -142,22 +130,12 @@ impl Kitie {
 
 #[derive(Debug, Default)]
 pub struct Doggie {
-    id: Uuid,
     scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
     pub consumed_pie: bool,
     pub consumed_soup: bool,
     pub consumed_dumplings: bool,
     pub consumed_meat: bool,
-}
-
-impl Id for Doggie {
-    fn id(&self) -> &uuid::Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
 }
 
 impl Tagged for Doggie {

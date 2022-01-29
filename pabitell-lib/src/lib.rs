@@ -69,12 +69,6 @@ impl Dumpable for ItemState {
     }
 }
 
-pub trait Id {
-    /// unique name within world
-    fn id(&self) -> &Uuid;
-    fn set_id(&mut self, id: Uuid);
-}
-
 pub trait Tagged {
     fn get_tags(&self) -> Vec<String> {
         vec![]
@@ -104,17 +98,17 @@ pub trait Dumpable {
     fn load(&mut self, data: serde_json::Value) -> Result<()>;
 }
 
-pub trait Item: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+pub trait Item: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
     fn state(&self) -> &ItemState;
     fn set_state(&mut self, state: ItemState);
 }
 
-pub trait Character: Id + Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+pub trait Character: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
     fn scene(&self) -> &Option<String>;
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Id + Named + Tagged + AsAny + Description + Dumpable + Music + fmt::Debug {
+pub trait Scene: Named + Tagged + AsAny + Description + Dumpable + Music + fmt::Debug {
     fn dialog(&self) -> Option<usize> {
         None
     }
@@ -196,7 +190,7 @@ where
     fn make_world() -> Result<S>;
 }
 
-pub trait World: Id + Named + Dumpable {
+pub trait World: Named + Dumpable {
     fn available_languages(&self) -> Vec<&str>;
     fn lang(&self) -> &str;
     fn set_lang(&mut self, lang: &str) -> bool;
@@ -220,22 +214,13 @@ pub trait World: Id + Named + Dumpable {
     }
     fn randomize_ids(&mut self) {
         self.set_id(Uuid::new_v4());
-
-        self.characters_mut()
-            .values_mut()
-            .for_each(|e| e.set_id(Uuid::new_v4()));
-
-        self.items_mut()
-            .values_mut()
-            .for_each(|e| e.set_id(Uuid::new_v4()));
-
-        self.scenes_mut()
-            .values_mut()
-            .for_each(|e| e.set_id(Uuid::new_v4()));
     }
     fn finished(&self) -> bool;
     fn event_count(&self) -> usize;
     fn event_inc(&mut self);
+
+    fn id(&self) -> &Uuid;
+    fn set_id(&mut self, id: Uuid);
 }
 
 pub trait Narrator {
@@ -246,7 +231,7 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        AsAny, Character, Description, Dumpable, Event, Id, Item, ItemState, Music, Named, Scene,
+        AsAny, Character, Description, Dumpable, Event, Item, ItemState, Music, Named, Scene,
         Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
@@ -255,17 +240,7 @@ pub mod test {
 
     #[derive(Debug, Default)]
     struct TestCharacter {
-        id: Uuid,
         scene: Option<String>,
-    }
-
-    impl Id for TestCharacter {
-        fn id(&self) -> &Uuid {
-            &self.id
-        }
-        fn set_id(&mut self, id: Uuid) {
-            self.id = id
-        }
     }
 
     impl Tagged for TestCharacter {}
@@ -319,17 +294,7 @@ pub mod test {
 
     #[derive(Debug, Default)]
     struct TestItem {
-        id: uuid::Uuid,
         state: ItemState,
-    }
-
-    impl Id for TestItem {
-        fn id(&self) -> &uuid::Uuid {
-            &self.id
-        }
-        fn set_id(&mut self, id: Uuid) {
-            self.id = id
-        }
     }
 
     impl Tagged for TestItem {}
@@ -382,18 +347,7 @@ pub mod test {
     }
 
     #[derive(Debug, Default)]
-    struct TestScene {
-        id: Uuid,
-    }
-
-    impl Id for TestScene {
-        fn id(&self) -> &Uuid {
-            &self.id
-        }
-        fn set_id(&mut self, id: Uuid) {
-            self.id = id
-        }
-    }
+    struct TestScene {}
 
     impl Tagged for TestScene {}
 
@@ -458,7 +412,6 @@ pub mod test {
 
     #[derive(Debug, Clone)]
     struct TestEvent {
-        id: Uuid,
         description: TestDescription,
     }
     impl Tagged for TestEvent {}
@@ -562,15 +515,6 @@ pub mod test {
         event_count: usize,
     }
 
-    impl Id for TestWorld {
-        fn id(&self) -> &Uuid {
-            &self.id
-        }
-        fn set_id(&mut self, id: Uuid) {
-            self.id = id
-        }
-    }
-
     impl Named for TestWorld {
         fn name(&self) -> &'static str {
             "test_world"
@@ -631,6 +575,14 @@ pub mod test {
 
         fn event_inc(&mut self) {
             self.event_count += 1;
+        }
+
+        fn id(&self) -> &Uuid {
+            &self.id
+        }
+
+        fn set_id(&mut self, id: Uuid) {
+            self.id = id
         }
     }
 

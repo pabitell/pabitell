@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    translations::get_available_locales, Character, Description, Dumpable, Id, Item, ItemState,
-    Named, Scene, Tagged, World, WorldBuilder,
+    translations::get_available_locales, Character, Description, Dumpable, Item, ItemState, Named,
+    Scene, Tagged, World, WorldBuilder,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -142,15 +142,6 @@ impl WorldBuilder<CakeWorld> for CakeWorldBuilder {
     }
 }
 
-impl Id for CakeWorld {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-    fn set_id(&mut self, id: Uuid) {
-        self.id = id;
-    }
-}
-
 impl Tagged for CakeWorld {}
 
 impl Named for CakeWorld {
@@ -264,6 +255,13 @@ impl World for CakeWorld {
 
     fn extra_clean(&mut self) {
         self.event_count = 0;
+    }
+
+    fn id(&self) -> &Uuid {
+        &self.id
+    }
+    fn set_id(&mut self, id: Uuid) {
+        self.id = id;
     }
 }
 

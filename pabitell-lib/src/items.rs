@@ -8,16 +8,6 @@ macro_rules! simple_item {
             state: $crate::ItemState,
         }
 
-        impl $crate::Id for $class_name {
-            fn id(&self) -> &uuid::Uuid {
-                &self.id
-            }
-
-            fn set_id(&mut self, id: uuid::Uuid) {
-                self.id = id;
-            }
-        }
-
         impl $crate::Named for $class_name {
             fn name(&self) -> &'static str {
                 $name

@@ -6,16 +6,6 @@ macro_rules! scene_base {
             id: uuid::Uuid,
         }
 
-        impl $crate::Id for $class_name {
-            fn id(&self) -> &uuid::Uuid {
-                &self.id
-            }
-
-            fn set_id(&mut self, id: uuid::Uuid) {
-                self.id = id;
-            }
-        }
-
         impl $crate::Named for $class_name {
             fn name(&self) -> &'static str {
                 $name
@@ -72,16 +62,6 @@ macro_rules! scene_with_dialog {
         pub struct $class_name {
             id: uuid::Uuid,
             dialog: usize,
-        }
-
-        impl $crate::Id for $class_name {
-            fn id(&self) -> &uuid::Uuid {
-                &self.id
-            }
-
-            fn set_id(&mut self, id: uuid::Uuid) {
-                self.id = id;
-            }
         }
 
         impl $crate::Named for $class_name {

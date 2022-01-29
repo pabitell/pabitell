@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use pabitell_lib::{
-    simple_item, AsAny, Description, Dumpable, Id, Item, ItemState, Named, Tagged, World,
+    simple_item, AsAny, Description, Dumpable, Item, ItemState, Named, Tagged, World,
 };
 use serde_json::{json, Value};
 use std::any::Any;
