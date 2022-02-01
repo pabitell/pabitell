@@ -236,6 +236,7 @@ impl Component for Intro {
                             <p>{ctx.props().story_detail.clone()}</p>
                             <QRScanner
                               qr_found={qr_found_cb}
+                              lang={ctx.props().lang.clone()}
                               shared_scope={self.qr_scanner_character_callback.clone()}
                             />
                         </div>

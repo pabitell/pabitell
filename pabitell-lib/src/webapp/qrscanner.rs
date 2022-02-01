@@ -1,16 +1,9 @@
-use std::{
-    cell::RefCell,
-    convert::TryInto,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, rc::Rc};
 
 use gloo::{
-    dialogs,
     storage::{self, Storage},
     timers,
 };
-use js_sys::{ArrayBuffer, Function, Uint8Array, Uint8ClampedArray};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
@@ -19,7 +12,9 @@ use web_sys::{
     MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
     MediaStreamTrack,
 };
-use yew::{function_component, html, prelude::*};
+use yew::{html, prelude::*};
+
+use crate::translations;
 
 use super::jsQR::js_qr;
 
@@ -27,6 +22,7 @@ use super::jsQR::js_qr;
 pub struct Props {
     pub qr_found: Callback<String>,
     pub shared_scope: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
+    pub lang: String,
 }
 
 impl PartialEq<Self> for Props {
@@ -51,6 +47,7 @@ pub struct QRScanner {
     video_ref: NodeRef,
     canvas_ref: NodeRef,
     interval: Option<timers::callback::Interval>,
+    camera_available: bool,
 }
 
 pub enum Msg {
@@ -59,6 +56,7 @@ pub enum Msg {
     Picture(ImageData),
     SwitchCamera(Option<String>),
     CameraSwitched,
+    CameraNotAvailable,
 }
 
 impl Component for QRScanner {
@@ -132,6 +130,7 @@ impl Component for QRScanner {
                 }
             }
             Msg::SwitchCamera(device_id) => {
+                self.camera_available = true;
                 // Store device in local storage
                 if let Some(device_id) = device_id.as_ref() {
                     storage::SessionStorage::set(&"device_id", device_id).unwrap();
@@ -162,16 +161,18 @@ impl Component for QRScanner {
                         let stream_fut =
                             media_devices.get_user_media_with_constraints(&constraints);
 
-                        let stream_js = JsFuture::from(stream_fut.unwrap()).await.unwrap();
-                        let media_stream = MediaStream::from(stream_js);
+                        if let Ok(stream_js) = JsFuture::from(stream_fut.unwrap()).await {
+                            let media_stream = MediaStream::from(stream_js);
 
-                        video.set_src_object(Some(&media_stream));
-                        JsFuture::from(video.play().unwrap()).await.unwrap();
+                            video.set_src_object(Some(&media_stream));
+                            JsFuture::from(video.play().unwrap()).await.unwrap();
 
-                        canvas.set_width(video.video_width());
-                        canvas.set_height(video.video_height());
-
-                        Msg::CameraSwitched
+                            canvas.set_width(video.video_width());
+                            canvas.set_height(video.video_height());
+                            Msg::CameraSwitched
+                        } else {
+                            Msg::CameraNotAvailable
+                        }
                     });
                 }
                 self.current_device_id = device_id.clone();
@@ -181,6 +182,10 @@ impl Component for QRScanner {
             Msg::CameraSwitched => {
                 self.prepare_interval(ctx);
                 false
+            }
+            Msg::CameraNotAvailable => {
+                self.camera_available = false;
+                true
             }
         }
     }
@@ -200,6 +205,7 @@ impl Component for QRScanner {
                 disabled: true,
             }],
             current_device_id: None,
+            camera_available: true,
         }
     }
 
@@ -216,7 +222,7 @@ impl Component for QRScanner {
                 <div class="modal-background"></div>
                 <div class="modal-content has-text-centered">
                 { self.view_cameras(ctx) }
-                { self.video_view() }
+                { self.video_view(ctx) }
                 </div>
                 <button
                   onclick={close_cb}
@@ -271,8 +277,19 @@ impl Component for QRScanner {
 }
 
 impl QRScanner {
-    fn video_view(&self) -> Html {
+    fn video_view(&self, ctx: &Context<Self>) -> Html {
         if self.active {
+            let text = translations::get_message_global("no_camera", &ctx.props().lang, None);
+            let no_camera_html = if self.camera_available {
+                html! {}
+            } else {
+                html! {
+                    <div class="content is-flex is-justify-content-center">
+                        <div class="notification is-danger w-50"><p>{{ text }}</p></div>
+                    </div>
+                }
+            };
+
             html! {
                 <div class="section">
                     <video
@@ -280,7 +297,9 @@ impl QRScanner {
                       height="auto"
                       id="video"
                       ref={self.video_ref.clone()}
-                      style="max-width:80%;max-height:80%"
+                      style={
+                        if self.camera_available {"max-width:80%;max-height:80%"} else {"display:none"}
+                      }
                       poster="images/qrcode.svg"
                     ></video>
                     <canvas
@@ -290,6 +309,7 @@ impl QRScanner {
                       style="display: none;"
                       ref={self.canvas_ref.clone()}>
                     </canvas>
+                    { no_camera_html }
                 </div>
             }
         } else {
@@ -324,7 +344,7 @@ impl QRScanner {
         };
         html! {
             <div class="tabs is-centered is-toggle">
-                <ul>
+                <ul class="ml-0">
                     { for self.cameras.iter().map(render_camera) }
                 </ul>
             </div>

@@ -11,6 +11,7 @@ pub struct Props {
     pub item_used_event: Callback<(String, String)>,
     pub show_qr_cb: Callback<Rc<Vec<u8>>>,
     pub trigger_event_cb: Callback<Rc<Vec<u8>>>,
+    pub lang: String,
 }
 
 pub struct ActionItem {
@@ -153,7 +154,11 @@ impl Component for ActionItem {
                 </div>
                 <div class="card-content">
                     <div class="content">{item.long.clone()}</div>
-                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_callback.clone()} />
+                    <QRScanner
+                      lang={ctx.props().lang.clone()}
+                      qr_found={qr_found_cb}
+                      shared_scope={self.qr_scanner_callback.clone()}
+                    />
                 </div>
                 <footer class="card-footer">
                     { scan_html }

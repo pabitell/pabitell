@@ -229,6 +229,7 @@ impl Component for Actions {
                 <action_item::ActionItem
                   item={item.clone()}
                   item_used_event={use_item_scanned_cb}
+                  lang={ctx.props().lang.clone()}
                   {show_qr_cb}
                   {trigger_event_cb}
                 />
@@ -256,7 +257,11 @@ impl Component for Actions {
                     { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
                     { for joinable_characters.iter().map(|e| render_join(&e)) }
                     { for items.iter().map(render_item) }
-                    <QRScanner qr_found={qr_found_cb} shared_scope={self.qr_scanner_scope.clone()} />
+                    <QRScanner
+                      qr_found={qr_found_cb}
+                      lang={ctx.props().lang.clone()}
+                      shared_scope={self.qr_scanner_scope.clone()}
+                    />
                     { for events.into_iter().map(render_action) }
                     <QRCode qr_code_scope={self.qr_code_scope.clone()}/>
                 </div>
