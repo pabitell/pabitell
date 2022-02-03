@@ -5,6 +5,7 @@ members = [
 	"pabitell-cli",
 	"stories/doggie-and-kitie/cake/",
 	"stories/doggie-and-kitie/doll/",
+	"pabitell-root",
 ]
 
 default-members = [
