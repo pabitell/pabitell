@@ -1,8 +1,5 @@
 use pabitell_lib::{data, webapp::print::PrintItem, World};
-use serde_json::Value;
 use std::rc::Rc;
-
-use crate::translations::get_message;
 
 pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     let mut res = vec![];
@@ -18,7 +15,7 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // find doll
     let item = world.items().get("doll").unwrap();
-    let data = serde_json::to_value(data::PickData::new("pick", "", "doll")).unwrap();
+    let data = serde_json::to_value(data::UseItemData::new("find_doll", "", "doll")).unwrap();
 
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))

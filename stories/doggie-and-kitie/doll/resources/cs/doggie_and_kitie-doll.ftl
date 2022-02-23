@@ -129,7 +129,7 @@ doggie_and_kitie-doll-doggie_move_to_walk-fail =
 doggie_and_kitie-doll-kitie_move_to_walk-action =
     Kočička odeje na procházku.
 doggie_and_kitie-doll-kitie_move_to_walk-success =
-    Kočička odešela na procházku.
+    Kočička odešla na procházku.
 doggie_and_kitie-doll-kitie_move_to_walk-fail =
     Kočička nemůže odejít na procházku.
 
@@ -345,7 +345,7 @@ doggie_and_kitie-doll-kitie_move_to_kitie_search-common =
 doggie_and_kitie-doll-kitie_move_to_kitie_search-action = 
     Kočička odejde { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
 doggie_and_kitie-doll-kitie_move_to_kitie_search-success = 
-    Kočička odešela { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
+    Kočička odešla { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
 doggie_and_kitie-doll-kitie_move_to_kitie_search-fail = 
     Kočička nemůže odejít { doggie_and_kitie-doll-kitie_move_to_kitie_search-common }
 

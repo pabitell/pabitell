@@ -301,12 +301,12 @@ impl Narrator for Doll {
                     )))),
                     4 => {
                         res.push(Box::new(events::make_find_doll(data::UseItemData::new(
-                            "found_doll",
+                            "find_doll",
                             "kitie",
                             "doll",
                         ))));
                         res.push(Box::new(events::make_find_doll(data::UseItemData::new(
-                            "found_doll",
+                            "find_doll",
                             "doggie",
                             "doll",
                         ))));
@@ -402,7 +402,7 @@ impl Narrator for Doll {
                 Self::parse_move_to(value, name, "home", "walk", Some(5), true)
             }
             Value::String(name) if name == "talk_on_walk" => Self::parse_talk(value, name, "walk"),
-            Value::String(name) if name == "found_doll" => {
+            Value::String(name) if name == "find_doll" => {
                 let character = if let Value::String(character) = &value["character"] {
                     Some(character)
                 } else {
