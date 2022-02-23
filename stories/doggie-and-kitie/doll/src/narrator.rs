@@ -431,25 +431,9 @@ impl Narrator for Doll {
                 }
             }
             Value::String(name) if name == "move_to_doggie_search" => {
-                let character = if let Value::String(character) = &value["character"] {
-                    Some(character)
-                } else {
-                    None
-                }?;
-                if character != "doggie" {
-                    return None;
-                }
                 Self::parse_move_to(value, name, "home", "doggie_search", Some(15), true)
             }
             Value::String(name) if name == "move_to_kitie_search" => {
-                let character = if let Value::String(character) = &value["character"] {
-                    Some(character)
-                } else {
-                    None
-                }?;
-                if character != "kitie" {
-                    return None;
-                }
                 Self::parse_move_to(value, name, "home", "kitie_search", Some(16), true)
             }
             Value::String(name) if name == "pick" => Self::parse_pick(value, name),
