@@ -1,6 +1,6 @@
 use futures::{stream::SplitSink, SinkExt, StreamExt};
+use gloo::net::websocket::{futures::WebSocket, Message, WebSocketError};
 use gloo::timers::callback::Timeout;
-use reqwasm::websocket::{futures::WebSocket, Message, WebSocketError};
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen_futures::spawn_local;
@@ -110,8 +110,8 @@ impl Component for Status {
                                             log::warn!("WS closed {}:{:?}", url, err);
                                             break;
                                         }
-                                        Err(WebSocketError::ConnectionError(err)) => {
-                                            log::warn!("WS connection Error {}:{:?}", url, err);
+                                        Err(WebSocketError::ConnectionError) => {
+                                            log::warn!("WS connection Error {}", url);
                                             break;
                                         }
                                         Err(_) => {
