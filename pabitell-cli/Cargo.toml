@@ -34,5 +34,5 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "0.8", features = ["serde"] }
 
 # Stories
-doggie_and_kitie_cake = { path = "../stories/doggie-and-kitie/cake/", optional = true }
-doggie_and_kitie_doll = { path = "../stories/doggie-and-kitie/doll/", optional = true }
+doggie_and_kitie_cake = { path = "../stories/doggie_and_kitie/cake/", optional = true }
+doggie_and_kitie_doll = { path = "../stories/doggie_and_kitie/doll/", optional = true }

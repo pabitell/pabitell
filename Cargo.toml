@@ -3,8 +3,8 @@
 members = [
 	"pabitell-lib",
 	"pabitell-cli",
-	"stories/doggie-and-kitie/cake/",
-	"stories/doggie-and-kitie/doll/",
+	"stories/doggie_and_kitie/cake/",
+	"stories/doggie_and_kitie/doll/",
 	"pabitell-root",
 ]
 
