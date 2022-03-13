@@ -5,7 +5,7 @@ use actix_web::{
 use actix_web_actors::ws;
 use anyhow::{anyhow, Result};
 use futures::StreamExt;
-use pabitell_lib::{data::EventData, Dumpable, Narrator, World};
+use pabitell_lib::{data::EventData, protocol, Dumpable, Narrator, World};
 use serde::{Deserialize, Serialize};
 use sled::Db;
 use std::{
@@ -139,11 +139,13 @@ async fn event_world(
         debug!("Sending;dump={}", event.dump());
         ws_manager.do_send(WsClientMessage {
             world_id,
-            data: serde_json::json!({
-                "event": event.dump(),
-                "event_count":  world.event_count()
-            })
-            .to_string(),
+            data: serde_json::to_string(&protocol::Message::Notification(
+                protocol::NotificationMessage::Event(protocol::EventNotification {
+                    event: event.dump(),
+                    event_count: world.event_count(),
+                }),
+            ))
+            .unwrap(),
         });
 
         // TODO think of some reasonable retval

@@ -8,7 +8,7 @@ use web_sys::{OrientationLockType, Request, RequestInit, RequestMode, Response};
 use yew::prelude::*;
 
 use crate::{
-    events, translations,
+    events, protocol, translations,
     webapp::{
         action_event::ActionEventItem,
         actions::{Actions, Msg as ActionsMsg},
@@ -31,7 +31,7 @@ pub enum Msg {
     TriggerEventData(Value),
     TriggerRestoreCharacter(Option<String>, bool, Uuid),
     PlayText(String),
-    NotificationRecieved(String),
+    WsMessageRecieved(String),
     Reset,
     CreateNewWorld,
     NewWorldIdFetched(Uuid),
@@ -276,7 +276,16 @@ impl Component for App {
 
                         // Queue character notification
                         // we need to wait till Status component is initialized
-                        self.ws_queue.push(character_instance.dump().to_string());
+                        self.ws_queue.push(
+                            serde_json::to_string(&protocol::Message::Notification(
+                                protocol::NotificationMessage::Joined(
+                                    protocol::JoinedNotification {
+                                        character: character_instance.dump(),
+                                    },
+                                ),
+                            ))
+                            .unwrap(),
+                        );
 
                         true
                     } else {
@@ -344,79 +353,82 @@ impl Component for App {
                 }
                 true
             }
-            Msg::NotificationRecieved(data) => {
+            Msg::WsMessageRecieved(data) => {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
-                if let Ok(json) = serde_json::from_str(&data) {
-                    let json: Value = json;
-                    let world = if let Some(world) = self.world.as_ref() {
-                        world
-                    } else {
-                        return false;
-                    };
-                    // Now we should determine which type of notification this really is
-                    if let Some(event) = narrator.parse_event(world.as_ref(), &json["event"]) {
-                        if let Value::Number(number) = &json["event_count"] {
-                            if let Some(count) = number.as_u64() {
-                                self.event_count = count as usize;
-                            } else {
-                                log::warn!("Event notification is not positive integer");
-                                return false;
-                            }
+                match serde_json::from_str(&data) {
+                    Ok(protocol::NotificationMessage::Event(event_notification)) => {
+                        let world = if let Some(world) = self.world.as_ref() {
+                            world
                         } else {
-                            log::warn!("Malformed event notification count");
                             return false;
-                        }
-                        log::info!("New event arrived from ws");
+                        };
+                        if let Some(event) =
+                            narrator.parse_event(world.as_ref(), &event_notification.event)
+                        {
+                            self.event_count = event_notification.event_count;
+                            log::info!("New event arrived from ws");
 
-                        // Store event to database
-                        let name = ctx.props().name.clone();
-                        let world_id = self.world_id.clone().unwrap();
-                        let event_count = self.event_count;
-                        let data = event.dump();
-                        spawn_local(async move {
-                            let db = database::init_database(&name).await;
-                            database::put_event(&db, &world_id, event_count as u64, data)
-                                .await
-                                .unwrap();
-                        });
+                            // Store event to database
+                            let name = ctx.props().name.clone();
+                            let world_id = self.world_id.clone().unwrap();
+                            let event_count = self.event_count;
+                            let data = event.dump();
+                            spawn_local(async move {
+                                let db = database::init_database(&name).await;
+                                database::put_event(&db, &world_id, event_count as u64, data)
+                                    .await
+                                    .unwrap();
+                            });
 
-                        if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
-                            log::debug!("Hiding QR code of actions");
-                            actions_scope.send_message(ActionsMsg::QRCodeHide);
-                        }
-                        if let Some(world_id) = self.world_id {
-                            // TODO this should be optimized
-                            // not need to refresh the whole world just a single event
-                            self.request_to_get_world(ctx, world_id);
-                        }
+                            if let Some(actions_scope) =
+                                self.actions_scope.as_ref().borrow().as_ref()
+                            {
+                                log::debug!("Hiding QR code of actions");
+                                actions_scope.send_message(ActionsMsg::QRCodeHide);
+                            }
+                            if let Some(world_id) = self.world_id {
+                                // TODO this should be optimized
+                                // not need to refresh the whole world just a single event
+                                self.request_to_get_world(ctx, world_id);
+                            }
 
-                        if let Some(world) = self.world.as_ref() {
-                            if event.can_be_triggered(world.as_ref()) {
-                                let message = MessageItem::new(
-                                    translations::get_message_global("event", world.lang(), None),
-                                    event.success_text(world.as_ref()),
-                                    MessageKind::Success,
-                                    Some("fas fa-cogs".to_string()),
-                                );
-                                let text = message.text.clone();
-                                self.messages_scope
-                                    .as_ref()
-                                    .borrow()
-                                    .clone()
-                                    .unwrap()
-                                    .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                                if !event.get_tags().contains(&"no_read".to_string()) {
-                                    ctx.link().send_message(Msg::PlayText(text.to_string()));
+                            if let Some(world) = self.world.as_ref() {
+                                if event.can_be_triggered(world.as_ref()) {
+                                    let message = MessageItem::new(
+                                        translations::get_message_global(
+                                            "event",
+                                            world.lang(),
+                                            None,
+                                        ),
+                                        event.success_text(world.as_ref()),
+                                        MessageKind::Success,
+                                        Some("fas fa-cogs".to_string()),
+                                    );
+                                    let text = message.text.clone();
+                                    self.messages_scope
+                                        .as_ref()
+                                        .borrow()
+                                        .clone()
+                                        .unwrap()
+                                        .send_message(MessagesMsg::AddMessage(Rc::new(message)));
+                                    if !event.get_tags().contains(&"no_read".to_string()) {
+                                        ctx.link().send_message(Msg::PlayText(text.to_string()));
+                                    }
                                 }
                             }
                         }
-                    } else if let Value::String(name) = &json["name"] {
-                        // It can be a message that character was joining the game
-                        // => close Modal which is displaying QR code
-                        log::info!("Character '{}' joined", name);
+                    }
+                    Ok(protocol::NotificationMessage::Joined(joined_notification)) => {
+                        log::info!(
+                            "Character '{}' joined",
+                            joined_notification.character["name"]
+                        );
                         if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
                             actions_scope.send_message(ActionsMsg::QRCodeHide);
                         }
+                    }
+                    Err(err) => {
+                        log::warn!("Failed to parse WS data: {}", err);
                     }
                 }
                 false
@@ -537,7 +549,7 @@ impl Component for App {
 
             let lang = world.lang().to_string();
 
-            let notification_cb = link.callback(|data| Msg::NotificationRecieved(data));
+            let ws_message_cb = link.callback(|data| Msg::WsMessageRecieved(data));
             let status_ready_cb = link.callback(|_| Msg::StatusReady);
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
@@ -574,7 +586,7 @@ impl Component for App {
                                         world_id={self.world_id.clone()}
                                         namespace={"some_namespace"}
                                         story={props.name.clone()}
-                                        msg_recieved={notification_cb}
+                                        msg_recieved={ws_message_cb}
                                         status_ready={status_ready_cb}
                                         refresh_world={refresh_world_cb}
                                         reset_world={reset_cb}

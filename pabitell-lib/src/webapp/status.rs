@@ -155,7 +155,7 @@ impl Component for Status {
             }
             Msg::SendMessage(message) => {
                 log::debug!("Sending a message to websockets");
-                if let Some(mut sender) = self.sender.clone() {
+                if let Some(sender) = self.sender.clone() {
                     spawn_local(async move {
                         // Best effort - don't care about the Result
                         let _ = sender.borrow_mut().send(Message::Text(message)).await;
