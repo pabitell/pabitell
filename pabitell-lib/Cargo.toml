@@ -22,8 +22,8 @@ intl-memoizer = { version = "~0.5.1", optional = true }
 js-sys = { version = "0.3", optional = true }
 log = { version = "~0.4.14", optional = true }
 lazy_static = "1"
-qrcode = { version = "0.11", features = ["svg"], optional = true }
-rexie = { version = "0.2", optional = true }
+qrcode = { version = "0.12", features = ["svg"], optional = true }
+rexie = { version = "0.3", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 unic-langid = { version = "~0.9.0", features = ["macros"], optional = true }

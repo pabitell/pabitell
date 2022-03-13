@@ -46,7 +46,7 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
         return Ok(None);
     }
     let world_json = world.into_serde().unwrap();
-    transaction.commit().await?;
+    transaction.done().await?;
     Ok(Some(world_json))
 }
 
@@ -59,7 +59,7 @@ pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String,
 
     let worlds = index.get_all(None, None, None, None).await?;
 
-    transaction.commit().await?;
+    transaction.done().await?;
     Ok(worlds
         .iter()
         .map(|(k, v)| {
@@ -101,7 +101,7 @@ pub async fn put_world(
     worlds
         .put(&JsValue::from_serde(&Some(record)).unwrap(), None)
         .await?;
-    transaction.commit().await?;
+    transaction.done().await?;
 
     Ok(())
 }
@@ -112,7 +112,7 @@ pub async fn del_world(rex: &Rexie, id: &Uuid) -> Result<()> {
     let worlds = transaction.store("worlds")?;
     worlds.delete(&JsValue::from_str(&id.to_string())).await?;
 
-    transaction.commit().await?;
+    transaction.done().await?;
     Ok(())
 }
 
@@ -131,7 +131,7 @@ pub async fn get_events(rex: &Rexie, world_id: &Uuid) -> Result<Vec<Value>> {
         )
         .await?;
 
-    transaction.commit().await?;
+    transaction.done().await?;
 
     Ok(world_events
         .iter()
@@ -177,7 +177,7 @@ pub async fn get_event(rex: &Rexie, world_id: &Uuid, idx: u64) -> Result<Option<
     } else {
         Some(res.remove(0))
     };
-    transaction.commit().await?;
+    transaction.done().await?;
 
     Ok(event_json)
 }
