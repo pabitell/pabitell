@@ -123,7 +123,7 @@ async fn event_world(
 
     // Test whether the data are JSON
     let value =
-        &serde_json::from_slice(&body).map_err(|_| error::ErrorBadRequest("Expected JSON"))?;
+        serde_json::from_slice(&body).map_err(|_| error::ErrorBadRequest("Expected JSON"))?;
 
     // Test whether it can be parsed as event
     let mut event = narrator

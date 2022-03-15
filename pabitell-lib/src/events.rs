@@ -6,6 +6,7 @@ use std::{any::Any, fmt};
 
 #[derive(Default)]
 pub struct Pick {
+    name: String,
     data: data::PickData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -17,7 +18,7 @@ pub struct Pick {
 
 impl fmt::Debug for Pick {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct(&format!("({})", self.name()))
+        f.debug_struct(&format!("Pick({})", self.name()))
             .field("character", &self.data.character)
             .field("item", &self.data.item)
             .finish()
@@ -55,7 +56,7 @@ impl PartialEq<[u8]> for Pick {
 
 impl Event for Pick {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -106,7 +107,9 @@ impl Event for Pick {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -115,8 +118,12 @@ impl Event for Pick {
 }
 
 impl Pick {
-    pub fn new(data: data::PickData) -> Self {
+    pub fn new<S>(name: S, data: data::PickData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -133,6 +140,7 @@ impl Pick {
 
 #[derive(Default)]
 pub struct Give {
+    name: String,
     data: data::GiveData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -183,7 +191,7 @@ impl PartialEq<[u8]> for Give {
 
 impl Event for Give {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -235,7 +243,9 @@ impl Event for Give {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -244,8 +254,12 @@ impl Event for Give {
 }
 
 impl Give {
-    pub fn new(data: data::GiveData) -> Self {
+    pub fn new<S>(name: S, data: data::GiveData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -266,6 +280,7 @@ impl Give {
 
 #[derive(Default)]
 pub struct UseItem {
+    name: String,
     data: data::UseItemData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -315,7 +330,7 @@ impl PartialEq<[u8]> for UseItem {
 
 impl Event for UseItem {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -366,7 +381,9 @@ impl Event for UseItem {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -375,8 +392,12 @@ impl Event for UseItem {
 }
 
 impl UseItem {
-    pub fn new(data: data::UseItemData) -> Self {
+    pub fn new<S>(name: S, data: data::UseItemData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -393,6 +414,7 @@ impl UseItem {
 
 #[derive(Default)]
 pub struct Move {
+    name: String,
     data: data::MoveData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -442,7 +464,7 @@ impl PartialEq<[u8]> for Move {
 
 impl Event for Move {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -493,7 +515,9 @@ impl Event for Move {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -502,8 +526,12 @@ impl Event for Move {
 }
 
 impl Move {
-    pub fn new(data: data::MoveData) -> Self {
+    pub fn new<S>(name: S, data: data::MoveData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -520,6 +548,7 @@ impl Move {
 
 #[derive(Default)]
 pub struct Void {
+    name: String,
     data: data::VoidData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -569,7 +598,7 @@ impl PartialEq<[u8]> for Void {
 
 impl Event for Void {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -620,7 +649,9 @@ impl Event for Void {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -629,8 +660,12 @@ impl Event for Void {
 }
 
 impl Void {
-    pub fn new(data: data::VoidData) -> Self {
+    pub fn new<S>(name: S, data: data::VoidData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -647,6 +682,7 @@ impl Void {
 
 #[derive(Default)]
 pub struct Talk {
+    name: String,
     data: data::TalkData,
     tags: Vec<String>,
     world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
@@ -697,7 +733,7 @@ impl PartialEq<[u8]> for Talk {
 
 impl Event for Talk {
     fn name(&self) -> &str {
-        &self.data.name
+        &self.name
     }
 
     fn initiator(&self) -> String {
@@ -748,7 +784,9 @@ impl Event for Talk {
     }
 
     fn dump(&self) -> serde_json::Value {
-        serde_json::to_value(self.data.clone()).unwrap()
+        let mut res = serde_json::to_value(self.data.clone()).unwrap();
+        res["name"] = serde_json::Value::String(self.name().to_string());
+        res
     }
 
     fn matches(&self, value: &serde_json::Value) -> bool {
@@ -757,8 +795,12 @@ impl Event for Talk {
 }
 
 impl Talk {
-    pub fn new(data: data::TalkData) -> Self {
+    pub fn new<S>(name: S, data: data::TalkData) -> Self
+    where
+        S: ToString,
+    {
         Self {
+            name: name.to_string(),
             data,
             ..Default::default()
         }
@@ -779,33 +821,33 @@ impl Talk {
 
 #[cfg(test)]
 pub mod test {
-    use super::{Give, Move, Pick, UseItem, Void};
+    use super::{Give, Move, Pick, Talk, UseItem, Void};
     use crate::{data, Event};
 
     #[test]
     fn kinds() {
-        let pick = Pick::new(data::PickData::new("pick", "character", "item"));
+        let pick = Pick::new("pick", data::PickData::new("character", "item"));
         assert_eq!(pick.kind(), "Pick");
 
-        let give = Give::new(data::GiveData::new(
+        let give = Give::new(
             "give",
-            "from_character",
-            "to_character",
-            "item",
-        ));
+            data::GiveData::new("from_character", "to_character", "item"),
+        );
         assert_eq!(give.kind(), "Give");
 
-        let move_event = Move::new(data::MoveData::new("move", "character", "to_scene"));
+        let move_event = Move::new("move", data::MoveData::new("character", "to_scene"));
         assert_eq!(move_event.kind(), "Move");
 
-        let use_item = UseItem::new(data::UseItemData::new("use_item", "character", "item"));
+        let use_item = UseItem::new("use_item", data::UseItemData::new("character", "item"));
         assert_eq!(use_item.kind(), "UseItem");
 
-        let void = Void::new(data::VoidData::new(
+        let void = Void::new(
             "void",
-            "character",
-            None as Option<String>,
-        ));
+            data::VoidData::new("character", None as Option<String>),
+        );
         assert_eq!(void.kind(), "Void");
+
+        let talk = Talk::new("talk", data::TalkData::new("character", "scene", 0));
+        assert_eq!(talk.kind(), "Talk");
     }
 }

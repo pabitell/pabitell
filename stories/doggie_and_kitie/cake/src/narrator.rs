@@ -1,7 +1,14 @@
 use pabitell_lib::{conditions, data, Character, Event, ItemState, Narrator, World};
 use serde_json::Value;
 
-use crate::{characters, events};
+use crate::{
+    characters,
+    events::{self, ProtocolEvent},
+};
+
+fn to_dynamic_event(event: Box<dyn Event>) -> Box<dyn Event> {
+    event
+}
 
 #[derive(Default, Debug)]
 pub struct Cake;
@@ -31,35 +38,37 @@ impl Narrator for Cake {
                 match sand_cake.state() {
                     ItemState::Unassigned => {
                         let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                            data::MoveData::new("move_to_kitchen", "doggie", "kitchen"),
+                            data::MoveData::new("doggie", "kitchen"),
                         ));
                         res.push(event);
                         let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                            data::MoveData::new("move_to_kitchen", "kitie", "kitchen"),
+                            data::MoveData::new("kitie", "kitchen"),
                         ));
                         res.push(event);
                     }
                     ItemState::Owned(e) if e == "doggie" => {
                         let event: Box<dyn Event> = Box::new(events::make_give_sand_cake(
-                            data::GiveData::new("give_sand_cake", "doggie", "kitie", "sand_cake"),
+                            data::GiveData::new("doggie", "kitie", "sand_cake"),
                         ));
                         res.push(event);
                     }
                     ItemState::Owned(e) if e == "kitie" => {
                         let event: Box<dyn Event> = Box::new(events::make_give_sand_cake(
-                            data::GiveData::new("give_sand_cake", "kitie", "doggie", "sand_cake"),
+                            data::GiveData::new("kitie", "doggie", "sand_cake"),
                         ));
                         res.push(event);
                     }
                     ItemState::InScene(e) if e == "playground" => {
                         let event: Box<dyn Event> = Box::new(events::make_pick(
-                            data::PickData::new("pick", "kitie", "sand_cake"),
+                            "pick",
+                            data::PickData::new("kitie", "sand_cake"),
                             false,
                         ));
                         res.push(event);
 
                         let event: Box<dyn Event> = Box::new(events::make_pick(
-                            data::PickData::new("pick", "doggie", "sand_cake"),
+                            "pick",
+                            data::PickData::new("doggie", "sand_cake"),
                             false,
                         ));
                         res.push(event);
@@ -69,13 +78,13 @@ impl Narrator for Cake {
             }
             (Some(d), Some(k)) if d == "playground" && k == "kitchen" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                    data::MoveData::new("move_to_kitchen", "doggie", "kitchen"),
+                    data::MoveData::new("doggie", "kitchen"),
                 ));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "kitchen" && k == "playground" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_kitchen(
-                    data::MoveData::new("move_to_kitchen", "kitie", "kitchen"),
+                    data::MoveData::new("kitie", "kitchen"),
                 ));
                 res.push(event);
             }
@@ -148,7 +157,8 @@ impl Narrator for Cake {
                             if e.get_tags().contains(&"accepted".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
-                                        data::PickData::new("pick_ingredient", character, e.name()),
+                                        "pick_ingredient",
+                                        data::PickData::new(character, e.name()),
                                         false,
                                     ));
                                     res.push(event);
@@ -156,11 +166,8 @@ impl Narrator for Cake {
                             } else if e.get_tags().contains(&"rejected".to_string()) {
                                 for character in ["doggie", "kitie"] {
                                     let event: Box<dyn Event> = Box::new(events::make_pick(
-                                        data::PickData::new(
-                                            "pick_disliked_ingredient",
-                                            character,
-                                            e.name(),
-                                        ),
+                                        "pick_disliked_ingredient",
+                                        data::PickData::new(character, e.name()),
                                         true,
                                     ));
                                     res.push(event);
@@ -170,7 +177,8 @@ impl Narrator for Cake {
                     }
                     ItemState::Owned(character) => {
                         let event = Box::new(events::make_use_item(
-                            data::UseItemData::new("add_ingredient", character, e.name()),
+                            "add_ingredient",
+                            data::UseItemData::new(character, e.name()),
                             true,
                         ));
                         res.push(event);
@@ -186,25 +194,22 @@ impl Narrator for Cake {
                     .all(|e| e.state() == &ItemState::Unassigned)
                 {
                     for character in ["doggie", "kitie"] {
-                        let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_children_garden(data::MoveData::new(
-                                "move_to_children_garden",
-                                character,
-                                "children_garden",
-                            )));
+                        let event: Box<dyn Event> = Box::new(events::make_move_to_children_garden(
+                            data::MoveData::new(character, "children_garden"),
+                        ));
                         res.push(event);
                     }
                 }
             }
             (Some(d), Some(k)) if d == "kitchen" && k == "children_garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_garden(
-                    data::MoveData::new("move_to_children_garden", "doggie", "children_garden"),
+                    data::MoveData::new("doggie", "children_garden"),
                 ));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_garden" && k == "kitchen" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_garden(
-                    data::MoveData::new("move_to_children_garden", "kitie", "children_garden"),
+                    data::MoveData::new("kitie", "children_garden"),
                 ));
                 res.push(event);
             }
@@ -220,7 +225,8 @@ impl Narrator for Cake {
                     .for_each(|e| {
                         for character in ["doggie", "kitie"] {
                             let event: Box<dyn Event> = Box::new(events::make_pick(
-                                data::PickData::new("play", character, e.name()),
+                                "play",
+                                data::PickData::new(character, e.name()),
                                 true,
                             ));
                             res.push(event);
@@ -236,7 +242,7 @@ impl Narrator for Cake {
                 {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> = Box::new(events::make_move_to_garden(
-                            data::MoveData::new("move_to_garden", character, "garden"),
+                            data::MoveData::new(character, "garden"),
                         ));
                         res.push(event);
                     }
@@ -244,13 +250,13 @@ impl Narrator for Cake {
             }
             (Some(d), Some(k)) if d == "children_garden" && k == "garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_garden(
-                    data::MoveData::new("move_to_garden", "doggie", "garden"),
+                    data::MoveData::new("doggie", "garden"),
                 ));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "garden" && k == "children_garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_garden(
-                    data::MoveData::new("move_to_garden", "kitie", "garden"),
+                    data::MoveData::new("kitie", "garden"),
                 ));
                 res.push(event);
             }
@@ -260,81 +266,78 @@ impl Narrator for Cake {
                 {
                     for character in ["doggie", "kitie"] {
                         let event: Box<dyn Event> = Box::new(events::make_find_bad_dog(
-                            data::PickData::new("find", character, "bad_dog"),
+                            data::PickData::new(character, "bad_dog"),
                         ));
                         res.push(event);
                     }
                 } else {
                     for character in ["doggie", "kitie"] {
-                        let event: Box<dyn Event> =
-                            Box::new(events::make_move_to_children_house(data::MoveData::new(
-                                "move_to_children_house",
-                                character,
-                                "children_house",
-                            )));
+                        let event: Box<dyn Event> = Box::new(events::make_move_to_children_house(
+                            data::MoveData::new(character, "children_house"),
+                        ));
                         res.push(event);
                     }
                 }
             }
             (Some(d), Some(k)) if d == "garden" && k == "children_house" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_house(
-                    data::MoveData::new("move_to_children_house", "doggie", "children_house"),
+                    data::MoveData::new("doggie", "children_house"),
                 ));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_house" && k == "garden" => {
                 let event: Box<dyn Event> = Box::new(events::make_move_to_children_house(
-                    data::MoveData::new("move_to_children_house", "kitie", "children_house"),
+                    data::MoveData::new("kitie", "children_house"),
                 ));
                 res.push(event);
             }
             (Some(d), Some(k)) if d == "children_house" && k == "children_house" => {
                 if !doggie.consumed_pie {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "doggie", Some("pie")),
+                        data::VoidData::new("doggie", Some("pie")),
                     ));
                     res.push(event);
                 }
                 if !doggie.consumed_soup {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "doggie", Some("soup")),
+                        data::VoidData::new("doggie", Some("soup")),
                     ));
                     res.push(event);
                 }
                 if !doggie.consumed_dumplings {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "doggie", Some("dumplings")),
+                        data::VoidData::new("doggie", Some("dumplings")),
                     ));
                     res.push(event);
                 }
                 if !doggie.consumed_meat {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "doggie", Some("meat")),
+                        data::VoidData::new("doggie", Some("meat")),
                     ));
                     res.push(event);
                 }
 
                 if !kitie.consumed_pie {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "kitie", Some("pie")),
+                        data::VoidData::new("kitie", Some("pie")),
                     ));
                     res.push(event);
                 }
                 if !kitie.consumed_soup {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "kitie", Some("soup")),
+                        data::VoidData::new("kitie", Some("soup")),
                     ));
                     res.push(event);
                 }
                 if !kitie.consumed_dumplings {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "kitie", Some("dumplings")),
+                        data::VoidData::new("kitie", Some("dumplings")),
                     ));
                     res.push(event);
                 }
                 if !kitie.consumed_meat {
                     let event: Box<dyn Event> = Box::new(events::make_eat_meal(
-                        data::VoidData::new("eat", "kitie", Some("meat")),
+                        data::VoidData::new("kitie", Some("meat")),
                     ));
                     res.push(event);
                 }
@@ -346,130 +349,50 @@ impl Narrator for Cake {
         res
     }
 
-    fn parse_event(&self, _world: &dyn World, value: &Value) -> Option<Box<dyn Event>> {
-        // TODO validate characters, items, scenes
-        match &value["name"] {
-            Value::String(name) if name == "move_to_kitchen" => {
-                if let Value::String(character) = &value["character"] {
-                    let data = data::MoveData::new(name, character, "kitchen");
-                    Some(Box::new(events::make_move_to_kitchen(data)))
-                } else {
-                    None
-                }
+    fn parse_event(&self, _world: &dyn World, value: Value) -> Option<Box<dyn Event>> {
+        let event: Result<ProtocolEvent, serde_json::Error> = serde_json::from_value(value);
+
+        match event {
+            Ok(ProtocolEvent::MoveToKitchen(data)) => Some(to_dynamic_event(Box::new(
+                events::make_move_to_kitchen(data),
+            ))),
+            Ok(ProtocolEvent::MoveToChildrenGarden(data)) => Some(to_dynamic_event(Box::new(
+                events::make_move_to_children_garden(data),
+            ))),
+            Ok(ProtocolEvent::MoveToGarden(data)) => Some(to_dynamic_event(Box::new(
+                events::make_move_to_garden(data),
+            ))),
+            Ok(ProtocolEvent::MoveToChildrenHouse(data)) => Some(to_dynamic_event(Box::new(
+                events::make_move_to_children_house(data),
+            ))),
+            Ok(ProtocolEvent::PickIngredient(data)) => Some(to_dynamic_event(Box::new(
+                events::make_pick("pick_ingredient", data, false),
+            ))),
+            Ok(ProtocolEvent::Pick(data)) => Some(to_dynamic_event(Box::new(events::make_pick(
+                "pick", data, false,
+            )))),
+            Ok(ProtocolEvent::GiveSandCake(data)) => Some(to_dynamic_event(Box::new(
+                events::make_give_sand_cake(data),
+            ))),
+            Ok(ProtocolEvent::Give(data)) => {
+                Some(to_dynamic_event(Box::new(events::make_give(data))))
             }
-            Value::String(name) if name == "move_to_children_garden" => {
-                if let Value::String(character) = &value["character"] {
-                    let data = data::MoveData::new(name, character, "children_garden");
-                    Some(Box::new(events::make_move_to_children_garden(data)))
-                } else {
-                    None
-                }
+            Ok(ProtocolEvent::Play(data)) => Some(to_dynamic_event(Box::new(events::make_pick(
+                "play", data, true,
+            )))),
+            Ok(ProtocolEvent::FindBadDog(data)) => {
+                Some(to_dynamic_event(Box::new(events::make_find_bad_dog(data))))
             }
-            Value::String(name) if name == "move_to_garden" => {
-                if let Value::String(character) = &value["character"] {
-                    let data = data::MoveData::new(name, character, "garden");
-                    Some(Box::new(events::make_move_to_garden(data)))
-                } else {
-                    None
-                }
+            Ok(ProtocolEvent::Eat(data)) => {
+                Some(to_dynamic_event(Box::new(events::make_eat_meal(data))))
             }
-            Value::String(name) if name == "move_to_children_house" => {
-                if let Value::String(character) = &value["character"] {
-                    let data = data::MoveData::new(name, character, "children_house");
-                    Some(Box::new(events::make_move_to_children_house(data)))
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if ["pick_ingredient", "pick"].contains(&name.as_str()) => {
-                if let Value::String(character) = &value["character"] {
-                    if let Value::String(item) = &value["item"] {
-                        let data = data::PickData::new(name, character, item);
-                        Some(Box::new(events::make_pick(data, false)))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "give_sand_cake" => {
-                if let Value::String(item) = &value["item"] {
-                    if let Value::String(from_character) = &value["from_character"] {
-                        if let Value::String(to_character) = &value["to_character"] {
-                            let data =
-                                data::GiveData::new(name, from_character, to_character, item);
-                            Some(Box::new(events::make_give_sand_cake(data)))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "play" => {
-                if let Value::String(item) = &value["item"] {
-                    if let Value::String(character) = &value["character"] {
-                        let data = data::PickData::new(name, character, item);
-                        Some(Box::new(events::make_pick(data, true)))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "find" => {
-                if let Value::String(character) = &value["character"] {
-                    let data = data::PickData::new(name, character, "bad_dog");
-                    Some(Box::new(events::make_find_bad_dog(data)))
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "eat" => {
-                if let Value::String(item) = &value["item"] {
-                    if let Value::String(character) = &value["character"] {
-                        Some(Box::new(events::make_eat_meal(data::VoidData::new(
-                            name,
-                            character,
-                            Some(item),
-                        ))))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "pick_disliked_ingredient" => {
-                if let Value::String(character) = &value["character"] {
-                    if let Value::String(item) = &value["item"] {
-                        let data = data::PickData::new(name, character, item);
-                        Some(Box::new(events::make_pick(data, true)))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            Value::String(name) if name == "add_ingredient" => {
-                if let Value::String(character) = &value["character"] {
-                    if let Value::String(item) = &value["item"] {
-                        let data = data::UseItemData::new(name, character, item);
-                        Some(Box::new(events::make_use_item(data, true)))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            _ => None,
+            Ok(ProtocolEvent::PickDislikedIngredient(data)) => Some(to_dynamic_event(Box::new(
+                events::make_pick("pick_disliked_ingredient", data, true),
+            ))),
+            Ok(ProtocolEvent::AddIngredient(data)) => Some(to_dynamic_event(Box::new(
+                events::make_use_item("add_ingredient", data, true),
+            ))),
+            Err(_) => None,
         }
     }
 }

@@ -88,7 +88,7 @@ pub mod tests {
             .iter()
             .map(|e| {
                 narrator
-                    .parse_event(world, &e.dump())
+                    .parse_event(world, e.dump())
                     .ok_or_else(|| anyhow::anyhow!("parse_failed"))
             })
             .collect::<Result<Vec<Box<dyn Event>>, _>>()

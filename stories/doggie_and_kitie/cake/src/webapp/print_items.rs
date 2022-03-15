@@ -2,14 +2,15 @@ use pabitell_lib::{data, webapp::print::PrintItem, World};
 use serde_json::Value;
 use std::rc::Rc;
 
-use crate::translations::get_message;
+use crate::{events::ProtocolEvent, translations::get_message};
 
 pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     let mut res = vec![];
 
     // sand cake
     let item = world.items().get("sand_cake").unwrap();
-    let data = serde_json::to_value(data::PickData::new("pick", "", "sand_cake")).unwrap();
+    let data =
+        serde_json::to_value(ProtocolEvent::Pick(data::PickData::new("", "sand_cake"))).unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(item.short(world.as_ref())))
@@ -18,7 +19,10 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // move to kitchen
     let scene = world.scenes().get("kitchen").unwrap();
-    let data = serde_json::to_value(data::MoveData::new("move_to_kitchen", "", "kitchen")).unwrap();
+    let data = serde_json::to_value(ProtocolEvent::MoveToKitchen(data::MoveData::new(
+        "", "kitchen",
+    )))
+    .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world.as_ref())))
@@ -31,15 +35,22 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
         .values()
         .filter(|e| e.get_tags().contains(&"ingredient".to_string()))
         .for_each(|e| {
-            let event_name = if e.get_tags().contains(&"accepted".to_string()) {
-                "pick_ingredient"
+            let data = if e.get_tags().contains(&"accepted".to_string()) {
+                serde_json::to_value(ProtocolEvent::PickIngredient(data::PickData::new(
+                    "",
+                    e.name(),
+                )))
+                .unwrap()
             } else {
                 // rejected ingredient
-                "pick_disliked_ingredient"
+                serde_json::to_value(ProtocolEvent::PickDislikedIngredient(data::PickData::new(
+                    "",
+                    e.name(),
+                )))
+                .unwrap()
             }
             .to_string();
 
-            let data = serde_json::to_value(data::PickData::new(event_name, "", e.name())).unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world.as_ref())))
@@ -48,7 +59,8 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
         });
 
     // put into pot
-    let mut data = serde_json::to_value(data::UseItemData::new("add_ingredient", "", "")).unwrap();
+    let mut data =
+        serde_json::to_value(ProtocolEvent::AddIngredient(data::UseItemData::new("", ""))).unwrap();
     let data = {
         if let Value::Object(ref mut map) = data {
             map.remove("item");
@@ -67,11 +79,10 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // move to children garden
     let scene = world.scenes().get("children_garden").unwrap();
-    let data = serde_json::to_value(data::MoveData::new(
-        "move_to_children_garden",
+    let data = serde_json::to_value(ProtocolEvent::MoveToChildrenGarden(data::MoveData::new(
         "",
         "children_garden",
-    ))
+    )))
     .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
@@ -85,7 +96,8 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
         .values()
         .filter(|e| e.get_tags().contains(&"toy".to_string()))
         .for_each(|e| {
-            let data = serde_json::to_value(data::PickData::new("play", "", e.name())).unwrap();
+            let data = serde_json::to_value(ProtocolEvent::Play(data::PickData::new("", e.name())))
+                .unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world.as_ref())))
@@ -95,7 +107,10 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // move to garden
     let scene = world.scenes().get("garden").unwrap();
-    let data = serde_json::to_value(data::MoveData::new("move_to_garden", "", "garden")).unwrap();
+    let data = serde_json::to_value(ProtocolEvent::MoveToGarden(data::MoveData::new(
+        "", "garden",
+    )))
+    .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(scene.short(world.as_ref())))
@@ -104,7 +119,10 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // find bad dog
     let item = world.items().get("bad_dog").unwrap();
-    let data = serde_json::to_value(data::PickData::new("find", "", "bad_dog")).unwrap();
+    let data = serde_json::to_value(ProtocolEvent::FindBadDog(data::PickData::new(
+        "", "bad_dog",
+    )))
+    .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
             .title(Some(item.short(world.as_ref())))
@@ -113,11 +131,10 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
 
     // move to children house
     let scene = world.scenes().get("children_house").unwrap();
-    let data = serde_json::to_value(data::MoveData::new(
-        "move_to_children_house",
+    let data = serde_json::to_value(ProtocolEvent::MoveToChildrenHouse(data::MoveData::new(
         "",
         "children_house",
-    ))
+    )))
     .unwrap();
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
@@ -132,7 +149,8 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
         .filter(|e| e.get_tags().contains(&"meal".to_string()))
         .for_each(|e| {
             let data =
-                serde_json::to_value(data::VoidData::new("eat", "", Some(e.name()))).unwrap();
+                serde_json::to_value(ProtocolEvent::Eat(data::VoidData::new("", Some(e.name()))))
+                    .unwrap();
             res.push(
                 PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
                     .title(Some(e.short(world.as_ref())))

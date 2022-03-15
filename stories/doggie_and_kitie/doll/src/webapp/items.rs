@@ -1,6 +1,8 @@
 use pabitell_lib::{data::UseItemData, webapp::items, ItemState, World};
 use std::rc::Rc;
 
+use crate::events::ProtocolEvent;
+
 pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec<Rc<items::Item>>> {
     let res = if let Some(character) = character {
         let owned_state = ItemState::Owned(character.to_string());
@@ -9,7 +11,7 @@ pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec
             .values()
             .filter(|i| i.state() == &owned_state)
             .map(|i| {
-                let data = UseItemData::new("lay_down", character, i.name());
+                let data = ProtocolEvent::LayDown(UseItemData::new(character, i.name()));
                 Rc::new(items::Item {
                     code: i.name().to_string(),
                     short: i.short(world),

@@ -1,7 +1,26 @@
 use super::characters;
 use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemState, Tagged, World};
+use serde::{Deserialize, Serialize};
 
 use crate::translations::get_message;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "name", rename_all = "snake_case")]
+pub enum ProtocolEvent {
+    MoveToKitchen(data::MoveData),
+    MoveToChildrenGarden(data::MoveData),
+    MoveToGarden(data::MoveData),
+    MoveToChildrenHouse(data::MoveData),
+    PickIngredient(data::PickData),
+    GiveSandCake(data::GiveData),
+    Pick(data::PickData),
+    Give(data::GiveData),
+    Play(data::PickData),
+    FindBadDog(data::PickData),
+    Eat(data::VoidData),
+    PickDislikedIngredient(data::PickData),
+    AddIngredient(data::UseItemData),
+}
 
 fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
     conditions::same_scene(
@@ -12,8 +31,8 @@ fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
     .unwrap()
 }
 
-pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
-    let mut event = events::Pick::new(pick_data);
+pub fn make_pick(name: &str, pick_data: data::PickData, consume: bool) -> events::Pick {
+    let mut event = events::Pick::new(name, pick_data);
 
     event.set_tags(vec!["pick".to_string()]);
 
@@ -151,7 +170,85 @@ pub fn make_pick(pick_data: data::PickData, consume: bool) -> events::Pick {
 }
 
 pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
-    let mut event = events::Give::new(give_data);
+    let mut event = events::Give::new("give_sand_cake", give_data);
+    event.set_tags(vec!["give".to_string()]);
+
+    event.set_world_update(Some(Box::new(|event, world| {
+        let event = event.downcast_ref::<events::Give>().unwrap();
+
+        updates::assign_item(world, event.item().to_string(), ItemState::Unassigned).unwrap();
+
+        let character = world
+            .characters_mut()
+            .get_mut(event.to_character())
+            .unwrap()
+            .as_any_mut();
+
+        if let Some(kitie) = character.downcast_mut::<characters::Kitie>() {
+            kitie.sand_cake_last = true;
+        }
+
+        if let Some(doggie) = character.downcast_mut::<characters::Doggie>() {
+            doggie.sand_cake_last = true;
+        }
+    })));
+    event.set_condition(Some(Box::new(|event, world| {
+        let event = event.downcast_ref::<events::Give>().unwrap();
+        conditions::can_give(
+            world,
+            event.from_character().to_string(),
+            event.to_character().to_string(),
+            event.item().to_string(),
+        )
+        .unwrap()
+    })));
+    event.set_make_action_text(Some(Box::new(|event, world| {
+        let event = event.downcast_ref::<events::Give>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_give_{}_to_{}-action",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_success_text(Some(Box::new(|event, world| {
+        let event = event.downcast_ref::<events::Give>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_give_{}_to_{}-success",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    event.set_make_fail_text(Some(Box::new(|event, world| {
+        let event = event.downcast_ref::<events::Give>().unwrap();
+        get_message(
+            &format!(
+                "{}-{}_give_{}_to_{}-fail",
+                world.name(),
+                event.from_character(),
+                event.item(),
+                event.to_character()
+            ),
+            world.lang(),
+            None,
+        )
+    })));
+    event
+}
+
+pub fn make_give(give_data: data::GiveData) -> events::Give {
+    let mut event = events::Give::new("give", give_data);
     event.set_tags(vec!["give".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -229,7 +326,7 @@ pub fn make_give_sand_cake(give_data: data::GiveData) -> events::Give {
 }
 
 pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
-    let mut event = events::Move::new(move_data);
+    let mut event = events::Move::new("move_to_kitchen", move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -290,7 +387,7 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
-    let mut event = events::Move::new(move_data);
+    let mut event = events::Move::new("move_to_children_garden", move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -355,8 +452,12 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
     event
 }
 
-pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events::UseItem {
-    let mut event = events::UseItem::new(use_item_data);
+pub fn make_use_item(
+    name: &str,
+    use_item_data: data::UseItemData,
+    consume: bool,
+) -> events::UseItem {
+    let mut event = events::UseItem::new(name, use_item_data);
     event.set_tags(vec!["use_item".to_string()]);
     event.set_world_update(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
@@ -417,7 +518,7 @@ pub fn make_use_item(use_item_data: data::UseItemData, consume: bool) -> events:
 }
 
 pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
-    let mut event = events::Move::new(move_data);
+    let mut event = events::Move::new("move_to_garden", move_data);
     event.set_tags(vec!["move".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -480,7 +581,7 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
-    let mut event = events::Pick::new(pick_data);
+    let mut event = events::Pick::new("find_bad_dog", pick_data);
     event.set_tags(vec!["find".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {
@@ -534,7 +635,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
 }
 
 pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
-    let mut event = events::Move::new(move_data);
+    let mut event = events::Move::new("move_to_children_house", move_data);
     event.set_tags(vec!["move".to_string()]);
     event.set_world_update(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -592,7 +693,7 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
 }
 
 pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
-    let mut event = events::Void::new(void_data);
+    let mut event = events::Void::new("eat", void_data);
     event.set_tags(vec!["eat".to_string()]);
 
     event.set_world_update(Some(Box::new(|event, world| {

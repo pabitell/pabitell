@@ -210,9 +210,10 @@ impl Component for App {
                 }
             }
             Msg::TriggerEventData(json_value) => {
+                let value = json_value.clone();
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 if let Some(world) = self.world.as_mut() {
-                    if let Some(mut event) = narrator.parse_event(world.as_ref(), &json_value) {
+                    if let Some(mut event) = narrator.parse_event(world.as_ref(), json_value) {
                         // Update initiator
                         if let Some(character) = self.character.clone().as_ref() {
                             event.set_initiator(character.to_string());
@@ -243,7 +244,7 @@ impl Component for App {
                     } else {
                         // Can't construct event based on given data
                         // TODO some error message
-                        log::warn!("Failed to parse event from {}", json_value.to_string());
+                        log::warn!("Failed to parse event from {}", value);
                         return false;
                     }
                 } else {
@@ -363,7 +364,7 @@ impl Component for App {
                             return false;
                         };
                         if let Some(event) =
-                            narrator.parse_event(world.as_ref(), &event_notification.event)
+                            narrator.parse_event(world.as_ref(), event_notification.event)
                         {
                             self.event_count = event_notification.event_count;
                             log::info!("New event arrived from ws");

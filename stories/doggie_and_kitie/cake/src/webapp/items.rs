@@ -8,6 +8,8 @@ use pabitell_lib::{
 use serde_json::Value;
 use std::rc::Rc;
 
+use crate::events::ProtocolEvent;
+
 pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec<Rc<items::Item>>> {
     let res = if let Some(character) = character {
         let owned_state = ItemState::Owned(character.to_string());
@@ -16,12 +18,19 @@ pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec
             .values()
             .filter(|i| i.state() == &owned_state)
             .map(|i| {
-                let data = GiveData::new(
-                    format!("give_{}", i.name()),
-                    character,
-                    String::new(), // keep target character empty
-                    i.name(),
-                );
+                let data = if i.name() == "sand_cake" {
+                    ProtocolEvent::GiveSandCake(GiveData::new(
+                        character,
+                        String::new(), // keep target character empty
+                        i.name(),
+                    ))
+                } else {
+                    ProtocolEvent::Give(GiveData::new(
+                        character,
+                        String::new(), // keep target character empty
+                        i.name(),
+                    ))
+                };
                 Rc::new(items::Item {
                     code: i.name().to_string(),
                     short: i.short(world),

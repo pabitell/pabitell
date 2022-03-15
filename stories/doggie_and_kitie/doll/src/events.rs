@@ -1,7 +1,22 @@
 use super::characters;
 use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemState, Tagged, World};
+use serde::{Deserialize, Serialize};
 
 use crate::translations::get_message;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "name", rename_all = "snake_case")]
+pub enum ProtocolEvent {
+    TalkInHome(data::TalkData),
+    MoveToWalk(data::MoveData),
+    TalkOnWalk(data::TalkData),
+    FindDoll(data::UseItemData),
+    MoveToHome(data::MoveData),
+    MoveToDoggieSearch(data::MoveData),
+    MoveToKitieSearch(data::MoveData),
+    Pick(data::PickData),
+    LayDown(data::UseItemData),
+}
 
 fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
     conditions::same_scene(
@@ -12,8 +27,8 @@ fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
     .unwrap()
 }
 
-pub fn make_talk(data: data::TalkData) -> events::Talk {
-    let mut event = events::Talk::new(data);
+pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {
+    let mut event = events::Talk::new(name, data);
 
     event.set_tags(vec!["talk".to_string()]);
     event.set_condition(Some(Box::new(move |event, world| {
@@ -86,12 +101,13 @@ pub fn make_talk(data: data::TalkData) -> events::Talk {
 }
 
 pub fn make_move(
+    name: &str,
     data: data::MoveData,
     from_scene: &str,
     from_dialog: Option<usize>,
     increase_dialog: bool,
 ) -> events::Move {
-    let mut event = events::Move::new(data);
+    let mut event = events::Move::new(name, data);
     let from_scene = from_scene.to_owned();
 
     event.set_tags(vec!["move".to_string()]);
@@ -168,7 +184,7 @@ pub fn make_move(
 }
 
 pub fn make_find_doll(data: data::UseItemData) -> events::UseItem {
-    let mut event = events::UseItem::new(data);
+    let mut event = events::UseItem::new("find_doll", data);
 
     event.set_tags(vec!["find".to_string()]);
 
@@ -225,8 +241,8 @@ pub fn make_find_doll(data: data::UseItemData) -> events::UseItem {
     event
 }
 
-pub fn make_pick(pick_data: data::PickData) -> events::Pick {
-    let mut event = events::Pick::new(pick_data);
+pub fn make_pick(name: &str, pick_data: data::PickData) -> events::Pick {
+    let mut event = events::Pick::new(name, pick_data);
 
     event.set_tags(vec!["pick".to_string()]);
 
@@ -297,8 +313,8 @@ pub fn make_pick(pick_data: data::PickData) -> events::Pick {
     event
 }
 
-pub fn make_lay_down(use_item_data: data::UseItemData) -> events::UseItem {
-    let mut event = events::UseItem::new(use_item_data);
+pub fn make_lay_down(name: &str, use_item_data: data::UseItemData) -> events::UseItem {
+    let mut event = events::UseItem::new(name, use_item_data);
     event.set_tags(vec!["lay_down".to_string()]);
 
     event.set_world_update(Some(Box::new(move |event, world| {
