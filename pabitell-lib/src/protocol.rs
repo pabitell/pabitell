@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub enum Message {
     Notification(NotificationMessage),
     Request(RequestMessage),
-    Reponse(ResponseMessage),
+    Response(ResponseMessage),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -33,11 +33,9 @@ pub struct EventNotification {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "request", rename_all = "snake_case")]
 pub enum RequestMessage {
-    /// New world created
-    CreateNewWorld(Uuid),
-    /// New world obtained
+    /// World obtained
     GetWorld(GetWorldRequest),
-    TriggerEvent(TriggerEventMessage),
+    TriggerEvent(TriggerEventRequest),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -47,27 +45,27 @@ pub struct GetWorldRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TriggerEventMessage {
+pub struct TriggerEventRequest {
     pub msg_id: Uuid,
     pub event: Value,
+    pub world_id: Uuid,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "response", rename_all = "snake_case")]
 pub enum ResponseMessage {
-    CreateNewWorld(CreateWorldResponse),
     GetWorld(GetWorldResponse),
-    TriggerEvent(Uuid),
+    TriggerEvent(TriggerEventResponse),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetWorldResponse {
     pub msg_id: Uuid,
-    pub world: Value,
+    pub world: Option<Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateWorldResponse {
+pub struct TriggerEventResponse {
     pub msg_id: Uuid,
-    pub new_world: Uuid,
+    pub success: bool,
 }

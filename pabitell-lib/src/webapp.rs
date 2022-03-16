@@ -16,3 +16,4 @@ pub mod qrcode;
 pub mod qrscanner;
 pub mod speech;
 pub mod status;
+pub mod websocket_client;

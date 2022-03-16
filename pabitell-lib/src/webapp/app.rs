@@ -1,4 +1,7 @@
-use gloo::storage::{self, Storage};
+use gloo::{
+    storage::{self, Storage},
+    timers::callback::Timeout,
+};
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
@@ -20,10 +23,13 @@ use crate::{
         messages::{Messages, Msg as MessagesMsg},
         print::{Print, PrintItem},
         speech::{Msg as SpeechMsg, Speech},
-        status::{Msg as StatusMsg, Status},
+        status::{Status, WsStatus},
+        websocket_client::{Msg as WsMsg, WebsocketClient},
     },
     Music, Narrator, Scene, World,
 };
+
+const WS_TIMEOUT: u32 = 3000; // ws timeout in ms
 
 pub enum Msg {
     UpdateCharacter(Rc<Option<String>>),
@@ -31,13 +37,17 @@ pub enum Msg {
     TriggerEventData(Value),
     TriggerRestoreCharacter(Option<String>, bool, Uuid),
     PlayText(String),
-    WsMessageRecieved(String),
     Reset,
     CreateNewWorld,
-    NewWorldIdFetched(Uuid),
-    WorldUpdateFetched(Box<dyn World>),
+    WorldUpdateFetched(Box<dyn World>, bool),
     RefreshWorld,
-    StatusReady,
+    WsFlush,
+    WsMessageRecieved(String),
+    WsGetWorld(Uuid),
+    WsTriggerEvent(Uuid, Value),
+    WsFailed,
+    WsConnect,
+    WsStatusUpdate(WsStatus),
     ShowPrint(bool),
     ScreenOrientationLocked(Option<JsValue>),
 }
@@ -45,41 +55,23 @@ pub enum Msg {
 pub struct App {
     world_id: Option<Uuid>,
     world: Option<Box<dyn World>>,
+    owned: Option<bool>,
+    /// Request which is being currently processed
+    request_id: Option<(Uuid, Timeout)>,
     /// Current character tab
     character: Rc<Option<String>>,
     /// If it is sent can't switch to other characters
     fixed_character: bool,
     messages_scope: Rc<RefCell<Option<html::Scope<Messages>>>>,
     speech_scope: Rc<RefCell<Option<html::Scope<Speech>>>>,
-    status_scope: Rc<RefCell<Option<html::Scope<Status>>>>,
+    client_scope: Rc<RefCell<Option<html::Scope<WebsocketClient>>>>,
     actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
     ws_queue: Vec<String>,
     loading: Rc<RefCell<bool>>,
     show_print: bool,
     orientation_lock: Option<JsValue>,
     event_count: usize,
-}
-
-async fn make_request(
-    url: &str,
-    method: &str,
-    data: Option<Value>,
-) -> Result<(Option<Value>, u16), JsValue> {
-    let mut opts = RequestInit::new();
-    opts.method(method);
-    opts.mode(RequestMode::Cors);
-    opts.body(data.map(|e| JsValue::from_str(&e.to_string())).as_ref());
-
-    let request = Request::new_with_str_and_init(url, &opts)?;
-
-    let window = web_sys::window().unwrap();
-    let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
-    let resp: Response = resp_value.dyn_into().unwrap();
-
-    log::debug!("{} ({})", url, resp.status());
-
-    let res = JsFuture::from(resp.json()?).await?;
-    Ok((res.into_serde().ok(), resp.status()))
+    ws_status: WsStatus,
 }
 
 #[derive(Properties)]
@@ -147,6 +139,8 @@ impl Component for App {
         let mut res = Self {
             world_id,
             world: None,
+            owned: None,
+            request_id: None,
             character: Rc::new(storage::LocalStorage::get("character").ok()),
             fixed_character: storage::LocalStorage::get("fixed_character")
                 .unwrap_or_else(|_| "false".to_string())
@@ -154,13 +148,14 @@ impl Component for App {
                 .unwrap_or(false),
             messages_scope: Rc::new(RefCell::new(None)),
             speech_scope: Rc::new(RefCell::new(None)),
-            status_scope: Rc::new(RefCell::new(None)),
+            client_scope: Rc::new(RefCell::new(None)),
             actions_scope: Rc::new(RefCell::new(None)),
             ws_queue: vec![],
             loading: Rc::new(RefCell::new(false)),
             show_print: false,
             orientation_lock: None,
             event_count: 0,
+            ws_status: WsStatus::default(),
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -323,18 +318,16 @@ impl Component for App {
                 if let Some(scope) = self.messages_scope.as_ref().borrow().clone() {
                     scope.send_message(MessagesMsg::Clear);
                 }
+
+                // Clear loding state
+                *self.loading.borrow_mut() = false;
                 true
             }
-            Msg::NewWorldIdFetched(world_id) => {
-                log::info!("New world id fetched {}", &world_id);
-                storage::LocalStorage::set("world_id", world_id).unwrap();
-                self.world_id = Some(world_id);
-                self.request_to_get_world(ctx, world_id);
-                true
-            }
-            Msg::WorldUpdateFetched(world) => {
+            Msg::WorldUpdateFetched(world, owned) => {
+                self.owned = Some(owned);
                 let old_screen_text = App::screen_text(&self.world, &self.character);
                 self.event_count = world.event_count();
+                self.world_id = Some(world.id().to_owned());
                 self.world = Some(world);
                 let new_screen_text = App::screen_text(&self.world, &self.character);
                 if new_screen_text != old_screen_text {
@@ -342,10 +335,31 @@ impl Component for App {
                         ctx.link().send_message(Msg::PlayText(text));
                     }
                 }
+
+                // Clear loding state
+                *self.loading.borrow_mut() = false;
                 true
             }
             Msg::CreateNewWorld => {
-                self.request_to_create_new_world(ctx);
+                self.fixed_character = false;
+                let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                world.setup();
+                let name = ctx.props().name.clone();
+                let link = ctx.link().clone();
+                spawn_local(async move {
+                    let db = database::init_database(&name).await;
+                    database::put_world(
+                        &db,
+                        &world.id(),
+                        "narrator".to_string(),
+                        false,
+                        world.dump(),
+                        true,
+                    )
+                    .await
+                    .unwrap();
+                    link.send_message(Msg::WorldUpdateFetched(world, true))
+                });
                 true
             }
             Msg::RefreshWorld => {
@@ -357,98 +371,375 @@ impl Component for App {
             Msg::WsMessageRecieved(data) => {
                 let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                 match serde_json::from_str(&data) {
-                    Ok(protocol::NotificationMessage::Event(event_notification)) => {
-                        let world = if let Some(world) = self.world.as_ref() {
-                            world
-                        } else {
-                            return false;
-                        };
-                        if let Some(event) =
-                            narrator.parse_event(world.as_ref(), event_notification.event)
-                        {
-                            self.event_count = event_notification.event_count;
-                            log::info!("New event arrived from ws");
+                    Ok(protocol::Message::Notification(notification)) => {
+                        match notification {
+                            protocol::NotificationMessage::Event(event_notification) => {
+                                let world = if let Some(world) = self.world.as_ref() {
+                                    world
+                                } else {
+                                    return false;
+                                };
+                                if let Some(event) =
+                                    narrator.parse_event(world.as_ref(), event_notification.event)
+                                {
+                                    self.event_count = event_notification.event_count;
+                                    log::info!("New event arrived from ws");
 
-                            // Store event to database
-                            let name = ctx.props().name.clone();
-                            let world_id = self.world_id.clone().unwrap();
-                            let event_count = self.event_count;
-                            let data = event.dump();
-                            spawn_local(async move {
-                                let db = database::init_database(&name).await;
-                                database::put_event(&db, &world_id, event_count as u64, data)
-                                    .await
-                                    .unwrap();
-                            });
+                                    // Store event to database
+                                    let name = ctx.props().name.clone();
+                                    let world_id = self.world_id.clone().unwrap();
+                                    let event_count = self.event_count;
+                                    let data = event.dump();
+                                    spawn_local(async move {
+                                        let db = database::init_database(&name).await;
+                                        database::put_event(
+                                            &db,
+                                            &world_id,
+                                            event_count as u64,
+                                            data,
+                                        )
+                                        .await
+                                        .unwrap();
+                                    });
 
-                            if let Some(actions_scope) =
-                                self.actions_scope.as_ref().borrow().as_ref()
-                            {
-                                log::debug!("Hiding QR code of actions");
-                                actions_scope.send_message(ActionsMsg::QRCodeHide);
-                            }
-                            if let Some(world_id) = self.world_id {
-                                // TODO this should be optimized
-                                // not need to refresh the whole world just a single event
-                                self.request_to_get_world(ctx, world_id);
-                            }
-
-                            if let Some(world) = self.world.as_ref() {
-                                if event.can_be_triggered(world.as_ref()) {
-                                    let message = MessageItem::new(
-                                        translations::get_message_global(
-                                            "event",
-                                            world.lang(),
-                                            None,
-                                        ),
-                                        event.success_text(world.as_ref()),
-                                        MessageKind::Success,
-                                        Some("fas fa-cogs".to_string()),
-                                    );
-                                    let text = message.text.clone();
-                                    self.messages_scope
-                                        .as_ref()
-                                        .borrow()
-                                        .clone()
-                                        .unwrap()
-                                        .send_message(MessagesMsg::AddMessage(Rc::new(message)));
-                                    if !event.get_tags().contains(&"no_read".to_string()) {
-                                        ctx.link().send_message(Msg::PlayText(text.to_string()));
+                                    if let Some(actions_scope) =
+                                        self.actions_scope.as_ref().borrow().as_ref()
+                                    {
+                                        log::debug!("Hiding QR code of actions");
+                                        actions_scope.send_message(ActionsMsg::QRCodeHide);
                                     }
+                                    if let Some(world_id) = self.world_id {
+                                        // TODO this should be optimized
+                                        // not need to refresh the whole world just a single event
+                                        self.request_to_get_world(ctx, world_id);
+                                    }
+
+                                    if let Some(world) = self.world.as_ref() {
+                                        if event.can_be_triggered(world.as_ref()) {
+                                            let message = MessageItem::new(
+                                                translations::get_message_global(
+                                                    "event",
+                                                    world.lang(),
+                                                    None,
+                                                ),
+                                                event.success_text(world.as_ref()),
+                                                MessageKind::Success,
+                                                Some("fas fa-cogs".to_string()),
+                                            );
+                                            let text = message.text.clone();
+                                            self.messages_scope
+                                                .as_ref()
+                                                .borrow()
+                                                .clone()
+                                                .unwrap()
+                                                .send_message(MessagesMsg::AddMessage(Rc::new(
+                                                    message,
+                                                )));
+                                            if !event.get_tags().contains(&"no_read".to_string()) {
+                                                ctx.link()
+                                                    .send_message(Msg::PlayText(text.to_string()));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            protocol::NotificationMessage::Joined(joined_notification) => {
+                                log::info!(
+                                    "Character '{}' joined",
+                                    joined_notification.character["name"]
+                                );
+                                if let Some(actions_scope) =
+                                    self.actions_scope.as_ref().borrow().as_ref()
+                                {
+                                    actions_scope.send_message(ActionsMsg::QRCodeHide);
                                 }
                             }
                         }
                     }
-                    Ok(protocol::NotificationMessage::Joined(joined_notification)) => {
-                        log::info!(
-                            "Character '{}' joined",
-                            joined_notification.character["name"]
-                        );
-                        if let Some(actions_scope) = self.actions_scope.as_ref().borrow().as_ref() {
-                            actions_scope.send_message(ActionsMsg::QRCodeHide);
+                    Ok(protocol::Message::Request(request)) => {
+                        if self.owned == Some(true) {
+                            let name = ctx.props().name.clone();
+                            let client_scope = self.client_scope.clone();
+                            match request {
+                                protocol::RequestMessage::GetWorld(get_world) => {
+                                    ctx.link().send_future(async move {
+                                        let protocol::GetWorldRequest { msg_id, world_id } =
+                                            get_world;
+
+                                        let db = database::init_database(&name).await;
+
+                                        let world = if let Some(record) =
+                                            database::get_world(&db, &world_id).await.unwrap()
+                                        {
+                                            // First try to get world from database
+                                            Some(record["data"].clone())
+                                        } else {
+                                            None
+                                        };
+                                        let resp = protocol::Message::Response(
+                                            protocol::ResponseMessage::GetWorld(
+                                                protocol::GetWorldResponse { msg_id, world },
+                                            ),
+                                        );
+                                        if let Some(client_scope) =
+                                            client_scope.as_ref().borrow().as_ref()
+                                        {
+                                            client_scope.send_message(WsMsg::SendMessage(
+                                                serde_json::to_string(&resp).unwrap(),
+                                            ));
+                                        }
+
+                                        Msg::WsFlush
+                                    });
+                                }
+                                protocol::RequestMessage::TriggerEvent(trigger_event) => {
+                                    let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                                    let narrator = ctx.props().make_narrator.as_ref().unwrap()();
+                                    ctx.link().send_future(async move {
+                                        let protocol::TriggerEventRequest {
+                                            msg_id,
+                                            world_id,
+                                            event,
+                                        } = trigger_event;
+                                        let db = database::init_database(&name).await;
+
+                                        let success = if let Some(record) =
+                                            database::get_world(&db, &world_id.clone())
+                                                .await
+                                                .unwrap()
+                                        {
+                                            // First try to get world from database
+                                            world.load(record["data"].clone()).unwrap();
+                                            world.set_id(world_id);
+                                            if let Some(mut event) =
+                                                narrator.parse_event(world.as_ref(), event)
+                                            {
+                                                if event.can_be_triggered(world.as_ref()) {
+                                                    // Apply event
+                                                    // Send response
+                                                    event.trigger(world.as_mut());
+
+                                                    // Store world
+                                                    log::debug!("UUUFf");
+                                                    database::put_world(
+                                                        &db,
+                                                        &world.id(),
+                                                        "narrator".to_string(),
+                                                        false,
+                                                        world.dump(),
+                                                        true,
+                                                    )
+                                                    .await
+                                                    .unwrap();
+
+                                                    // Send notification that event was triggered
+                                                    let notification =
+                                                        protocol::Message::Notification(
+                                                            protocol::NotificationMessage::Event(
+                                                                protocol::EventNotification {
+                                                                    event: event.dump(),
+                                                                    event_count: world
+                                                                        .event_count(),
+                                                                },
+                                                            ),
+                                                        );
+                                                    if let Some(client_scope) =
+                                                        client_scope.as_ref().borrow().as_ref()
+                                                    {
+                                                        client_scope.send_message(
+                                                            WsMsg::SendMessage(
+                                                                serde_json::to_string(
+                                                                    &notification,
+                                                                )
+                                                                .unwrap(),
+                                                            ),
+                                                        );
+                                                    }
+
+                                                    true
+                                                } else {
+                                                    false
+                                                }
+                                            } else {
+                                                false
+                                            }
+                                        } else {
+                                            false
+                                        };
+
+                                        if let Some(client_scope) =
+                                            client_scope.as_ref().borrow().as_ref()
+                                        {
+                                            let resp = protocol::Message::Response(
+                                                protocol::ResponseMessage::TriggerEvent(
+                                                    protocol::TriggerEventResponse {
+                                                        msg_id,
+                                                        success,
+                                                    },
+                                                ),
+                                            );
+
+                                            client_scope.send_message(WsMsg::SendMessage(
+                                                serde_json::to_string(&resp).unwrap(),
+                                            ));
+                                        }
+
+                                        Msg::WsFlush
+                                    })
+                                }
+                            }
                         }
                     }
+                    Ok(protocol::Message::Response(response)) => match response {
+                        protocol::ResponseMessage::GetWorld(get_world) => {
+                            let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                            let world_id = self.world_id.clone();
+
+                            if let Some((msg_id, timeout)) = self.request_id.take() {
+                                if get_world.msg_id == msg_id {
+                                    timeout.cancel();
+                                    *self.loading.borrow_mut() = false;
+
+                                    let fixed_character = self.fixed_character;
+                                    let character: Option<String> = self.character.as_ref().clone();
+                                    let name = ctx.props().name.clone();
+
+                                    if let Some(world_data) = get_world.world {
+                                        ctx.link().send_future(async move {
+                                            let world_id = world_id.unwrap();
+                                            world.set_id(world_id);
+                                            world.load(world_data).unwrap();
+                                            log::debug!("World {} updated", world_id);
+                                            let db = database::init_database(&name).await;
+                                            database::put_world(
+                                                &db,
+                                                &world_id,
+                                                character.unwrap_or_else(|| "narrator".to_string()),
+                                                fixed_character,
+                                                world.dump(),
+                                                false,
+                                            )
+                                            .await
+                                            .unwrap();
+                                            Msg::WorldUpdateFetched(world, false)
+                                        });
+                                    } else {
+                                        // This branch should not be normally reached
+                                        // usually if response comes it should contain data
+                                        // aways reset is quite good response in this situation,
+                                        // because world on onwer is lost...
+                                        ctx.link().send_message(Msg::Reset);
+                                    }
+                                } else {
+                                    self.request_id = Some((msg_id, timeout));
+                                }
+                            }
+                        }
+                        protocol::ResponseMessage::TriggerEvent(trigger_event) => {
+                            if let Some((msg_id, timeout)) = self.request_id.take() {
+                                if trigger_event.msg_id == msg_id {
+                                    timeout.cancel();
+                                    *self.loading.borrow_mut() = false;
+                                    ctx.link().send_message(Msg::RefreshWorld);
+                                } else {
+                                    self.request_id = Some((msg_id, timeout));
+                                }
+                            }
+                        }
+                    },
                     Err(err) => {
                         log::warn!("Failed to parse WS data: {}", err);
                     }
                 }
                 false
             }
-            Msg::StatusReady => {
+            Msg::WsFlush => {
                 // Send notification to other connected clients
                 // Note that notification needs to be send once
-                // status_scope in initialized by the subcomponent
-                let status_scope = self.status_scope.clone();
+                // client_scope in initialized by the subcomponent
+                let client_scope = self.client_scope.clone();
 
                 self.ws_queue.drain(..).for_each(|msg| {
-                    let status_scope = status_scope.clone();
+                    let client_scope = client_scope.clone();
                     spawn_local(async move {
-                        if let Some(status_scope) = status_scope.as_ref().borrow().as_ref() {
-                            status_scope.send_message(StatusMsg::SendMessage(msg));
+                        if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
+                            client_scope.send_message(WsMsg::SendMessage(msg));
                         }
                     });
                 });
                 false
+            }
+            Msg::WsGetWorld(world_id) => {
+                log::debug!("Obtaining world {} through WS.", world_id);
+
+                *self.loading.borrow_mut() = true;
+                let link = ctx.link().clone();
+                let msg_id = Uuid::new_v4();
+
+                // Set world_id to be sure that a proper world is fetched
+                self.world_id = Some(world_id);
+
+                self.request_id = Some((
+                    msg_id.clone(),
+                    Timeout::new(WS_TIMEOUT, move || link.send_message(Msg::WsFailed)),
+                ));
+
+                self.ws_queue.push(
+                    serde_json::to_string(&protocol::Message::Request(
+                        protocol::RequestMessage::GetWorld(protocol::GetWorldRequest {
+                            msg_id,
+                            world_id,
+                        }),
+                    ))
+                    .unwrap(),
+                );
+
+                // Plan flushing of WS messages
+                ctx.link().send_future(async { Msg::WsFlush });
+
+                true
+            }
+            Msg::WsTriggerEvent(world_id, event) => {
+                *self.loading.borrow_mut() = true;
+                let msg_id = Uuid::new_v4();
+                let link = ctx.link().clone();
+                self.request_id = Some((
+                    msg_id.clone(),
+                    Timeout::new(WS_TIMEOUT, move || link.send_message(Msg::WsFailed)),
+                ));
+
+                self.ws_queue.push(
+                    serde_json::to_string(&protocol::Message::Request(
+                        protocol::RequestMessage::TriggerEvent(protocol::TriggerEventRequest {
+                            msg_id,
+                            world_id,
+                            event,
+                        }),
+                    ))
+                    .unwrap(),
+                );
+
+                // Plan flushing of WS messages
+                ctx.link().send_future(async { Msg::WsFlush });
+
+                true
+            }
+            Msg::WsFailed => {
+                *self.loading.borrow_mut() = false;
+                // TODO display some error message to user
+                true
+            }
+            Msg::WsConnect => {
+                let client_scope = self.client_scope.clone();
+                if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
+                    client_scope.send_message(WsMsg::Connect);
+                }
+                true
+            }
+            Msg::WsStatusUpdate(status) => {
+                log::debug!("Ws Status update {:?}->{:?}", self.ws_status, &status);
+                self.ws_status = status;
+                true
             }
             Msg::ShowPrint(show) => {
                 if self.show_print != show {
@@ -497,7 +788,7 @@ impl Component for App {
             };
         }
 
-        if let Some(world) = &self.world {
+        let view = if let Some(world) = &self.world {
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
             let set_character_callback = link.callback(|character| Msg::UpdateCharacter(character));
             let narrator = props.make_narrator.as_ref().unwrap()();
@@ -550,8 +841,6 @@ impl Component for App {
 
             let lang = world.lang().to_string();
 
-            let ws_message_cb = link.callback(|data| Msg::WsMessageRecieved(data));
-            let status_ready_cb = link.callback(|_| Msg::StatusReady);
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
@@ -584,15 +873,11 @@ impl Component for App {
                               <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
                                   <div class="has-text-centered">
                                       <Status
-                                        world_id={self.world_id.clone()}
-                                        namespace={"some_namespace"}
-                                        story={props.name.clone()}
-                                        msg_recieved={ws_message_cb}
-                                        status_ready={status_ready_cb}
                                         refresh_world={refresh_world_cb}
                                         reset_world={reset_cb}
-                                        status_scope={self.status_scope.clone()}
+                                        connect_ws={link.callback(|_| Msg::WsConnect)}
                                         event_count={self.event_count}
+                                        status={self.ws_status.clone()}
                                       />
                                   </div>
                               </div>
@@ -655,15 +940,31 @@ impl Component for App {
                     { loading }
                 </>
             }
+        };
+
+        let ws_ready_cb = link.callback(|_| Msg::WsFlush);
+        let ws_message_cb = link.callback(|data| Msg::WsMessageRecieved(data));
+
+        html! {
+            <>
+                <WebsocketClient
+                    world_id={self.world_id.clone()}
+                    namespace={"some_namespace"}
+                    story={props.name.clone()}
+                    msg_recieved={ws_message_cb}
+                    client_scope={self.client_scope.clone()}
+                    ready={ws_ready_cb}
+                    connecting={link.callback(|_| Msg::WsStatusUpdate(WsStatus::CONNECTING))}
+                    connected={link.callback(|_| Msg::WsStatusUpdate(WsStatus::CONNECTED))}
+                    disconnected={link.callback(|_| Msg::WsStatusUpdate(WsStatus::DISCONNECTED))}
+                />
+                { view }
+            </>
         }
     }
 }
 
 impl App {
-    fn base_url(ctx: &Context<Self>) -> String {
-        format!("/api/some_namespace/{}/", ctx.props().name)
-    }
-
     fn screen_text(world: &Option<Box<dyn World>>, character: &Option<String>) -> Option<String> {
         let world = world.as_ref()?;
         if let Some(character) = character.as_ref() {
@@ -750,116 +1051,69 @@ impl App {
         }
     }
 
-    fn request_to_create_new_world(&mut self, ctx: &Context<Self>) {
+    fn request_to_get_world(&mut self, ctx: &Context<Self>, world_id: Uuid) {
         *self.loading.borrow_mut() = true;
-        let loading = self.loading.clone();
-        let url = Self::base_url(ctx);
-        let link = ctx.link().clone();
-        spawn_local(async move {
-            let res = make_request(&url, "POST", None).await;
-            *loading.borrow_mut() = false;
-            match res {
-                Ok((Some(json), status)) => {
-                    if let Some(Value::String(id_str)) = json.get("id") {
-                        if let Ok(uuid) = Uuid::parse_str(id_str) {
-                            log::info!("New World Id: {:?}", &uuid);
-                            link.send_message(Msg::NewWorldIdFetched(uuid));
-                        }
+        let name = ctx.props().name.clone();
+        let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+        world.set_id(world_id);
+        let owned = self.owned.clone();
+
+        ctx.link().send_future(async move {
+            // first try to detect whether the world is owned
+            match owned {
+                Some(true) => {
+                    // World is owned obtain it from db
+                    let db = database::init_database(&name).await;
+                    if let Some(record) = database::get_world(&db, &world_id).await.unwrap() {
+                        // First try to get world from database
+                        world.load(record["data"].clone()).unwrap();
+
+                        // If this world is owned update it right away
+                        log::debug!("World {} is owned. Local db queried.", world_id);
+                        Msg::WorldUpdateFetched(world, true)
+                    } else {
+                        // Got to intro page
+                        Msg::Reset
                     }
                 }
-                Ok((None, status)) => {
-                    log::debug!("{} ({})", url, status);
-                    log::warn!(
-                        "No JSON response from the server when creating new world (http={})",
-                        status
-                    );
+                Some(false) => {
+                    // World is not owned, obtain it via WS
+                    Msg::WsGetWorld(world_id)
                 }
-                Err(e) => {
-                    log::warn!("Failed to fetch: {:?}", e);
+                None => {
+                    let db = database::init_database(&name).await;
+                    if let Some(record) = database::get_world(&db, &world_id).await.unwrap() {
+                        match record["owned"].as_bool() {
+                            Some(true) => {
+                                // First try to get world from database
+                                world.load(record["data"].clone()).unwrap();
+
+                                // If this world is owned update it right away
+                                log::debug!("World {} is owned. Local db queried.", world_id);
+                                Msg::WorldUpdateFetched(world, true)
+                            }
+                            _ => {
+                                // world is not owned get it using WS
+                                Msg::WsGetWorld(world_id)
+                            }
+                        }
+                    } else {
+                        // World is not present it db, this means that it is not owned
+                        // and we should try to get world from WS
+                        Msg::WsGetWorld(world_id)
+                    }
                 }
             }
         });
     }
 
-    fn request_to_get_world(&mut self, ctx: &Context<Self>, world_id: Uuid) {
-        *self.loading.borrow_mut() = true;
-        let loading = self.loading.clone();
-        let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
-        let url = Self::base_url(ctx);
-        let name = ctx.props().name.clone();
-        let link = ctx.link().clone();
-        let character: Option<String> = self.character.as_ref().clone();
-        let fixed_character = self.fixed_character;
-        spawn_local(async move {
-            let url = format!("{}{}/", url, world_id);
-            let res = make_request(&url, "GET", None).await;
-            *loading.borrow_mut() = false;
-            match res {
-                Ok((Some(json), status)) => match status {
-                    404 => {
-                        log::warn!("World with id {} was not found on the server", world_id);
-                        // world not found => remove from db
-                        let db = database::init_database(&name).await;
-                        let _ = database::del_world(&db, &world_id).await;
-                        link.send_message(Msg::Reset)
-                    }
-                    e if 200 <= e && e < 300 => {
-                        if let Err(e) = world.load(json) {
-                            log::warn!("Fetched world in wrong format: {:?}", e);
-                        } else {
-                            log::debug!("World {} updated", world_id);
-                            let db = database::init_database(&name).await;
-                            database::put_world(
-                                &db,
-                                &world_id,
-                                character.unwrap_or_else(|| "narrator".to_string()),
-                                fixed_character,
-                                world.dump(),
-                            )
-                            .await
-                            .unwrap();
-                            link.send_message(Msg::WorldUpdateFetched(world))
-                        }
-                    }
-                    _ => {
-                        log::warn!("Wrong server response when downloading world {}", world_id);
-                    }
-                },
-                Ok((None, _)) => {
-                    log::warn!("No JSON response from the server when creating new world");
-                }
-                Err(e) => {
-                    log::warn!("Failed to fetch: {:?}", e);
-                }
-            }
-        })
-    }
-
     fn request_to_trigger_event(&mut self, ctx: &Context<Self>, world_id: Uuid, event_json: Value) {
         *self.loading.borrow_mut() = true;
-        let loading = self.loading.clone();
-        let url = Self::base_url(ctx);
-        let link = ctx.link().clone();
-        spawn_local(async move {
-            let url = format!("{}{}/event/", url, world_id);
-            let res = make_request(&url, "POST", Some(event_json)).await;
-            *loading.borrow_mut() = false;
-            match res {
-                Ok((resp, status)) => {
-                    match status {
-                        e if 200 <= e && e < 300 => {
-                            log::debug!("Event triggered {:?}", resp);
-                            link.send_message(Msg::RefreshWorld);
-                        }
-                        _ => {
-                            // TODO failed to publish event message
-                        }
-                    }
-                }
-                Err(e) => {
-                    log::warn!("Failed to trigger: {:?}", e);
-                }
-            }
-        })
+        // TODO owned world can be queried locally
+        ctx.link().send_future(async move {
+            log::debug!("Obtaining world {} through WS.", world_id);
+            // World can't be owned => try to get it via websockets
+            Msg::WsTriggerEvent(world_id, event_json)
+        });
     }
 }

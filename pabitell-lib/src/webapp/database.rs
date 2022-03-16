@@ -25,14 +25,20 @@ async fn _init_database(name: &str) -> Result<Rexie> {
 }
 
 pub async fn init_database(name: &str) -> Rexie {
-    if let Ok(db) = _init_database(name).await {
-        log::debug!("DB obtained '{name}'");
-        db
-    } else {
-        log::warn!("DB wiping '{name}'");
-        Rexie::delete(name).await.unwrap();
-        log::info!("Recreating database '{name}'");
-        _init_database(name).await.unwrap()
+    match _init_database(name).await {
+        Ok(db) => {
+            log::debug!("DB obtained '{name}'");
+            db
+        }
+        Err(err) => {
+            log::warn!("DB error '{err}'");
+            log::warn!("DB wiping '{name}'");
+            if let Err(err) = Rexie::delete(name).await {
+                log::error!("Failed to delete database '{name}': {err}");
+            }
+            log::info!("Recreating database '{name}'");
+            _init_database(name).await.unwrap()
+        }
     }
 }
 
@@ -42,7 +48,7 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
 
     let worlds = transaction.store("worlds")?;
     let world = worlds.get(&JsValue::from_str(&id.to_string())).await?;
-    if world.is_null() {
+    if !world.is_object() {
         return Ok(None);
     }
     let world_json = world.into_serde().unwrap();
@@ -86,8 +92,20 @@ pub async fn put_world(
     character: String,
     fixed_character: bool,
     data: Value,
+    owned: bool,
 ) -> Result<()> {
     log::debug!("DB Put world '{id}'");
+
+    // Test whether world is present and if so keep owned attr
+    let owned = if let Some(world) = get_world(rex, id).await? {
+        if let Some(owned) = world["owned"].as_bool() {
+            owned
+        } else {
+            owned
+        }
+    } else {
+        owned
+    };
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadWrite)?;
     let worlds = transaction.store("worlds")?;
     let world_id = id.to_string();
@@ -97,6 +115,7 @@ pub async fn put_world(
         "character": character,
         "fixed_character": fixed_character,
         "last": Utc::now(),
+        "owned": owned,
     });
     worlds
         .put(&JsValue::from_serde(&Some(record)).unwrap(), None)
