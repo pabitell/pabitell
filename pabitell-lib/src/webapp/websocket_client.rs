@@ -67,6 +67,7 @@ impl Component for WebsocketClient {
                     props.connecting.emit(());
                     let props = props.clone();
                     link.clone().send_future(async move {
+                        let _ = &props;
                         match WebSocket::open(&url) {
                             Ok(ws) => {
                                 log::debug!("WS opened {}", url);

@@ -2,7 +2,7 @@
 name = "doggie_and_kitie_cake"
 version = "0.1.0"
 authors = ["Stepan Henek <stepan@henek.name>"]
-edition = "2018"
+edition = "2021"
 
 [features]
 default = [ 'with_webapp' ]
