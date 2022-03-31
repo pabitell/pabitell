@@ -44,3 +44,7 @@ lazy_static! {
         }]
     };
 }
+
+lazy_static! {
+    pub static ref LANGUAGES: Vec<&'static str> = vec!["en", "cs"];
+}
