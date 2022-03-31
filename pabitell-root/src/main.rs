@@ -3,11 +3,15 @@ mod data;
 mod router;
 mod translations;
 
+use gloo::storage::{LocalStorage, Storage};
 use sycamore::prelude::*;
 use sycamore_router::{HistoryIntegration, Router};
 
-use components::{book::Book, books::Books, breadcrumb::BreadCrumb, footer::Footer, title::Title};
-use data::BOOKS;
+use components::{
+    book::Book, books::Books, breadcrumb::BreadCrumb, footer::Footer, language::Language,
+    title::Title,
+};
+use data::{BOOKS, LANGUAGES};
 use router::AppRoutes;
 use translations::get_message_global;
 
@@ -17,7 +21,9 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
     sycamore::render(|ctx| {
-        let lang = ctx.create_signal("cs".to_owned());
+        let lang: String = (LocalStorage::get("pabitell_lang") as Result<String, _>)
+            .unwrap_or_else(|_| "en".to_string());
+        let lang = ctx.create_signal(lang);
         view! { ctx,
             Router {
                 integration: HistoryIntegration::new(),
@@ -27,9 +33,18 @@ fn main() {
                     view! { ctx,
                         div(class="root") {
                             div(class="section page-header pb-1 pt-0") {
-                                Title {}
+                                Title {
+                                    selected_language: lang,
+                                }
+                                div(class="content is-flex is-justify-content-center") {
+                                    Language {
+                                        selected_language: lang,
+                                        languages: LANGUAGES.iter().map(|e| e.to_string()).collect(),
+                                    }
+                                }
                                 BreadCrumb {
                                     levels: levels,
+                                    selected_language: lang,
                                 }
                             }
                             main(class="section is-flex") {

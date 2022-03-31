@@ -5,10 +5,12 @@ use crate::translations::get_message_global;
 #[derive(Prop)]
 pub struct BreadCrumbProps<'a> {
     levels: &'a Signal<Vec<String>>,
+    selected_language: &'a Signal<String>,
 }
 
 #[component]
 pub fn BreadCrumb<'a, G: Html>(ctx: ScopeRef<'a>, props: BreadCrumbProps<'a>) -> View<G> {
+    let selected_lang = ctx.create_selector(|| props.selected_language.get().to_string());
     view! { ctx,
         nav(class="breadcrumb", ariel-label="breadcrumbs") {
             ul {
@@ -21,7 +23,7 @@ pub fn BreadCrumb<'a, G: Html>(ctx: ScopeRef<'a>, props: BreadCrumbProps<'a>) ->
                 }
                 Indexed {
                     iterable: props.levels,
-                    view: |ctx, level| view! { ctx,
+                    view: move |ctx, level| view! { ctx,
                         li(class=if true {"active"} else {"false"}) {
                             a(
                                 href="",
@@ -32,7 +34,7 @@ pub fn BreadCrumb<'a, G: Html>(ctx: ScopeRef<'a>, props: BreadCrumbProps<'a>) ->
                                 },
                             ) {
                                 (
-                                    get_message_global(&level, "cs", None)
+                                    get_message_global(&level, &selected_lang.get().to_string(), None)
                                 )
                             }
                         }
