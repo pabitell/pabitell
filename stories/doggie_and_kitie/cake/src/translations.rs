@@ -4,7 +4,7 @@ use include_dir::{include_dir, Dir, DirEntry};
 use intl_memoizer::concurrent::IntlLangMemoizer;
 use lazy_static::lazy_static;
 use pabitell_lib::translations::{self, get_available_locales, get_bundle};
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 pub static RESOURCES: Dir = include_dir!("resources/");
 
@@ -29,4 +29,13 @@ pub fn get_message(msgid: &str, langid: &str, args: Option<FluentArgs>) -> Strin
     } else {
         msgid.to_string()
     }
+}
+
+pub fn make_languages() -> Rc<Vec<String>> {
+    Rc::new(
+        BUNDLES
+            .keys()
+            .map(ToString::to_string)
+            .collect::<Vec<String>>(),
+    )
 }
