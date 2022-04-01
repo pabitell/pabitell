@@ -9,6 +9,7 @@ use super::{
     characters::make_characters, items::make_owned_items, narrator::make_narrator,
     print_items::make_print_items, world::make_world,
 };
+use crate::translations::make_languages;
 
 pub struct Root {}
 
@@ -37,6 +38,8 @@ impl Component for Root {
         let make_owned_items: Option<
             Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>,
         > = Some(Box::new(make_owned_items));
+        let make_languages: Option<Box<dyn Fn() -> Rc<Vec<String>>>> =
+            Some(Box::new(make_languages));
         html! {
             <App
               {make_characters}
@@ -44,6 +47,7 @@ impl Component for Root {
               {make_print_items}
               {make_owned_items}
               {make_world}
+              {make_languages}
               {name}
             >
             </App>

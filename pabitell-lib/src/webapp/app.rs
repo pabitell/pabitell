@@ -19,6 +19,7 @@ use crate::{
         characters, database,
         intro::Intro,
         items::Item,
+        language_switch::LanguageSwitch,
         message::{Kind as MessageKind, MessageItem},
         messages::{Messages, Msg as MessagesMsg},
         print::{Print, PrintItem},
@@ -50,11 +51,13 @@ pub enum Msg {
     WsStatusUpdate(WsStatus),
     ShowPrint(bool),
     ScreenOrientationLocked(Option<JsValue>),
+    SetLanguage(String),
 }
 
 pub struct App {
     world_id: Option<Uuid>,
     world: Option<Box<dyn World>>,
+    lang: String,
     owned: Option<bool>,
     /// Request which is being currently processed
     request_id: Option<(Uuid, Timeout)>,
@@ -81,6 +84,7 @@ pub struct Props {
     pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
     pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>>,
     pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
+    pub make_languages: Option<Box<dyn Fn() -> Rc<Vec<String>>>>,
     pub name: String,
 }
 
@@ -98,6 +102,7 @@ impl Default for Props {
             make_world: None,
             make_owned_items: None,
             make_print_items: None,
+            make_languages: None,
             name: String::default(),
         }
     }
@@ -136,6 +141,9 @@ impl Component for App {
             Msg::ScreenOrientationLocked(res)
         });
 
+        let lang: String = (storage::LocalStorage::get("pabitell_lang") as Result<String, _>)
+            .unwrap_or_else(|_| "en".to_string());
+
         let mut res = Self {
             world_id,
             world: None,
@@ -156,6 +164,7 @@ impl Component for App {
             orientation_lock: None,
             event_count: 0,
             ws_status: WsStatus::default(),
+            lang,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -249,7 +258,7 @@ impl Component for App {
             }
             Msg::TriggerRestoreCharacter(character, fixed_character, world_id) => {
                 // check whether character exists in the world
-                let world = ctx.props().make_world.as_ref().unwrap()("cs");
+                let world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
 
                 // update charactes
                 storage::LocalStorage::set(
@@ -342,7 +351,7 @@ impl Component for App {
             }
             Msg::CreateNewWorld => {
                 self.fixed_character = false;
-                let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
                 world.setup();
                 let name = ctx.props().name.clone();
                 let link = ctx.link().clone();
@@ -493,7 +502,8 @@ impl Component for App {
                                     });
                                 }
                                 protocol::RequestMessage::TriggerEvent(trigger_event) => {
-                                    let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                                    let mut world =
+                                        ctx.props().make_world.as_ref().unwrap()(&self.lang);
                                     let narrator = ctx.props().make_narrator.as_ref().unwrap()();
                                     ctx.link().send_future(async move {
                                         let protocol::TriggerEventRequest {
@@ -592,7 +602,7 @@ impl Component for App {
                     }
                     Ok(protocol::Message::Response(response)) => match response {
                         protocol::ResponseMessage::GetWorld(get_world) => {
-                            let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+                            let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
                             let world_id = self.world_id.clone();
 
                             if let Some((msg_id, timeout)) = self.request_id.take() {
@@ -753,6 +763,16 @@ impl Component for App {
                 self.orientation_lock = value;
                 false
             }
+            Msg::SetLanguage(lang) => {
+                log::debug!("Setting language to '{lang}'");
+                let _ = storage::LocalStorage::set("pabitell_lang", &lang); // best effort
+                self.lang = lang;
+                if let Some(world) = self.world.as_mut() {
+                    world.set_lang(&self.lang);
+                }
+
+                true
+            }
         }
     }
 
@@ -781,12 +801,14 @@ impl Component for App {
             return html! {
                 <Print {close_cb} items={
                     props.make_print_items.as_ref().unwrap()(
-                        props.make_world.as_ref().unwrap()("cs")
+                        props.make_world.as_ref().unwrap()(&self.lang)
                     )
                   }
                 />
             };
         }
+
+        let set_language_cb = link.callback(|lang| Msg::SetLanguage(lang));
 
         let view = if let Some(world) = &self.world {
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
@@ -839,8 +861,6 @@ impl Component for App {
             let trigger_event_data_callback =
                 link.callback(|json_value| Msg::TriggerEventData(json_value));
 
-            let lang = world.lang().to_string();
-
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
@@ -859,9 +879,14 @@ impl Component for App {
                           </p>
                           <div class="subtitle is-flex">
                               <div class="w-100 field is-grouped is-grouped-multiline is-justify-content-center">
-                                  <div class="has-text-centered">
+                                  <div class="has-text-centered is-flex">
+                                      <LanguageSwitch
+                                          languages={props.make_languages.as_ref().unwrap()()}
+                                          {set_language_cb}
+                                          lang={self.lang.clone()}
+                                      />
                                       <Speech
-                                        lang={lang.clone()}
+                                        lang={self.lang.clone()}
                                         start_text={world.description().short(world.as_ref())}
                                         shared_scope={self.speech_scope.clone()}
                                         world_name={world.name()}
@@ -892,7 +917,7 @@ impl Component for App {
                           fixed={self.fixed_character}
                         />
                         <Actions
-                          lang={ lang }
+                          lang={ self.lang.clone() }
                           available_characters={ available_characters }
                           owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.character.as_ref()) }
                           character={ self.character.clone() }
@@ -921,21 +946,22 @@ impl Component for App {
             });
             let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
 
-            let world = props.make_world.as_ref().unwrap()("cs");
+            let world = props.make_world.as_ref().unwrap()(&self.lang);
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
-            let lang = world.lang().to_string();
-
             html! {
                 <>
                     <Intro
                         new_world={new_world_cb}
                         name={props.name.to_owned()}
                         {available_characters}
-                        {lang}
+                        languages={props.make_languages.as_ref().unwrap()()}
+                        set_language={set_language_cb}
+                        lang={self.lang.clone()}
                         story_name={world.description().short(world.as_ref())}
                         story_detail={world.description().long(world.as_ref())}
                         character_scanned={character_scanned_cb}
                         show_print={show_print_cb}
+
                     />
                     { loading }
                 </>
@@ -1054,7 +1080,7 @@ impl App {
     fn request_to_get_world(&mut self, ctx: &Context<Self>, world_id: Uuid) {
         *self.loading.borrow_mut() = true;
         let name = ctx.props().name.clone();
-        let mut world = ctx.props().make_world.as_ref().unwrap()("cs");
+        let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
         world.set_id(world_id);
         let owned = self.owned.clone();
 

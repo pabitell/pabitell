@@ -7,6 +7,7 @@ use yew::{html, prelude::*};
 
 use super::{
     characters, database,
+    language_switch::LanguageSwitch,
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
 
@@ -16,6 +17,8 @@ use crate::translations;
 pub struct Props {
     pub new_world: Callback<()>,
     pub show_print: Callback<bool>,
+    pub set_language: Callback<String>,
+    pub languages: Rc<Vec<String>>,
     pub name: String,
     pub available_characters: Rc<Vec<Rc<characters::Character>>>,
     pub story_name: String,
@@ -32,6 +35,7 @@ pub enum Msg {
     UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid)>),
     WorldDelete(Uuid),
     WorldPicked(Uuid, String, bool),
+    SetLanguage(String),
 }
 
 pub struct Intro {
@@ -135,6 +139,10 @@ impl Component for Intro {
                 });
                 false
             }
+            Msg::SetLanguage(lang) => {
+                ctx.props().set_language.emit(lang);
+                true
+            }
         }
     }
 
@@ -148,6 +156,7 @@ impl Component for Intro {
 
         let new_world_cb = link.callback(|_| Msg::NewWorld);
         let show_qr_cb = link.callback(|_| Msg::QRCodeScanShow);
+        let set_language_cb = link.callback(|lang| Msg::SetLanguage(lang));
 
         let table = if !self.worlds.is_empty() {
             let characters: HashMap<String, _> = props
@@ -206,6 +215,7 @@ impl Component for Intro {
             html! {
                 <div class="content">
                     <h5>{{ last_stories }}</h5>
+
                     <div class="table-container">
                       <table class="table is-bordered">
                         {
@@ -227,9 +237,16 @@ impl Component for Intro {
                 <div class="modal-background"></div>
                 <div class="modal-card">
                     <header class="modal-card-head">
-                        <p class="modal-card-title is-flex-shrink-1">
+                        <div class="modal-card-subtitle is-flex-shrink-1 mr-2">
+                            <LanguageSwitch
+                                languages={props.languages.clone()}
+                                {set_language_cb}
+                                lang={props.lang.clone()}
+                            />
+                        </div>
+                        <div class="modal-card-title is-flex-shrink-1">
                             {ctx.props().story_name.clone()}
-                        </p>
+                        </div>
                     </header>
                     <section class="modal-card-body">
                         <div class="content">

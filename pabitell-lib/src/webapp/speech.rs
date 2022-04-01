@@ -49,6 +49,7 @@ pub struct Speech {
     end: Closure<dyn Fn()>,
     onvoiceschanged: Closure<dyn Fn()>,
     default_voice_key: String,
+    current_lang: String,
 }
 
 pub enum Msg {
@@ -132,7 +133,7 @@ impl Component for Speech {
                 self.voices = voices
                     .iter()
                     .filter_map(|e| e.dyn_into::<SpeechSynthesisVoice>().ok())
-                    .filter(|e| e.lang().starts_with(&ctx.props().lang))
+                    .filter(|e| e.lang().starts_with(&self.current_lang))
                     .collect();
 
                 if let Ok(selected_voice) =
@@ -183,6 +184,7 @@ impl Component for Speech {
             retry_texts: vec![],
             playing: false,
             end,
+            current_lang: ctx.props().lang.clone(),
             onvoiceschanged,
             default_voice_key: storage_world_prefix(&ctx.props().world_name, "speech"),
         }
@@ -245,6 +247,10 @@ impl Component for Speech {
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
         // Update when component is reused
         *ctx.props().shared_scope.borrow_mut() = Some(ctx.link().clone());
+        if *ctx.props().lang != self.current_lang {
+            self.current_lang = ctx.props().lang.clone();
+            ctx.link().send_message(Msg::GetVoiceList);
+        }
         true
     }
 }

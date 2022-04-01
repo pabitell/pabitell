@@ -9,6 +9,7 @@ pub mod database;
 pub mod intro;
 pub mod items;
 pub mod jsQR;
+pub mod language_switch;
 pub mod message;
 pub mod messages;
 pub mod print;
