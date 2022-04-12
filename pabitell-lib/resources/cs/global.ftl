@@ -6,3 +6,4 @@ restart = Pustit znovu
 end = Konec.
 last_stories = Poslední příběhy
 no_camera = Vybraná kamera není dostupná
+built_on = Sestaveno

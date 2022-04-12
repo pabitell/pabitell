@@ -5,3 +5,4 @@ event = Event
 restart = Play again
 end = End.
 no_camera = Selected camera is not available
+built_on = Built on
