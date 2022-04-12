@@ -869,6 +869,11 @@ impl Component for App {
             } else {
                 false
             };
+            let built_on_text = format!(
+                "{}: {}",
+                translations::get_message_global("built_on", world.lang(), None,),
+                build_time::build_time_utc!("%Y-%m-%d %H:%M:%S"),
+            );
 
             html! {
                 <>
@@ -934,6 +939,8 @@ impl Component for App {
                     <footer class="footer">
                         <div class="content has-text-centered">
                             <a href="https://github.com/shenek/pabitell/"> { "Pabitell" }</a>
+                            <br />
+                            <small class="is-italic is-size-7">{ built_on_text }</small>
                         </div>
                     </footer>
                     { loading }
