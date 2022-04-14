@@ -23,12 +23,12 @@ fn main() {
     sycamore::render(|ctx| {
         let lang: String = (LocalStorage::get("pabitell_lang") as Result<String, _>)
             .unwrap_or_else(|_| "en".to_string());
-        let lang = ctx.create_signal(lang);
+        let lang = create_signal(ctx, lang);
         view! { ctx,
             Router {
                 integration: HistoryIntegration::new(),
                 view: move |ctx, route: &ReadSignal<AppRoutes>| {
-                    let levels = ctx.create_signal(vec![] as Vec<String>);
+                    let levels = create_signal(ctx, vec![] as Vec<String>);
                     let not_found_text = get_message_global("not_found", &lang.get(), None);
                     view! { ctx,
                         div(class="root") {

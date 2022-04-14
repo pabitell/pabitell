@@ -9,8 +9,8 @@ pub struct BreadCrumbProps<'a> {
 }
 
 #[component]
-pub fn BreadCrumb<'a, G: Html>(ctx: ScopeRef<'a>, props: BreadCrumbProps<'a>) -> View<G> {
-    let selected_lang = ctx.create_selector(|| props.selected_language.get().to_string());
+pub fn BreadCrumb<'a, G: Html>(ctx: Scope<'a>, props: BreadCrumbProps<'a>) -> View<G> {
+    let selected_lang = create_selector(ctx, || props.selected_language.get().to_string());
     view! { ctx,
         nav(class="breadcrumb", ariel-label="breadcrumbs") {
             ul {
