@@ -11,8 +11,8 @@ pub struct BooksProps<'a> {
 }
 
 #[component]
-pub fn Books<'a, G: Html>(ctx: ScopeRef<'a>, props: BooksProps<'a>) -> View<G> {
-    let books = ctx.create_signal(BOOKS.clone());
+pub fn Books<'a, G: Html>(ctx: Scope<'a>, props: BooksProps<'a>) -> View<G> {
+    let books = create_signal(ctx, BOOKS.clone());
     let lang = props.lang.to_owned();
     let levels = props.levels.to_owned();
     view! { ctx,
@@ -46,7 +46,7 @@ pub struct BookItemProps<'a> {
 }
 
 #[component]
-pub fn BookItem<'a, G: Html>(ctx: ScopeRef<'a>, props: BookItemProps<'a>) -> View<G> {
+pub fn BookItem<'a, G: Html>(ctx: Scope<'a>, props: BookItemProps<'a>) -> View<G> {
     let name = props.name.to_owned();
     view! { ctx,
         div(class="column card is-12-mobile is-6-tablet is-4-desktop is-4-widescreen is-4-fullhd m-1") {

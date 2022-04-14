@@ -9,7 +9,7 @@ pub struct TitleProps<'a> {
 }
 
 #[component]
-pub fn Title<'a, G: Html>(ctx: ScopeRef<'a>, props: TitleProps<'a>) -> View<G> {
+pub fn Title<'a, G: Html>(ctx: Scope<'a>, props: TitleProps<'a>) -> View<G> {
     view! { ctx,
         section(
             class="hero is-clickable",

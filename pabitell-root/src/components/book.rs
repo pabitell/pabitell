@@ -10,8 +10,8 @@ pub struct BookProps<'a> {
 }
 
 #[component]
-pub fn Book<'a, G: Html>(ctx: ScopeRef<'a>, props: BookProps<'a>) -> View<G> {
-    let chapters = ctx.create_signal(props.book.chapters.clone());
+pub fn Book<'a, G: Html>(ctx: Scope<'a>, props: BookProps<'a>) -> View<G> {
+    let chapters = create_signal(ctx, props.book.chapters.clone());
     let lang = props.lang.to_owned();
     view! { ctx,
         div(class="content w-100") {
@@ -40,7 +40,7 @@ pub struct ChapterProps<'a> {
 }
 
 #[component]
-pub fn Chapter<'a, G: Html>(ctx: ScopeRef<'a>, props: ChapterProps<'a>) -> View<G> {
+pub fn Chapter<'a, G: Html>(ctx: Scope<'a>, props: ChapterProps<'a>) -> View<G> {
     view! { ctx,
         div(class="column card is-12-mobile is-6-tablet is-4-desktop is-4-widescreen is-4-fullhd m-1") {
             div(class="card-content") {
