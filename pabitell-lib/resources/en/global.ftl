@@ -4,5 +4,6 @@ qr_code_scan = Scan QR code to perform an action.
 event = Event
 restart = Play again
 end = End.
+last_stories = Last stories
 no_camera = Selected camera is not available
 built_on = Built on
