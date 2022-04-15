@@ -1,4 +1,4 @@
-subtitle = Interactive story telling
+subtitle = Interactive storytelling
 not_found = Page not found
 
 # Stories

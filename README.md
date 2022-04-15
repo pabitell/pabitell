@@ -1,6 +1,6 @@
 # Pabitell
 
-Interactive story telling web app.
+Interactive storytelling web app.
 
 
 Work in progress...

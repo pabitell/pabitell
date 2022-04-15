@@ -1,8 +1,14 @@
 [package]
 name = "pabitell-lib"
 version = "0.1.0"
-authors = ["Stepan Henek"]
+authors = ["Stepan Henek <stepan@henek.name>"]
 edition = "2021"
+description = "Interactive storytelling - core library"
+license = "LGPL-3.0-or-later"
+readme = "README.md"
+keywords = ["games", "stories", "books"]
+repository = "https://github.com/shenek/pabitell"
+categories = ["games-engines"]
 
 [dependencies]
 anyhow = "1"
