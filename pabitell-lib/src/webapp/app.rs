@@ -748,6 +748,13 @@ impl Component for App {
             }
             Msg::WsStatusUpdate(status) => {
                 log::debug!("Ws Status update {:?}->{:?}", self.ws_status, &status);
+                if WsStatus::CONNECTED == status && self.owned == Some(false) {
+                    // Plan to redownload world
+                    if let Some(world_id) = self.world_id.clone() {
+                        ctx.link()
+                            .send_future(async move { Msg::WsGetWorld(world_id) });
+                    }
+                }
                 self.ws_status = status;
                 true
             }
