@@ -213,7 +213,7 @@ pub mod tests {
     #[test]
     fn languages() {
         let mut world = DollWorldBuilder::make_world().unwrap();
-        for lang in vec!["cs", "en-US"] {
+        for lang in vec!["cs", "en"] {
             assert!(world.set_lang(lang));
         }
     }
