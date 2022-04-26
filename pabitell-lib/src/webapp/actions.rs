@@ -18,7 +18,6 @@ pub struct Props {
     pub owned_items: Rc<Vec<Rc<items::Item>>>,
     pub character: Rc<Option<String>>,
     pub events: Vec<Rc<action_event::ActionEventItem>>,
-    pub trigger_event_idx: Callback<usize>,
     pub trigger_event_data: Callback<Value>,
     pub world_id: Uuid,
     pub actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
@@ -32,7 +31,6 @@ impl PartialEq for Props {
             && self.owned_items == other.owned_items
             && self.character == other.character
             && self.events == other.events
-            && self.trigger_event_idx == other.trigger_event_idx
             && self.trigger_event_data == other.trigger_event_data
             && self.world_id == other.world_id
     }
@@ -40,7 +38,6 @@ impl PartialEq for Props {
 
 pub enum Msg {
     QRCodeScanShow,
-    TriggerEventIdx(usize),
     TriggerEventData(Rc<Vec<u8>>),
     QRCodeShow(Rc<Vec<u8>>),
     QRCodeHide,
@@ -111,10 +108,6 @@ impl Component for Actions {
                 }
                 false
             }
-            Msg::TriggerEventIdx(idx) => {
-                ctx.props().trigger_event_idx.emit(idx);
-                true
-            }
             Msg::TriggerEventData(data) => {
                 let data = serde_json::from_slice(&data).unwrap();
                 ctx.props().trigger_event_data.emit(data);
@@ -156,7 +149,10 @@ impl Component for Actions {
         let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
         let render_action = move |item: Rc<action_event::ActionEventItem>| {
             let idx = item.idx;
-            let cb = link.clone().callback(move |_| Msg::TriggerEventIdx(idx));
+            let event_data = item.data.clone();
+            let cb = link
+                .clone()
+                .callback(move |_| Msg::TriggerEventData(event_data.clone()));
             let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
 
             html! {

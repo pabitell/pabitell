@@ -34,7 +34,6 @@ const WS_TIMEOUT: u32 = 3000; // ws timeout in ms
 
 pub enum Msg {
     UpdateCharacter(Rc<Option<String>>),
-    TriggerEventIdx(usize),
     TriggerEventData(Value),
     TriggerRestoreCharacter(Option<String>, bool, Uuid),
     PlayText(String),
@@ -193,21 +192,6 @@ impl Component for App {
                         ctx.link()
                             .send_message(Msg::PlayText(scene.long(world.as_ref())));
                     }
-                    true
-                } else {
-                    false
-                }
-            }
-            Msg::TriggerEventIdx(idx) => {
-                if let Some(world) = self.world.as_mut() {
-                    let narrator = ctx.props().make_narrator.as_ref().unwrap()();
-                    let mut events = narrator.available_events(world.as_ref());
-                    let event = &mut events[idx];
-                    self.request_to_trigger_event(
-                        ctx,
-                        self.world_id.unwrap().clone(),
-                        event.dump(),
-                    );
                     true
                 } else {
                     false
@@ -864,7 +848,6 @@ impl Component for App {
                 })
                 .collect();
 
-            let trigger_event_idx_callback = link.callback(|idx| Msg::TriggerEventIdx(idx));
             let trigger_event_data_callback =
                 link.callback(|json_value| Msg::TriggerEventData(json_value));
 
@@ -934,7 +917,6 @@ impl Component for App {
                           owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.character.as_ref()) }
                           character={ self.character.clone() }
                           events={ events }
-                          trigger_event_idx={ trigger_event_idx_callback }
                           trigger_event_data={ trigger_event_data_callback }
                           world_id={self.world_id.unwrap_or_default().clone()}
                           actions_scope={self.actions_scope.clone()}
