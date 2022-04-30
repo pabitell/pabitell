@@ -22,11 +22,12 @@ pub fn assign_item(world: &mut dyn World, item: String, state: ItemState) -> Res
     };
 
     // Set item to character
-    world
+    let item = world
         .items_mut()
         .get_mut(&item)
-        .ok_or_else(|| anyhow!("Item '{}' is not found", item))?
-        .set_state(state);
+        .ok_or_else(|| anyhow!("Item '{}' is not found", item))?;
+
+    item.set_state(state);
 
     Ok(())
 }

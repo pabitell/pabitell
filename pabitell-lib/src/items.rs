@@ -6,6 +6,7 @@ macro_rules! simple_item {
         pub struct $class_name {
             id: uuid::Uuid,
             state: $crate::ItemState,
+            last_event: Option<usize>,
         }
 
         impl $crate::Named for $class_name {
@@ -60,17 +61,37 @@ macro_rules! simple_item {
             fn set_state(&mut self, state: $crate::ItemState) {
                 self.state = state;
             }
+
+            fn last_event(&self) -> Option<usize> {
+                self.last_event
+            }
+
+            fn set_last_event(&mut self, event: usize) {
+                self.last_event = Some(event);
+            }
         }
 
         impl $crate::Dumpable for $class_name {
             fn dump(&self) -> serde_json::Value {
                 serde_json::json!(
-                    {"state": self.state.dump(), "name": self.name()}
+                    {
+                        "state": self.state.dump(),
+                        "name": self.name(),
+                        "last_event": self.last_event,
+                    }
                 )
             }
             fn load(&mut self, data: serde_json::Value) -> anyhow::Result<()> {
                 if let serde_json::Value::Object(mut object) = data {
                     let state_json = object.remove("state").ok_or_else(|| anyhow::anyhow!("Wrong format of item '{}'", self.name()))?;
+                    let last_event_json = object.remove("last_event").ok_or_else(|| anyhow::anyhow!("Wrong format of item '{}'", self.name()))?;
+                    if let Some(last_event) = last_event_json.as_u64() {
+                        self.last_event = Some(last_event as usize);
+                    } else if last_event_json.is_null() {
+                        self.last_event = None;
+                    } else {
+                        return Err(anyhow::anyhow!("Wrong format of item '{}'", self.name()));
+                    }
                     self.state.load(state_json)?;
                     Ok(())
                 } else{

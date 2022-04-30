@@ -115,6 +115,10 @@ impl Event for Pick {
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
     }
+
+    fn items(&self) -> Vec<String> {
+        vec![self.data.item.to_string()]
+    }
 }
 
 impl Pick {
@@ -250,6 +254,10 @@ impl Event for Give {
 
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
+    }
+
+    fn items(&self) -> Vec<String> {
+        vec![self.data.item.to_string()]
     }
 }
 
@@ -389,6 +397,10 @@ impl Event for UseItem {
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
     }
+
+    fn items(&self) -> Vec<String> {
+        vec![self.data.item.to_string()]
+    }
 }
 
 impl UseItem {
@@ -522,6 +534,10 @@ impl Event for Move {
 
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
+    }
+
+    fn items(&self) -> Vec<String> {
+        vec![]
     }
 }
 
@@ -657,6 +673,14 @@ impl Event for Void {
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
     }
+
+    fn items(&self) -> Vec<String> {
+        if let Some(item) = self.data.item.as_ref() {
+            vec![item.to_string()]
+        } else {
+            vec![]
+        }
+    }
 }
 
 impl Void {
@@ -791,6 +815,10 @@ impl Event for Talk {
 
     fn matches(&self, value: &serde_json::Value) -> bool {
         &self.dump() == value
+    }
+
+    fn items(&self) -> Vec<String> {
+        vec![]
     }
 }
 

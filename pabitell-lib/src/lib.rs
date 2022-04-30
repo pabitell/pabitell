@@ -102,6 +102,8 @@ pub trait Dumpable {
 pub trait Item: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
     fn state(&self) -> &ItemState;
     fn set_state(&mut self, state: ItemState);
+    fn last_event(&self) -> Option<usize>;
+    fn set_last_event(&mut self, event: usize);
 }
 
 pub trait Character: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
@@ -134,6 +136,11 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
         if let Some(world_update) = self.get_world_update().as_ref() {
             (world_update)(self.as_any(), world);
             world.event_inc();
+            for item in self.items() {
+                let last_event = world.event_count();
+                let item = world.items_mut().get_mut(&item).unwrap();
+                item.set_last_event(last_event);
+            }
         }
     }
     fn perform(&mut self, world: &mut dyn World) -> bool {
@@ -178,6 +185,7 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn set_initiator(&mut self, initiator: String);
     fn dump(&self) -> serde_json::Value;
     fn matches(&self, value: &serde_json::Value) -> bool;
+    fn items(&self) -> Vec<String>;
 }
 
 pub trait WorldBuilder<S>
@@ -296,6 +304,7 @@ pub mod test {
     #[derive(Debug, Default)]
     struct TestItem {
         state: ItemState,
+        last_event: Option<usize>,
     }
 
     impl Tagged for TestItem {}
@@ -344,6 +353,12 @@ pub mod test {
         }
         fn set_state(&mut self, state: ItemState) {
             self.state = state;
+        }
+        fn last_event(&self) -> Option<usize> {
+            self.last_event
+        }
+        fn set_last_event(&mut self, event: usize) {
+            self.last_event = Some(event);
         }
     }
 
@@ -503,6 +518,10 @@ pub mod test {
 
         fn matches(&self, value: &serde_json::Value) -> bool {
             false
+        }
+
+        fn items(&self) -> Vec<String> {
+            vec![]
         }
     }
 
