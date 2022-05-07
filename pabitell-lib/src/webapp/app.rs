@@ -81,7 +81,7 @@ pub struct Props {
     pub make_characters: Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>,
     pub make_narrator: Option<Box<dyn Fn() -> Box<dyn Narrator>>>,
     pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
-    pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>>,
+    pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Vec<Rc<Item>>>>,
     pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
     pub make_languages: Option<Box<dyn Fn() -> Rc<Vec<String>>>>,
     pub name: String,
@@ -865,6 +865,11 @@ impl Component for App {
                 build_time::build_time_utc!("%Y-%m-%d %H:%M:%S"),
             );
 
+            let mut owned_items =
+                props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.character.as_ref());
+            owned_items.sort();
+            let owned_items = Rc::new(owned_items);
+
             html! {
                 <>
                     <section class="hero is-small is-light">
@@ -914,7 +919,7 @@ impl Component for App {
                         <Actions
                           lang={ self.lang.clone() }
                           available_characters={ available_characters }
-                          owned_items={ props.make_owned_items.as_ref().unwrap()(world.as_ref(), self.character.as_ref()) }
+                          { owned_items }
                           character={ self.character.clone() }
                           events={ events }
                           trigger_event_data={ trigger_event_data_callback }

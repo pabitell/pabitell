@@ -10,8 +10,8 @@ use std::rc::Rc;
 
 use crate::events::ProtocolEvent;
 
-pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec<Rc<items::Item>>> {
-    let res = if let Some(character) = character {
+pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Vec<Rc<items::Item>> {
+    if let Some(character) = character {
         let owned_state = ItemState::Owned(character.to_string());
         world
             .items()
@@ -44,11 +44,11 @@ pub fn make_owned_items(world: &dyn World, character: &Option<String>) -> Rc<Vec
                     } else {
                         items::DefaultAction::Scan
                     },
+                    last_event: i.last_event(),
                 })
             })
             .collect()
     } else {
         vec![]
-    };
-    Rc::new(res)
+    }
 }

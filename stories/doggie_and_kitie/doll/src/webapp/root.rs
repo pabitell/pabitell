@@ -35,9 +35,8 @@ impl Component for Root {
         let make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>> = Some(Box::new(make_world));
         let make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>> =
             Some(Box::new(make_print_items));
-        let make_owned_items: Option<
-            Box<dyn Fn(&dyn World, &Option<String>) -> Rc<Vec<Rc<Item>>>>,
-        > = Some(Box::new(make_owned_items));
+        let make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Vec<Rc<Item>>>> =
+            Some(Box::new(make_owned_items));
         let make_languages: Option<Box<dyn Fn() -> Rc<Vec<String>>>> =
             Some(Box::new(make_languages));
         html! {
