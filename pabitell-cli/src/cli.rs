@@ -327,7 +327,7 @@ impl SkimItem for EventItem {
 
 fn select_event(world: &dyn World, narrator: &dyn Narrator) -> Option<Vec<EventItem>> {
     let events = narrator
-        .available_events(world)
+        .available_events_sorted(world)
         .iter()
         .enumerate()
         .map(|(idx, e)| EventItem {
@@ -516,17 +516,18 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                 if let Some(events) = select_event(world.as_mut(), narrator.as_ref()) {
                     if !events.is_empty() {
                         let idx = events[0].idx;
-                        let mut events = narrator.available_events(world.as_ref());
+                        let mut events = narrator.available_events_sorted(world.as_ref());
                         if events[idx].can_be_triggered(world.as_ref()) {
                             println(
                                 color::BRIGHT_CYAN,
-                                format!("{}. {}", world.event_count() + 1, events[idx].success_text(world.as_ref())),
+                                format!(
+                                    "{}. {}",
+                                    world.event_count() + 1,
+                                    events[idx].success_text(world.as_ref())
+                                ),
                             );
                         } else {
-                            println(
-                                color::BRIGHT_RED,
-                                events[idx].fail_text(world.as_ref()),
-                            );
+                            println(color::BRIGHT_RED, events[idx].fail_text(world.as_ref()));
                         }
                         events[idx].trigger(world.as_mut());
                         backend::store(&mut db, &story.code, world.as_ref()).unwrap();

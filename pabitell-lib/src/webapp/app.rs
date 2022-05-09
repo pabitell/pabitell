@@ -805,7 +805,7 @@ impl Component for App {
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
             let set_character_callback = link.callback(|character| Msg::UpdateCharacter(character));
             let narrator = props.make_narrator.as_ref().unwrap()();
-            let events = narrator.available_events(world.as_ref());
+            let events = narrator.available_events_sorted(world.as_ref());
             let characters_map: HashMap<String, Rc<characters::Character>> =
                 props.make_characters.as_ref().unwrap()(world.as_ref())
                     .iter()

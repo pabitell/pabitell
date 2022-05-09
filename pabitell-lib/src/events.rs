@@ -119,6 +119,10 @@ impl Event for Pick {
     fn items(&self) -> Vec<String> {
         vec![self.data.item.to_string()]
     }
+
+    fn characters(&self) -> Vec<String> {
+        vec![self.character().to_string()]
+    }
 }
 
 impl Pick {
@@ -258,6 +262,13 @@ impl Event for Give {
 
     fn items(&self) -> Vec<String> {
         vec![self.data.item.to_string()]
+    }
+
+    fn characters(&self) -> Vec<String> {
+        vec![
+            self.from_character().to_string(),
+            self.to_character().to_string(),
+        ]
     }
 }
 
@@ -401,6 +412,10 @@ impl Event for UseItem {
     fn items(&self) -> Vec<String> {
         vec![self.data.item.to_string()]
     }
+
+    fn characters(&self) -> Vec<String> {
+        vec![self.character().to_string()]
+    }
 }
 
 impl UseItem {
@@ -538,6 +553,10 @@ impl Event for Move {
 
     fn items(&self) -> Vec<String> {
         vec![]
+    }
+
+    fn characters(&self) -> Vec<String> {
+        vec![self.character().to_string()]
     }
 }
 
@@ -681,6 +700,10 @@ impl Event for Void {
             vec![]
         }
     }
+
+    fn characters(&self) -> Vec<String> {
+        vec![self.character().to_string()]
+    }
 }
 
 impl Void {
@@ -819,6 +842,10 @@ impl Event for Talk {
 
     fn items(&self) -> Vec<String> {
         vec![]
+    }
+
+    fn characters(&self) -> Vec<String> {
+        vec![self.character().to_string()]
     }
 }
 

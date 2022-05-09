@@ -185,7 +185,32 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     fn set_initiator(&mut self, initiator: String);
     fn dump(&self) -> serde_json::Value;
     fn matches(&self, value: &serde_json::Value) -> bool;
+
     fn items(&self) -> Vec<String>;
+    fn characters(&self) -> Vec<String>;
+
+    fn sort_key(&self, world: &dyn World) -> (usize, String, String, String) {
+        let max_event_idx = self
+            .items()
+            .iter()
+            .map(|e| {
+                if let Some(item) = world.items().get(e) {
+                    item.last_event().unwrap_or(0)
+                } else {
+                    0
+                }
+            })
+            .max()
+            .unwrap_or(0);
+
+        let max_item_name = self.items().into_iter().max().unwrap_or_default();
+        (
+            max_event_idx,
+            max_item_name,
+            self.characters().into_iter().max().unwrap_or_default(),
+            self.name().to_string(),
+        )
+    }
 }
 
 pub trait WorldBuilder<S>
@@ -235,6 +260,11 @@ pub trait World: Named + Dumpable {
 pub trait Narrator {
     fn available_events(&self, world: &dyn World) -> Vec<Box<dyn Event>>;
     fn parse_event(&self, world: &dyn World, value: serde_json::Value) -> Option<Box<dyn Event>>;
+    fn available_events_sorted(&self, world: &dyn World) -> Vec<Box<dyn Event>> {
+        let mut events = self.available_events(world);
+        events.sort_by_key(|e| e.sort_key(world));
+        events
+    }
 }
 
 #[cfg(test)]
@@ -522,6 +552,10 @@ pub mod test {
 
         fn items(&self) -> Vec<String> {
             vec![]
+        }
+
+        fn characters(&self) -> Vec<String> {
+            vec!["test_character".to_owned()]
         }
     }
 
