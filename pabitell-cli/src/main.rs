@@ -85,7 +85,7 @@ pub fn main() {
         }
         Some(("cli", cli_matches)) => {
             let default_lang = cli_matches.value_of("default-lang").unwrap();
-            let db_path = matches.value_of("db-path").unwrap();
+            let db_path = cli_matches.value_of("db-path").unwrap();
             cli::start_cli_app(default_lang, db_path).unwrap();
         }
         _ => exit_on_parse_error(app),
