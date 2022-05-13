@@ -688,7 +688,7 @@ doggie_and_kitie-cake-children_garden-leaving =
     A tak se ten zlý pes pustil do toho dortu. Hltal a hltal, až mu v očích
     slzy stály, jak byl ten dort uvnitř ještě horký, hltal, až se při tom
     několikrát zakuckal, hltal a hltal, až ho celý dohltal. Pak na to vypil
-    ještě celoukonev vody a odvalil se pryč.
+    ještě celou konev vody a odvalil se pryč.
     Když si pejsek a kočička s dětmi dost pohráli, vzpomněli si na ten
     dort. Tak se vzali všichni za ruce a šli se podívat, jestli už ten dort dost
     vychladl. „Panečku, to si, děti, pochutnáte,“ řekli pejsek s kočičkou, „to
