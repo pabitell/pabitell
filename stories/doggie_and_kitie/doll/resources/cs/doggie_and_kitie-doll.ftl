@@ -577,8 +577,8 @@ doggie_and_kitie-doll-home-long-6 =
     zamazané od hlíny, a dala je na sluníčko usušit, aby zas byly čisté a suché.
     Pejsek uložil panenku do postýlky, aby se zahřála, a přinesl jí rohlíček
     a hrneček mléka. Panenka se najedla a pak v postýlce pěkně usnula.
-    Pejsek s kočičkou chodili po špičkách kolem, aby panenku neprobu-
-    dili, a těšili se z toho, že teď mají svoje děťátko.
+    Pejsek s kočičkou chodili po špičkách kolem, aby panenku neprobudili,
+    a těšili se z toho, že teď mají svoje děťátko.
 
 doggie_and_kitie-doll-home-long-7 =
     A kočička řekla pejskovi: „Něco ti, pejsku, povím: teď,
