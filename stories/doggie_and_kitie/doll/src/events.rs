@@ -1,5 +1,4 @@
-use super::characters;
-use pabitell_lib::{conditions, data, events, updates, Character, Event, ItemState, Tagged, World};
+use pabitell_lib::{conditions, data, events, updates, Event, ItemState, Tagged, World};
 use serde::{Deserialize, Serialize};
 
 use crate::translations::get_message;
@@ -105,6 +104,7 @@ pub fn make_move(
     data: data::MoveData,
     from_scene: &str,
     from_dialog: Option<usize>,
+    items_state: Option<(Vec<String>, ItemState)>,
     increase_dialog: bool,
 ) -> events::Move {
     let mut event = events::Move::new(name, data);
@@ -121,6 +121,11 @@ pub fn make_move(
         }
         if let Some(from_dialog) = from_dialog {
             if !conditions::scene_dialog(world, &from_scene, from_dialog).unwrap() {
+                return false;
+            }
+        }
+        if let Some((tags, state)) = items_state.as_ref() {
+            if !conditions::all_items_with_tags_in_state(world, tags, state.clone()) {
                 return false;
             }
         }
@@ -350,6 +355,7 @@ pub fn make_lay_down(name: &str, use_item_data: data::UseItemData) -> events::Us
             .unwrap()
             && conditions::in_scenes(world, event.character().to_string(), &["home".to_string()])
                 .unwrap()
+            && conditions::scene_dialog(world, "home", 17).unwrap()
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
