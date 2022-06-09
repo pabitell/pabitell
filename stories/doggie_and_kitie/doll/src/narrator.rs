@@ -3,10 +3,6 @@ use serde_json::Value;
 
 use crate::events::{self, ProtocolEvent};
 
-fn to_dynamic_event(event: Box<dyn Event>) -> Box<dyn Event> {
-    event
-}
-
 #[derive(Default, Debug)]
 pub struct Doll;
 
@@ -159,18 +155,21 @@ impl Narrator for Doll {
         let event: Result<ProtocolEvent, serde_json::Error> = serde_json::from_value(value);
 
         match event {
-            Ok(ProtocolEvent::TalkInHome(data)) => Some(to_dynamic_event(Box::new(
-                events::make_talk("talk_in_home", data),
-            ))),
-            Ok(ProtocolEvent::MoveToWalk(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move("move_to_walk", data, "home", Some(5), None, true),
-            ))),
-            Ok(ProtocolEvent::TalkOnWalk(data)) => Some(to_dynamic_event(Box::new(
-                events::make_talk("talk_on_walk", data),
-            ))),
-            Ok(ProtocolEvent::FindDoll(data)) => {
-                Some(to_dynamic_event(Box::new(events::make_find_doll(data))))
+            Ok(ProtocolEvent::TalkInHome(data)) => {
+                Some(Box::new(events::make_talk("talk_in_home", data)))
             }
+            Ok(ProtocolEvent::MoveToWalk(data)) => Some(Box::new(events::make_move(
+                "move_to_walk",
+                data,
+                "home",
+                Some(5),
+                None,
+                true,
+            ))),
+            Ok(ProtocolEvent::TalkOnWalk(data)) => {
+                Some(Box::new(events::make_talk("talk_on_walk", data)))
+            }
+            Ok(ProtocolEvent::FindDoll(data)) => Some(Box::new(events::make_find_doll(data))),
             Ok(ProtocolEvent::MoveToHome(data)) => {
                 let doggie_picked = world
                     .items()
@@ -183,7 +182,7 @@ impl Narrator for Doll {
                     .filter(|e| e.get_tags().contains(&"kitie_pick".to_owned()))
                     .all(|e| e.state() != &ItemState::InScene("kitie_search".to_owned()));
                 Some(if kitie_picked {
-                    to_dynamic_event(Box::new(events::make_move(
+                    Box::new(events::make_move(
                         "move_to_home",
                         data,
                         "kitie_search",
@@ -193,9 +192,9 @@ impl Narrator for Doll {
                             ItemState::Owned("kitie".to_string()),
                         )),
                         true,
-                    )))
+                    ))
                 } else if doggie_picked {
-                    to_dynamic_event(Box::new(events::make_move(
+                    Box::new(events::make_move(
                         "move_to_home",
                         data,
                         "doggie_search",
@@ -205,30 +204,38 @@ impl Narrator for Doll {
                             ItemState::Owned("doggie".to_string()),
                         )),
                         true,
-                    )))
+                    ))
                 } else {
-                    to_dynamic_event(Box::new(events::make_move(
+                    Box::new(events::make_move(
                         "move_to_home",
                         data,
                         "walk",
                         Some(7),
                         None,
                         true,
-                    )))
+                    ))
                 })
             }
-            Ok(ProtocolEvent::MoveToDoggieSearch(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move("move_to_doggie_search", data, "home", Some(15), None, true),
+            Ok(ProtocolEvent::MoveToDoggieSearch(data)) => Some(Box::new(events::make_move(
+                "move_to_doggie_search",
+                data,
+                "home",
+                Some(15),
+                None,
+                true,
             ))),
-            Ok(ProtocolEvent::MoveToKitieSearch(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move("move_to_kitie_search", data, "home", Some(16), None, true),
+            Ok(ProtocolEvent::MoveToKitieSearch(data)) => Some(Box::new(events::make_move(
+                "move_to_kitie_search",
+                data,
+                "home",
+                Some(16),
+                None,
+                true,
             ))),
-            Ok(ProtocolEvent::Pick(data)) => {
-                Some(to_dynamic_event(Box::new(events::make_pick("pick", data))))
+            Ok(ProtocolEvent::Pick(data)) => Some(Box::new(events::make_pick("pick", data))),
+            Ok(ProtocolEvent::LayDown(data)) => {
+                Some(Box::new(events::make_lay_down("lay_down", data)))
             }
-            Ok(ProtocolEvent::LayDown(data)) => Some(to_dynamic_event(Box::new(
-                events::make_lay_down("lay_down", data),
-            ))),
             Err(_) => None,
         }
     }

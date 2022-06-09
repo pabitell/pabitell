@@ -1,14 +1,7 @@
-use pabitell_lib::{conditions, data, Character, Event, ItemState, Narrator, World};
+use pabitell_lib::{data, Event, Narrator, World};
 use serde_json::Value;
 
-use crate::{
-    characters,
-    events::{self, ProtocolEvent},
-};
-
-fn to_dynamic_event(event: Box<dyn Event>) -> Box<dyn Event> {
-    event
-}
+use crate::events::{self, ProtocolEvent};
 
 #[derive(Default, Debug)]
 pub struct Cake;
@@ -160,44 +153,38 @@ impl Narrator for Cake {
         let event: Result<ProtocolEvent, serde_json::Error> = serde_json::from_value(value);
 
         match event {
-            Ok(ProtocolEvent::MoveToKitchen(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move_to_kitchen(data),
-            ))),
-            Ok(ProtocolEvent::MoveToChildrenGarden(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move_to_children_garden(data),
-            ))),
-            Ok(ProtocolEvent::MoveToGarden(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move_to_garden(data),
-            ))),
-            Ok(ProtocolEvent::MoveToChildrenHouse(data)) => Some(to_dynamic_event(Box::new(
-                events::make_move_to_children_house(data),
-            ))),
-            Ok(ProtocolEvent::PickIngredient(data)) => Some(to_dynamic_event(Box::new(
-                events::make_pick("pick_ingredient", data, false),
-            ))),
-            Ok(ProtocolEvent::Pick(data)) => Some(to_dynamic_event(Box::new(events::make_pick(
-                "pick", data, false,
-            )))),
-            Ok(ProtocolEvent::GiveSandCake(data)) => Some(to_dynamic_event(Box::new(
-                events::make_give_sand_cake(data),
-            ))),
-            Ok(ProtocolEvent::Give(data)) => {
-                Some(to_dynamic_event(Box::new(events::make_give(data))))
+            Ok(ProtocolEvent::MoveToKitchen(data)) => {
+                Some(Box::new(events::make_move_to_kitchen(data)))
             }
-            Ok(ProtocolEvent::Play(data)) => Some(to_dynamic_event(Box::new(events::make_pick(
-                "play", data, true,
-            )))),
-            Ok(ProtocolEvent::FindBadDog(data)) => {
-                Some(to_dynamic_event(Box::new(events::make_find_bad_dog(data))))
+            Ok(ProtocolEvent::MoveToChildrenGarden(data)) => {
+                Some(Box::new(events::make_move_to_children_garden(data)))
             }
-            Ok(ProtocolEvent::Eat(data)) => {
-                Some(to_dynamic_event(Box::new(events::make_eat_meal(data))))
+            Ok(ProtocolEvent::MoveToGarden(data)) => {
+                Some(Box::new(events::make_move_to_garden(data)))
             }
-            Ok(ProtocolEvent::PickDislikedIngredient(data)) => Some(to_dynamic_event(Box::new(
-                events::make_pick("pick_disliked_ingredient", data, true),
+            Ok(ProtocolEvent::MoveToChildrenHouse(data)) => {
+                Some(Box::new(events::make_move_to_children_house(data)))
+            }
+            Ok(ProtocolEvent::PickIngredient(data)) => {
+                Some(Box::new(events::make_pick("pick_ingredient", data, false)))
+            }
+            Ok(ProtocolEvent::Pick(data)) => Some(Box::new(events::make_pick("pick", data, false))),
+            Ok(ProtocolEvent::GiveSandCake(data)) => {
+                Some(Box::new(events::make_give_sand_cake(data)))
+            }
+            Ok(ProtocolEvent::Give(data)) => Some(Box::new(events::make_give(data))),
+            Ok(ProtocolEvent::Play(data)) => Some(Box::new(events::make_pick("play", data, true))),
+            Ok(ProtocolEvent::FindBadDog(data)) => Some(Box::new(events::make_find_bad_dog(data))),
+            Ok(ProtocolEvent::Eat(data)) => Some(Box::new(events::make_eat_meal(data))),
+            Ok(ProtocolEvent::PickDislikedIngredient(data)) => Some(Box::new(events::make_pick(
+                "pick_disliked_ingredient",
+                data,
+                true,
             ))),
-            Ok(ProtocolEvent::AddIngredient(data)) => Some(to_dynamic_event(Box::new(
-                events::make_use_item("add_ingredient", data, true),
+            Ok(ProtocolEvent::AddIngredient(data)) => Some(Box::new(events::make_use_item(
+                "add_ingredient",
+                data,
+                true,
             ))),
             Err(_) => None,
         }
