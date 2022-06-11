@@ -144,6 +144,7 @@ impl Narrator for Doll {
                 res.push(Box::new(events::make_pick(
                     "pick",
                     data::PickData::new(character, toy),
+                    Some(format!("{character}_search")),
                 )));
             }
         }
@@ -232,7 +233,10 @@ impl Narrator for Doll {
                 None,
                 true,
             ))),
-            Ok(ProtocolEvent::Pick(data)) => Some(Box::new(events::make_pick("pick", data))),
+            Ok(ProtocolEvent::Pick(data)) => {
+                let scene = format!("{}_search", data.character);
+                Some(Box::new(events::make_pick("pick", data, Some(scene))))
+            }
             Ok(ProtocolEvent::LayDown(data)) => {
                 Some(Box::new(events::make_lay_down("lay_down", data)))
             }

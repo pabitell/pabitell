@@ -246,7 +246,7 @@ pub fn make_find_doll(data: data::UseItemData) -> events::UseItem {
     event
 }
 
-pub fn make_pick(name: &str, pick_data: data::PickData) -> events::Pick {
+pub fn make_pick(name: &str, pick_data: data::PickData, scene: Option<String>) -> events::Pick {
     let mut event = events::Pick::new(name, pick_data);
 
     event.set_tags(vec!["pick".to_string()]);
@@ -261,7 +261,7 @@ pub fn make_pick(name: &str, pick_data: data::PickData) -> events::Pick {
         .unwrap();
     })));
 
-    event.set_condition(Some(Box::new(|event, world| {
+    event.set_condition(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
         conditions::same_scene(
             world,
@@ -269,6 +269,13 @@ pub fn make_pick(name: &str, pick_data: data::PickData) -> events::Pick {
             &[event.item().to_string()],
         )
         .unwrap_or(false)
+            && scene
+                .as_ref()
+                .map(|s| {
+                    conditions::in_scenes(world, event.character().to_owned(), &[s.to_owned()])
+                        .unwrap()
+                })
+                .unwrap_or(true)
     })));
 
     event.set_make_action_text(Some(Box::new(|event, world| {
