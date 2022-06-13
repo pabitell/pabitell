@@ -7,3 +7,4 @@ end = Konec.
 last_stories = Poslední příběhy
 no_camera = Vybraná kamera není dostupná
 built_on = Sestaveno
+will_join_the_game = {$characterName} se připojí ke hře.

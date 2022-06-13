@@ -241,6 +241,7 @@ impl Component for Actions {
                   {show_qr_cb}
                   character={character.clone()}
                   world_id={world_id}
+                  lang={ctx.props().lang.clone()}
                 />
             }
         };

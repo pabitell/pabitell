@@ -1,13 +1,17 @@
 use super::characters;
+use fluent::{FluentArgs, FluentValue};
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::{html, prelude::*};
+
+use crate::translations::get_message_global;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
     pub character: Rc<characters::Character>,
     pub world_id: Uuid,
     pub show_qr_cb: Callback<Rc<Vec<u8>>>,
+    pub lang: String,
 }
 
 pub struct ActionJoin {}
@@ -44,6 +48,14 @@ impl Component for ActionJoin {
         let onclick = ctx.link().callback(|_| Msg::ShowQRCode);
         let character = ctx.props().character.clone();
 
+        let mut f_args = FluentArgs::new();
+        f_args.set(
+            "characterName",
+            FluentValue::from(character.short.to_string()),
+        );
+
+        let help_text = get_message_global("will_join_the_game", &ctx.props().lang, Some(f_args));
+
         html! {
             <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
                 <div class="card-content">
@@ -60,10 +72,10 @@ impl Component for ActionJoin {
                     </div>
                 </div>
                 <div class="card-image has-text-centered">
-                    <figure class="image is-clickable is-square w-75 is-inline-block box" {onclick} >
+                    <figure class="image is-clickable is-square w-75 is-inline-block" {onclick} >
                         <img class="box" src={character.character_url.to_string()}/>
                     </figure>
-                    <div class="content"></div>
+                    <div class="content">{help_text}</div>
                 </div>
             </div>
         }

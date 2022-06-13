@@ -7,3 +7,4 @@ end = End.
 last_stories = Last stories
 no_camera = Selected camera is not available
 built_on = Built on
+will_join_the_game = {$characterName} will join the game.

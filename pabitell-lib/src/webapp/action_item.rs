@@ -105,7 +105,7 @@ impl Component for ActionItem {
             items::DefaultAction::Give => {
                 html! {
                     <figure class="image is-square w-75 is-inline-block is-clickable box"  onclick={ show_qr }>
-                        <img src={ item.image_url.clone() }/>
+                        <img class="box" src={ item.image_url.clone() }/>
                     </figure>
                 }
             }
