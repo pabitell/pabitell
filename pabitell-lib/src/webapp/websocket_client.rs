@@ -174,7 +174,6 @@ impl Component for WebsocketClient {
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
         // Update when component is reused
-        *ctx.props().client_scope.borrow_mut() = Some(ctx.link().clone());
         ctx.props().ready.emit(());
         true
     }

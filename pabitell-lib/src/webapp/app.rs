@@ -48,6 +48,7 @@ pub enum Msg {
     WsFailed,
     WsConnect,
     WsStatusUpdate(WsStatus),
+    WsDisconnect,
     ShowPrint(bool),
     ScreenOrientationLocked(Option<JsValue>),
     SetLanguage(String),
@@ -311,6 +312,13 @@ impl Component for App {
                 if let Some(scope) = self.messages_scope.as_ref().borrow().clone() {
                     scope.send_message(MessagesMsg::Clear);
                 }
+
+                // Disconnect from WS
+                ctx.link().send_message(Msg::WsDisconnect);
+                // Reset picked character
+                self.character = Rc::new(None);
+                // Reset owned flag
+                self.owned = None;
 
                 // Clear loding state
                 *self.loading.borrow_mut() = false;
@@ -741,6 +749,16 @@ impl Component for App {
                 }
                 self.ws_status = status;
                 true
+            }
+            Msg::WsDisconnect => {
+                let client_scope = self.client_scope.clone();
+                log::debug!("Disconnecting WS");
+                spawn_local(async move {
+                    if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
+                        client_scope.send_message(WsMsg::Disconnect);
+                    }
+                });
+                false
             }
             Msg::ShowPrint(show) => {
                 if self.show_print != show {
