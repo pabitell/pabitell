@@ -8,9 +8,9 @@ use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
     Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-    Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlVideoElement, ImageData,
-    MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
-    MediaStreamTrack,
+    Element, EventTarget, HtmlCanvasElement, HtmlInputElement, HtmlMediaElement, HtmlVideoElement,
+    ImageData, MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
+    MediaStreamTrack, MouseEvent,
 };
 use yew::{html, prelude::*};
 
@@ -46,17 +46,21 @@ pub struct QRScanner {
     current_device_id: Option<String>,
     video_ref: NodeRef,
     canvas_ref: NodeRef,
+    input_ref: NodeRef,
     interval: Option<timers::callback::Interval>,
     camera_available: bool,
+    show_text_input: bool,
 }
 
 pub enum Msg {
     Active(bool),
     CamerasLoaded(Vec<Camera>),
     Picture(ImageData),
+    TextInput(String),
     SwitchCamera(Option<String>),
     CameraSwitched,
     CameraNotAvailable,
+    ToggleTextInput,
 }
 
 impl Component for QRScanner {
@@ -129,6 +133,20 @@ impl Component for QRScanner {
                     false
                 }
             }
+            Msg::TextInput(text) => {
+                ctx.props().qr_found.emit(text);
+                if let Some(interval) = self.interval.take() {
+                    interval.cancel();
+                }
+                let input = self.input_ref.clone().cast::<HtmlInputElement>().unwrap();
+
+                // Reset state
+                input.set_value("");
+                self.show_text_input = false;
+                self.active = false;
+
+                true
+            }
             Msg::SwitchCamera(device_id) => {
                 self.camera_available = true;
                 // Store device in local storage
@@ -187,6 +205,10 @@ impl Component for QRScanner {
                 self.camera_available = false;
                 true
             }
+            Msg::ToggleTextInput => {
+                self.show_text_input = !self.show_text_input;
+                true
+            }
         }
     }
 
@@ -196,6 +218,7 @@ impl Component for QRScanner {
             active: false,
             video_ref: NodeRef::default(),
             canvas_ref: NodeRef::default(),
+            input_ref: NodeRef::default(),
             interval: None,
             cameras_loaded: false,
             cameras: vec![Camera {
@@ -206,6 +229,7 @@ impl Component for QRScanner {
             }],
             current_device_id: None,
             camera_available: true,
+            show_text_input: false,
         }
     }
 
@@ -224,6 +248,7 @@ impl Component for QRScanner {
                 { self.view_cameras(ctx) }
                 { self.video_view(ctx) }
                 </div>
+                { self.view_text_input(ctx) }
                 <button
                   onclick={close_cb}
                   class="modal-close is-large"
@@ -348,6 +373,48 @@ impl QRScanner {
                     { for self.cameras.iter().map(render_camera) }
                 </ul>
             </div>
+        }
+    }
+
+    fn view_text_input(&self, ctx: &Context<Self>) -> Html {
+        let toggle_cb = ctx.link().callback(|_| Msg::ToggleTextInput);
+        let input_ref = self.input_ref.clone();
+        let trigger_cb = ctx.link().callback(move |_: MouseEvent| {
+            let input = input_ref.cast::<HtmlInputElement>().unwrap();
+            Msg::TextInput(input.value())
+        });
+        if self.show_text_input {
+            html! {
+              <div class="field has-addons is-hidden-touch">
+                <p class="control">
+                  <a class="button is-light" onclick={toggle_cb}>
+                    <span class="icon is-small"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+                  </a>
+                </p>
+                <p class="control">
+                  <input
+                    class="input"
+                    type="text"
+                    ref={self.input_ref.clone()}
+                  />
+                </p>
+                <p class="control">
+                  <a class="button is-info" onclick={trigger_cb}>
+                    <span class="icon is-small"><i class="fas fa-keyboard" aria-hidden="true"></i></span>
+                  </a>
+                </p>
+              </div>
+            }
+        } else {
+            html! {
+              <div class="field has-addons is-hidden-touch">
+                <p class="control">
+                  <a class="button is-info" onclick={toggle_cb}>
+                    <span class="icon is-small"><i class="fas fa-keyboard" aria-hidden="true"></i></span>
+                  </a>
+                </p>
+              </div>
+            }
         }
     }
 
