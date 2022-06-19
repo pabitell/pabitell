@@ -75,6 +75,7 @@ pub struct App {
     orientation_lock: Option<JsValue>,
     event_count: usize,
     ws_status: WsStatus,
+    ws_request_failed: bool,
 }
 
 #[derive(Properties)]
@@ -141,6 +142,9 @@ impl Component for App {
             Msg::ScreenOrientationLocked(res)
         });
 
+        // Make sure that WS connections are disconnected
+        ctx.link().send_future(async { Msg::WsDisconnect });
+
         let lang: String = (storage::LocalStorage::get("pabitell_lang") as Result<String, _>)
             .unwrap_or_else(|_| "en".to_string());
 
@@ -164,6 +168,7 @@ impl Component for App {
             orientation_lock: None,
             event_count: 0,
             ws_status: WsStatus::default(),
+            ws_request_failed: false,
             lang,
         };
 
@@ -322,6 +327,8 @@ impl Component for App {
 
                 // Clear loding state
                 *self.loading.borrow_mut() = false;
+                self.ws_request_failed = false;
+
                 true
             }
             Msg::WorldUpdateFetched(world, owned) => {
@@ -339,6 +346,7 @@ impl Component for App {
 
                 // Clear loding state
                 *self.loading.borrow_mut() = false;
+                self.ws_request_failed = false;
                 true
             }
             Msg::CreateNewWorld => {
@@ -728,7 +736,7 @@ impl Component for App {
             }
             Msg::WsFailed => {
                 *self.loading.borrow_mut() = false;
-                // TODO display some error message to user
+                self.ws_request_failed = true;
                 true
             }
             Msg::WsConnect => {
@@ -921,6 +929,7 @@ impl Component for App {
                                         connect_ws={link.callback(|_| Msg::WsConnect)}
                                         event_count={self.event_count}
                                         status={self.ws_status.clone()}
+                                        ws_request_failed={self.ws_request_failed}
                                       />
                                   </div>
                               </div>

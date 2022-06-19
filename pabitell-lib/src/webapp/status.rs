@@ -7,6 +7,7 @@ pub struct Props {
     pub reset_world: Callback<()>,
     pub event_count: usize,
     pub status: WsStatus,
+    pub ws_request_failed: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -25,9 +26,9 @@ impl Default for WsStatus {
 impl WsStatus {
     fn icon_classes(&self) -> String {
         match self {
-            Self::CONNECTED => "fas fa-check-circle",
-            Self::CONNECTING => "rotate fas fa-circle-notch",
-            Self::DISCONNECTED => "fas fa-times-circle",
+            Self::CONNECTED => "fas fa-book",
+            Self::CONNECTING => "fas fa-book-alt",
+            Self::DISCONNECTED => "fas fa-book-dead",
         }
         .to_string()
     }
@@ -54,7 +55,6 @@ impl Component for Status {
     type Properties = Props;
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        let link = ctx.link().clone();
         match msg {
             Msg::Connect => {
                 ctx.props().connect_ws.emit(());
@@ -80,6 +80,24 @@ impl Component for Status {
         let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
         let reset_world_cb = link.callback(|_| Msg::ResetWorld);
 
+        let status_part = if !ctx.props().ws_request_failed {
+            html! {
+                <button class="button is-outlined is-medium" {onclick}>
+                    <span class={ classes!(ctx.props().status.text_classes()) }>
+                        <i class={ classes!(ctx.props().status.icon_classes()) }></i>
+                    </span>
+                </button>
+            }
+        } else {
+            html! {
+                <button class="button is-outlined is-medium" {onclick}>
+                    <span class="icon has-text-danger">
+                        <i class="fas fa-book-dead"></i>
+                    </span>
+                </button>
+            }
+        };
+
         html! {
             <>
                 <button class="button is-outlined is-medium is-static">
@@ -90,11 +108,7 @@ impl Component for Status {
                         <i class="fas fa-sync"></i>
                     </span>
                 </button>
-                <button class="button is-outlined is-medium" {onclick}>
-                    <span class={ classes!(ctx.props().status.text_classes()) }>
-                        <i class={ classes!(ctx.props().status.icon_classes()) }></i>
-                    </span>
-                </button>
+                { status_part }
                 <button class="button is-outlined is-medium" onclick={reset_world_cb}>
                     <span class="icon has-text-danger">
                         <i class="fas fa-sign-out-alt"></i>
