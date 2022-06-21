@@ -5,18 +5,12 @@
 use futures::{stream::SplitSink, SinkExt, StreamExt};
 use gloo::net::websocket::{futures::WebSocket, Message, WebSocketError};
 use gloo::timers::callback::Timeout;
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
-use wasm_bindgen_futures::spawn_local;
 use yew::{html, prelude::*};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub world_id: Option<Uuid>,
     pub namespace: String,
     pub story: String,
     pub msg_recieved: Callback<String>,
@@ -29,8 +23,7 @@ pub struct Props {
 
 impl PartialEq<Self> for Props {
     fn eq(&self, rhs: &Self) -> bool {
-        self.world_id == rhs.world_id
-            && self.namespace == rhs.namespace
+        self.namespace == rhs.namespace
             && self.story == rhs.story
             && self.msg_recieved == rhs.msg_recieved
             && self.ready == rhs.ready
@@ -41,14 +34,18 @@ impl PartialEq<Self> for Props {
 }
 
 pub struct WebsocketClient {
+    world_id: Option<Uuid>,
     sender: Option<SplitSink<WebSocket, Message>>,
     queued_messages: Vec<String>,
     reconnect_timeout: Option<Timeout>,
 }
 
 pub enum Msg {
-    Connect,
+    Connect(Uuid),
     SetSender(SplitSink<WebSocket, Message>, bool),
+    /// Disconnected by e.g. failed connection
+    Disconnected,
+    /// Request to disconnect by the user
     Disconnect,
     SendMessage(String),
 }
@@ -61,9 +58,14 @@ impl Component for WebsocketClient {
         let link = ctx.link().clone();
         let props = ctx.props();
         match msg {
-            Msg::Connect => {
-                log::debug!("Connecting to {:?}", &props.world_id);
-                if let Some(url) = Self::ws_url(ctx) {
+            Msg::Connect(world_id) => {
+                // Disconnect first
+                if self.world_id.is_some() {
+                    link.send_message(Msg::Disconnect);
+                }
+                self.world_id = Some(world_id);
+                log::debug!("Connecting to {:?}", &world_id);
+                if let Some(url) = self.ws_url(ctx) {
                     props.connecting.emit(());
                     let props = props.clone();
                     link.clone().send_future(async move {
@@ -104,11 +106,11 @@ impl Component for WebsocketClient {
                                 log::warn!("WS error {}:{:?}", url, err);
                             }
                         }
-                        Msg::Disconnect
+                        Msg::Disconnected
                     });
                     true
                 } else {
-                    self.plan_reconnect(ctx);
+                    self.plan_reconnect(ctx, world_id);
                     false
                 }
             }
@@ -129,12 +131,25 @@ impl Component for WebsocketClient {
                 }
                 true
             }
-            Msg::Disconnect => {
-                log::warn!("Disconnect");
+            Msg::Disconnected => {
+                log::debug!("WS disconneted. Reconnect was planned.");
                 let render = self.sender.is_some();
                 props.disconnected.emit(());
-                self.plan_reconnect(ctx);
+                if let Some(world_id) = self.world_id.clone() {
+                    self.plan_reconnect(ctx, world_id);
+                }
                 self.sender = None;
+                render
+            }
+            Msg::Disconnect => {
+                log::debug!("WS disconneted. Reconnect is not planned.");
+                let mut render = false;
+                if self.world_id.is_some() {
+                    self.world_id = None;
+                    props.disconnected.emit(());
+                    render = self.sender.is_some();
+                    self.sender = None;
+                }
                 render
             }
             Msg::SendMessage(message) => {
@@ -159,12 +174,11 @@ impl Component for WebsocketClient {
     fn create(ctx: &Context<Self>) -> Self {
         *ctx.props().client_scope.borrow_mut() = Some(ctx.link().clone());
         ctx.props().ready.emit(());
-        // Plan to create a connection
-        ctx.link().send_future(async { Msg::Connect });
         Self {
             sender: None,
             queued_messages: vec![],
             reconnect_timeout: None,
+            world_id: None,
         }
     }
 
@@ -180,14 +194,14 @@ impl Component for WebsocketClient {
 }
 
 impl WebsocketClient {
-    fn plan_reconnect(&mut self, ctx: &Context<Self>) {
+    fn plan_reconnect(&mut self, ctx: &Context<Self>, world_id: Uuid) {
         let link = ctx.link().to_owned();
         self.reconnect_timeout = Some(Timeout::new(5000, move || {
-            link.send_message(Msg::Connect);
+            link.send_message(Msg::Connect(world_id));
         }));
     }
 
-    fn ws_url(ctx: &Context<Self>) -> Option<String> {
+    fn ws_url(&self, ctx: &Context<Self>) -> Option<String> {
         let location = web_sys::window().unwrap().location();
         let proto = if location.protocol().unwrap() == "https:" {
             "wss"
@@ -201,7 +215,7 @@ impl WebsocketClient {
             location.host().unwrap(),
             props.namespace,
             props.story,
-            props.world_id?,
+            self.world_id?,
         ))
     }
 }

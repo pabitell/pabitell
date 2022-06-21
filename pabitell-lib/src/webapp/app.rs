@@ -46,7 +46,7 @@ pub enum Msg {
     WsGetWorld(Uuid),
     WsTriggerEvent(Uuid, Value),
     WsFailed,
-    WsConnect,
+    WsConnect(Uuid),
     WsStatusUpdate(WsStatus),
     WsDisconnect,
     ShowPrint(bool),
@@ -174,6 +174,11 @@ impl Component for App {
 
         if let Some(world_id) = world_id.as_ref() {
             log::info!("World Id: {:?}", &world_id);
+
+            let world_id_owned = world_id.to_owned();
+            // Start WS connection
+            ctx.link()
+                .send_future(async move { Msg::WsConnect(world_id_owned) });
             // Update data from the server
             res.request_to_get_world(ctx, *world_id);
         }
@@ -266,6 +271,11 @@ impl Component for App {
                         storage::LocalStorage::set("world_id", world_id).unwrap();
                         self.world_id = Some(world_id);
 
+                        let world_id_cloned = world_id.clone();
+                        // Start ws connection
+                        ctx.link()
+                            .send_future(async move { Msg::WsConnect(world_id_cloned) });
+
                         // Get the world
                         self.request_to_get_world(ctx, world_id);
 
@@ -293,6 +303,11 @@ impl Component for App {
                     storage::LocalStorage::set("world_id", world_id).unwrap();
                     storage::LocalStorage::delete("character");
                     self.character = Rc::new(None);
+
+                    let world_id_cloned = world_id.clone();
+                    // Start ws connection
+                    ctx.link()
+                        .send_future(async move { Msg::WsConnect(world_id_cloned) });
 
                     // Get the world
                     self.request_to_get_world(ctx, world_id);
@@ -367,6 +382,7 @@ impl Component for App {
                     )
                     .await
                     .unwrap();
+                    link.send_message(Msg::WsConnect(world.id().to_owned()));
                     link.send_message(Msg::WorldUpdateFetched(world, true))
                 });
                 true
@@ -739,10 +755,10 @@ impl Component for App {
                 self.ws_request_failed = true;
                 true
             }
-            Msg::WsConnect => {
+            Msg::WsConnect(world_id) => {
                 let client_scope = self.client_scope.clone();
                 if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
-                    client_scope.send_message(WsMsg::Connect);
+                    client_scope.send_message(WsMsg::Connect(world_id));
                 }
                 true
             }
@@ -761,11 +777,9 @@ impl Component for App {
             Msg::WsDisconnect => {
                 let client_scope = self.client_scope.clone();
                 log::debug!("Disconnecting WS");
-                spawn_local(async move {
-                    if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
-                        client_scope.send_message(WsMsg::Disconnect);
-                    }
-                });
+                if let Some(client_scope) = client_scope.as_ref().borrow().as_ref() {
+                    client_scope.send_message(WsMsg::Disconnect);
+                }
                 false
             }
             Msg::ShowPrint(show) => {
@@ -896,6 +910,8 @@ impl Component for App {
             owned_items.sort();
             let owned_items = Rc::new(owned_items);
 
+            let world_id = world.id().to_owned();
+
             html! {
                 <>
                     <section class="hero is-small is-light">
@@ -926,7 +942,7 @@ impl Component for App {
                                       <Status
                                         refresh_world={refresh_world_cb}
                                         reset_world={reset_cb}
-                                        connect_ws={link.callback(|_| Msg::WsConnect)}
+                                        connect_ws={link.callback(move |_| Msg::WsConnect(world_id))}
                                         event_count={self.event_count}
                                         status={self.ws_status.clone()}
                                         ws_request_failed={self.ws_request_failed}
@@ -1002,7 +1018,6 @@ impl Component for App {
         html! {
             <>
                 <WebsocketClient
-                    world_id={self.world_id.clone()}
                     namespace={"some_namespace"}
                     story={props.name.clone()}
                     msg_recieved={ws_message_cb}
