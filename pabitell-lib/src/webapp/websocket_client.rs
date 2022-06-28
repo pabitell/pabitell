@@ -2,11 +2,13 @@
 // However agent are not mcuch stable in YEW yet so perhaps this should
 // wait till yew 0.20.0 is released
 
-use futures::{stream::SplitSink, SinkExt, StreamExt};
+use futures::{channel, select, stream::SplitSink, SinkExt, StreamExt};
 use gloo::net::websocket::{futures::WebSocket, Message, WebSocketError};
 use gloo::timers::callback::Timeout;
 use std::{cell::RefCell, rc::Rc};
+use stream_cancel::{StreamExt as CancelStreamExt, Trigger, Tripwire};
 use uuid::Uuid;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
 use yew::{html, prelude::*};
 
 #[derive(Clone, Debug, Properties)]
@@ -35,14 +37,14 @@ impl PartialEq<Self> for Props {
 
 pub struct WebsocketClient {
     world_id: Option<Uuid>,
-    sender: Option<SplitSink<WebSocket, Message>>,
+    sender: Option<(SplitSink<WebSocket, Message>, Trigger)>,
     queued_messages: Vec<String>,
     reconnect_timeout: Option<Timeout>,
 }
 
 pub enum Msg {
     Connect(Uuid),
-    SetSender(SplitSink<WebSocket, Message>, bool),
+    SetSender(SplitSink<WebSocket, Message>, Trigger, bool),
     /// Disconnected by e.g. failed connection
     Disconnected,
     /// Request to disconnect by the user
@@ -62,20 +64,27 @@ impl Component for WebsocketClient {
                 // Disconnect first
                 if self.world_id.is_some() {
                     link.send_message(Msg::Disconnect);
+                    link.send_message(Msg::Connect(world_id));
+                    return true;
                 }
                 self.world_id = Some(world_id);
                 log::debug!("Connecting to {:?}", &world_id);
                 if let Some(url) = self.ws_url(ctx) {
                     props.connecting.emit(());
                     let props = props.clone();
-                    link.clone().send_future(async move {
+                    spawn_local(async move {
+                        let mut error = false;
                         let _ = &props;
                         match WebSocket::open(&url) {
                             Ok(ws) => {
                                 log::debug!("WS opened {}", url);
-                                let (sender, mut receiver) = ws.split();
-                                link.send_message(Msg::SetSender(sender, true));
-                                while let Some(msg) = receiver.next().await {
+                                // Terminate channel
+                                let (trigger, tripwire) = Tripwire::new();
+
+                                let (sender, receiver) = ws.split();
+                                link.send_message(Msg::SetSender(sender, trigger, true));
+                                let mut reader = receiver.take_until_if(tripwire);
+                                while let Some(msg) = reader.next().await {
                                     log::debug!("MSG recieved: {:?}", &msg);
                                     match msg {
                                         Ok(Message::Text(msg)) => {
@@ -90,10 +99,12 @@ impl Component for WebsocketClient {
                                         }
                                         Err(WebSocketError::ConnectionClose(err)) => {
                                             log::warn!("WS closed {}:{:?}", url, err);
+                                            error = true;
                                             break;
                                         }
                                         Err(WebSocketError::ConnectionError) => {
                                             log::warn!("WS connection Error {}", url);
+                                            error = true;
                                             break;
                                         }
                                         Err(_) => {
@@ -103,10 +114,13 @@ impl Component for WebsocketClient {
                                 }
                             }
                             Err(err) => {
+                                error = true;
                                 log::warn!("WS error {}:{:?}", url, err);
                             }
                         }
-                        Msg::Disconnected
+                        if error {
+                            link.send_future(async { Msg::Disconnected });
+                        }
                     });
                     true
                 } else {
@@ -114,8 +128,8 @@ impl Component for WebsocketClient {
                     false
                 }
             }
-            Msg::SetSender(sender, emit) => {
-                self.sender = Some(sender);
+            Msg::SetSender(sender, terminate, emit) => {
+                self.sender = Some((sender, terminate));
                 if emit {
                     log::info!("Ws connected");
                     props.connected.emit(());
@@ -133,34 +147,44 @@ impl Component for WebsocketClient {
             }
             Msg::Disconnected => {
                 log::debug!("WS disconneted. Reconnect was planned.");
-                let render = self.sender.is_some();
                 props.disconnected.emit(());
                 if let Some(world_id) = self.world_id.clone() {
                     self.plan_reconnect(ctx, world_id);
                 }
-                self.sender = None;
-                render
+                true
             }
             Msg::Disconnect => {
                 log::debug!("WS disconneted. Reconnect is not planned.");
-                let mut render = false;
+
+                // Discard reconnecting
+                if let Some(timer) = self.reconnect_timeout.take() {
+                    timer.cancel();
+                }
+
+                // Drop sender to disconnect
+                let resp = if let Some((_, _)) = self.sender.take() {
+                    true
+                } else {
+                    false
+                };
+
+                // Unset world
                 if self.world_id.is_some() {
                     self.world_id = None;
                     props.disconnected.emit(());
-                    render = self.sender.is_some();
-                    self.sender = None;
                 }
-                render
+
+                resp
             }
             Msg::SendMessage(message) => {
                 log::debug!("Sending a message to websockets");
-                if let Some(mut sender) = self.sender.take() {
-                    ctx.link().send_future(async move {
+                if let Some((mut sender, trigger)) = self.sender.take() {
+                    link.send_future(async move {
                         // Best effort - don't care about the Result
                         let _ = sender.send(Message::Text(message)).await;
 
                         // Restore sender so other messages can be sent
-                        Msg::SetSender(sender, false)
+                        Msg::SetSender(sender, trigger, false)
                     });
                 } else {
                     log::debug!("Add '{}' to queue", message);
