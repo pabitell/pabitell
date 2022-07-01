@@ -21,7 +21,6 @@ with_webapp = [
 	'gloo',
 	'js-sys',
 	'pabitell-lib/with_webapp',
-	#'reqwasm',
 	'uuid/v4',
 	'uuid/js',
 	'web-sys/MediaDevices',

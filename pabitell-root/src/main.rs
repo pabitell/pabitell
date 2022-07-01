@@ -8,8 +8,8 @@ use sycamore::prelude::*;
 use sycamore_router::{HistoryIntegration, Router};
 
 use components::{
-    book::Book, books::Books, breadcrumb::BreadCrumb, footer::Footer, language::Language,
-    title::Title,
+    book::Book, books::Books, breadcrumb::BreadCrumb, footer::Footer, help::Help,
+    language::Language, title::Title,
 };
 use data::{BOOKS, LANGUAGES};
 use router::AppRoutes;
@@ -37,6 +37,7 @@ fn main() {
                                     selected_language: lang,
                                 }
                                 div(class="content is-flex is-justify-content-center") {
+                                    Help { lang }
                                     Language {
                                         selected_language: lang,
                                         languages: LANGUAGES.iter().map(|e| e.to_string()).collect(),
