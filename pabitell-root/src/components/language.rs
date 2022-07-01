@@ -17,7 +17,6 @@ pub fn Language<'a, G: Html>(ctx: Scope<'a>, props: LanguageProps<'a>) -> View<G
         .collect();
 
     let languages = create_signal(ctx, languages);
-    let selected_lang = create_selector(ctx, || props.selected_language.get().to_string());
 
     view! { ctx,
         div(class="select") {
@@ -30,19 +29,12 @@ pub fn Language<'a, G: Html>(ctx: Scope<'a>, props: LanguageProps<'a>) -> View<G
                     ).unwrap()
                 },
             ) {
-                option(selected=true) {
-                    (props.selected_language.get())
-                }
                 Indexed {
                     iterable: languages,
                     view: move |ctx, lang| view! { ctx,
                         (
-                            if selected_lang.get().to_string() != lang.to_string() {
-                                view! { ctx,
-                                    option {(lang)}
-                                }
-                            } else {
-                                view! { ctx, }
+                            view! { ctx,
+                                option {(lang)}
                             }
                         )
                     }
