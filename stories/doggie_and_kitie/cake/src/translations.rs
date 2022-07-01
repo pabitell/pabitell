@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use pabitell_lib::translations::{self, get_available_locales, get_bundle};
 use std::{collections::HashMap, rc::Rc};
 
-pub static RESOURCES: Dir = include_dir!("resources/");
+pub static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources/");
 
 lazy_static! {
     static ref BUNDLES: HashMap<String, FluentBundle<FluentResource, IntlLangMemoizer>> = {

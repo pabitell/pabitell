@@ -21,9 +21,9 @@ with_webapp = [
 	'gloo',
 	'js-sys',
 	'pabitell-lib/with_webapp',
-	'reqwasm',
+	#'reqwasm',
 	'uuid/v4',
-	'uuid/stdweb',
+	'uuid/js',
 	'web-sys/MediaDevices',
 	'web-sys/MediaStreamConstraints',
 	'web-sys/HtmlSelectElement',
@@ -43,7 +43,7 @@ futures = "0.3"
 fluent-bundle = { version = "~0.15.0" }
 console_error_panic_hook = { version = "~0.1.6", optional = true }
 image = { version = "0.23", optional = true, features = ["png"] }
-include_dir = { version = "~0.6.1" }
+include_dir = { version = "0.7", features = ["glob"] }
 intl-memoizer = { version = "~0.5.1" }
 getrandom = { version = "0.2", features = ["js"] }  # add optional once https://github.com/thedodd/trunk/pull/183 is merged
 gloo = { version = "0.3", features = ["futures"], optional = true }
@@ -52,10 +52,9 @@ lazy_static = { version = "~1.4.0" }
 log = "~0.4.14"
 pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
 qrcode = { version = "0.11", features = ["svg"] }
-reqwasm = { version = "0.3.1", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-uuid = { version = "0.8", features = [ 'v4', 'stdweb' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
+uuid = { version = "1.1", features = [ 'v4', 'js' ] } # remove features once https://github.com/thedodd/trunk/pull/183 is merged 
 wee_alloc = { version = "~0.4.5", optional = true }
 wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
 wasm-bindgen-futures  = { version = "0.4", optional = true}
@@ -97,7 +96,6 @@ optional = true
 
 
 [dev-dependencies]
-uuid = { version = "0.8", features = ["v4"] }
 
 [profile.release]
 # less code to include into binary

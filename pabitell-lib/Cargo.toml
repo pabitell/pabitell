@@ -13,33 +13,33 @@ categories = ["games-engines"]
 [dependencies]
 anyhow = "1"
 base64 = { version = "0.13", optional = true }
-build-time = { version = "0.1.1", optional = true}
+build-time = { version = "0.1", optional = true}
 chrono = { version = "0.4", optional = true, features = ["serde", "wasmbind"] }
-console_error_panic_hook = { version = "~0.1.6", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
 data-url = { version = "0.1", optional = true }
-fluent = { version = "~0.15.0", optional = true }
-fluent-bundle = { version = "~0.15.0", optional = true }
-fluent-langneg = { version = "~0.13.0", optional = true }
+fluent = { version = "0.16", optional = true }
+fluent-bundle = { version = "0.15", optional = true }
+fluent-langneg = { version = "0.13", optional = true }
 futures = { version = "0.3", optional = true }
-gloo = { version = "0.6", features = ["futures"], optional = true }
-gloo-net = { version = "0.1", features = ["websocket"], optional = true }
-image = { version = "0.23", optional = true, features = ["png"] }
-include_dir = { version = "~0.6.1", optional = true  }
-intl-memoizer = { version = "~0.5.1", optional = true }
+gloo = { version = "0.8", features = ["futures"], optional = true }
+gloo-net = { version = "0.2", features = ["websocket"], optional = true }
+image = { version = "0.24", optional = true, features = ["png"] }
+include_dir = { version = "0.7", optional = true, features = ["glob"] }
+intl-memoizer = { version = "0.5", optional = true }
 js-sys = { version = "0.3", optional = true }
-log = { version = "~0.4.14", optional = true }
+log = { version = "0.4", optional = true }
 lazy_static = "1"
 qrcode = { version = "0.12", features = ["svg"], optional = true }
 rexie = { version = "0.3", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 stream-cancel = "0.8"
-unic-langid = { version = "~0.9.0", features = ["macros"], optional = true }
-uuid = { version = "0.8", features = ["serde", "v4"]}
+unic-langid = { version = "0.9", features = ["macros"], optional = true }
+uuid = { version = "1.1", features = ["serde", "v4"]}
 wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
 wasm-bindgen-futures  = { version = "0.4", optional = true}
 wasm-logger = { version = "0.2", optional = true }
-yew = { version = "0.19.0", optional = true }
+yew = { version = "0.19", optional = true }
 
 [dependencies.web-sys]
 version = "0.3"
@@ -99,7 +99,7 @@ with_webapp = [
 	"rexie",
 	"qrcode/svg",
 	"with_translations",
-	"uuid/stdweb",
+	"uuid/js",
 	"wasm-bindgen/default",
 	"wasm-bindgen/serde-serialize",
 	"wasm-bindgen-futures",

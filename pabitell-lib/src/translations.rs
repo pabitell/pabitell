@@ -9,7 +9,7 @@ use std::{
 };
 use unic_langid::LanguageIdentifier;
 
-pub static RESOURCES: Dir = include_dir!("resources/");
+pub static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources/");
 
 lazy_static! {
     static ref BUNDLES: HashMap<String, FluentBundle<FluentResource, IntlLangMemoizer>> = {
@@ -34,7 +34,7 @@ pub fn read_language_data(
     let file = resoure_dir
         .get_file(format!("{}/{}.ftl", id.to_string(), translation_name))
         .ok_or_else(|| anyhow!("'{}' translation not found", translation_name))?;
-    Ok(from_utf8(file.contents)?.to_string())
+    Ok(from_utf8(file.contents())?.to_string())
 }
 
 pub fn get_available_locales(resoure_dir: &Dir) -> Result<Vec<LanguageIdentifier>> {

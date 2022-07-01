@@ -14,18 +14,18 @@ categories = ["web-programming"]
 
 [dependencies]
 anyhow = "1"
-console_error_panic_hook = "~0.1.6"
-fluent-bundle = "~0.15.2"
-gloo = "~0.6"
-include_dir = { version = "~0.7.2", features = ["glob"] }
-intl-memoizer = "~0.5.1"
-lazy_static = "^1.4"
-log = "~0.4.14"
-sycamore = "0.8.0-beta.3"
-sycamore-router = "0.8.0-beta.3"
-unic-langid = { version = "~0.9.0", features = ["macros"] }
+console_error_panic_hook = "0.1"
+fluent-bundle = "0.15"
+gloo = "0.8"
+include_dir = { version = "0.7", features = ["glob"] }
+intl-memoizer = "0.5"
+lazy_static = "1"
+log = "0.4"
+sycamore = "0.8.0-beta.7"
+sycamore-router = "0.8.0-beta.7"
+unic-langid = { version = "0.9", features = ["macros"] }
 wasm-logger = "0.2"
-wee_alloc = "~0.4.5"
+wee_alloc = "0.4"
 
 [profile.release]
 # less code to include into binary
