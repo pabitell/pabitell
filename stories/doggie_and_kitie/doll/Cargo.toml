@@ -49,7 +49,7 @@ gloo = { version = "0.3", features = ["futures"], optional = true }
 js-sys = { version = "0.3", optional = true }
 lazy_static = { version = "~1.4.0" }
 log = "~0.4.14"
-pabitell-lib = { path = "../../../pabitell-lib/", features = ["with_translations"] }
+pabitell-lib = { path = "../../../pabitell-lib/" }
 qrcode = { version = "0.11", features = ["svg"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

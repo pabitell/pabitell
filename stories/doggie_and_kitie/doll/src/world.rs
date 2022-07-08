@@ -32,11 +32,11 @@ impl Named for DollWorldDescription {
 
 impl Description for DollWorldDescription {
     fn long(&self, world: &dyn World) -> String {
-        get_message(&format!("{}-long", world.name()), world.lang(), None)
+        world.get_message(&format!("{}-long", world.name()), None)
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(&format!("{}-short", world.name()), world.lang(), None)
+        world.get_message(&format!("{}-short", world.name()), None)
     }
 }
 
@@ -225,6 +225,9 @@ impl World for DollWorld {
     }
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
+    }
+    fn get_message(&self, msgid: &str, args: Option<fluent_bundle::FluentArgs>) -> String {
+        get_message(msgid, &self.lang, args)
     }
 }
 

@@ -17,15 +17,15 @@ build-time = { version = "0.1", optional = true}
 chrono = { version = "0.4", optional = true, features = ["serde", "wasmbind"] }
 console_error_panic_hook = { version = "0.1", optional = true }
 data-url = { version = "0.1", optional = true }
-fluent = { version = "0.16", optional = true }
-fluent-bundle = { version = "0.15", optional = true }
-fluent-langneg = { version = "0.13", optional = true }
+fluent = "0.16"
+fluent-bundle = "0.15"
+fluent-langneg = "0.13"
 futures = { version = "0.3", optional = true }
 gloo = { version = "0.8", features = ["futures"], optional = true }
 gloo-net = { version = "0.2", features = ["websocket"], optional = true }
 image = { version = "0.24", optional = true, features = ["png"] }
-include_dir = { version = "0.7", optional = true, features = ["glob"] }
-intl-memoizer = { version = "0.5", optional = true }
+include_dir = { version = "0.7", features = ["glob"] }
+intl-memoizer = "0.5"
 js-sys = { version = "0.3", optional = true }
 log = { version = "0.4", optional = true }
 lazy_static = "1"
@@ -34,7 +34,7 @@ rexie = { version = "0.3", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 stream-cancel = "0.8"
-unic-langid = { version = "0.9", features = ["macros"], optional = true }
+unic-langid = { version = "0.9", features = ["macros"] }
 uuid = { version = "1.1", features = ["serde", "v4"]}
 wasm-bindgen = { version = "0.2", features = [ 'default', 'serde-serialize'], optional = true } 
 wasm-bindgen-futures  = { version = "0.4", optional = true}
@@ -76,14 +76,6 @@ optional = true
 
 [features]
 default = []
-with_translations = [
-	"fluent",
-	"fluent-bundle",
-	"fluent-langneg",
-	"include_dir",
-	"intl-memoizer",
-	"unic-langid",
-]
 with_webapp = [
 	"base64",
 	"build-time",
@@ -98,7 +90,6 @@ with_webapp = [
 	"log",
 	"rexie",
 	"qrcode/svg",
-	"with_translations",
 	"uuid/js",
 	"wasm-bindgen/default",
 	"wasm-bindgen/serde-serialize",

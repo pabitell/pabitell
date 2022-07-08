@@ -12,23 +12,19 @@ impl Description for PlayGround {
     fn long(&self, world: &dyn World) -> String {
         match world.items().get("sand_cake").unwrap().state() {
             ItemState::Owned(character) => match character.as_str() {
-                "doggie" => get_message(
+                "doggie" => world.get_message(
                     &format!("{}-{}-doggie_pick", world.name(), self.name()),
-                    world.lang(),
                     None,
                 ),
-                "kitie" => get_message(
+                "kitie" => world.get_message(
                     &format!("{}-{}-kitie_pick", world.name(), self.name()),
-                    world.lang(),
                     None,
                 ),
                 _ => unreachable!(),
             },
-            ItemState::InScene(_) => get_message(
-                &format!("{}-{}-initial", world.name(), self.name()),
-                world.lang(),
-                None,
-            ),
+            ItemState::InScene(_) => {
+                world.get_message(&format!("{}-{}-initial", world.name(), self.name()), None)
+            }
             ItemState::Unassigned => {
                 let doggie = world
                     .characters()
@@ -47,17 +43,15 @@ impl Description for PlayGround {
                     .unwrap();
 
                 if doggie.sand_cake_last {
-                    return get_message(
+                    return world.get_message(
                         &format!("{}-{}-doggie_last", world.name(), self.name()),
-                        world.lang(),
                         None,
                     );
                 }
 
                 if kitie.sand_cake_last {
-                    return get_message(
+                    return world.get_message(
                         &format!("{}-{}-kitie_last", world.name(), self.name()),
-                        world.lang(),
                         None,
                     );
                 }
@@ -68,11 +62,7 @@ impl Description for PlayGround {
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -151,15 +141,11 @@ impl Description for Kitchen {
         } else {
             format!("{}-{}-ready", world.name(), self.name())
         };
-        get_message(&message, world.lang(), None)
+        world.get_message(&message, None)
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -169,26 +155,14 @@ scene_no_music!(Garden);
 impl Description for Garden {
     fn long(&self, world: &dyn World) -> String {
         if world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned {
-            get_message(
-                &format!("{}-{}-found", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
+            world.get_message(&format!("{}-{}-found", world.name(), self.name()), None)
         } else {
-            get_message(
-                &format!("{}-{}-searching", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
+            world.get_message(&format!("{}-{}-searching", world.name(), self.name()), None)
         }
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -197,19 +171,11 @@ scene_no_music!(ChildrenHouse);
 
 impl Description for ChildrenHouse {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-eating", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-eating", world.name(), self.name()), None)
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -224,26 +190,14 @@ impl Description for ChildrenGarden {
             .filter(|e| e.get_tags().contains(&"toy".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
         {
-            get_message(
-                &format!("{}-{}-leaving", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
+            world.get_message(&format!("{}-{}-leaving", world.name(), self.name()), None)
         } else {
-            get_message(
-                &format!("{}-{}-playing", world.name(), self.name()),
-                world.lang(),
-                None,
-            )
+            world.get_message(&format!("{}-{}-playing", world.name(), self.name()), None)
         }
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -252,18 +206,10 @@ scene_no_music!(WayHome);
 
 impl Description for WayHome {
     fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-end", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-end", world.name(), self.name()), None)
     }
 
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }

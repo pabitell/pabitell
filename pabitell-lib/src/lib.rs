@@ -4,13 +4,13 @@ pub mod events;
 pub mod items;
 pub mod protocol;
 pub mod scenes;
-#[cfg(feature = "with_translations")]
 pub mod translations;
 pub mod updates;
 #[cfg(feature = "with_webapp")]
 pub mod webapp;
 
 use anyhow::{anyhow, Result};
+use fluent_bundle::FluentArgs;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
@@ -90,8 +90,12 @@ pub trait Music {
 }
 
 pub trait Description: Named {
-    fn long(&self, world: &dyn World) -> String;
-    fn short(&self, world: &dyn World) -> String;
+    fn long(&self, world: &dyn World) -> String {
+        world.get_message(&format!("{}-{}-long", world.name(), self.name()), None)
+    }
+    fn short(&self, world: &dyn World) -> String {
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
+    }
 }
 
 pub trait Dumpable {
@@ -255,6 +259,9 @@ pub trait World: Named + Dumpable {
 
     fn id(&self) -> &Uuid;
     fn set_id(&mut self, id: Uuid);
+    fn get_message(&self, msgid: &str, _args: Option<FluentArgs>) -> String {
+        msgid.to_string()
+    }
 }
 
 pub trait Narrator {
@@ -280,6 +287,7 @@ pub mod test {
         Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
+    use fluent_bundle::FluentArgs;
     use std::{any::Any, collections::HashMap};
     use uuid::Uuid;
 
@@ -296,14 +304,7 @@ pub mod test {
         }
     }
 
-    impl Description for TestCharacter {
-        fn short(&self, _: &dyn World) -> String {
-            "Test Character".into()
-        }
-        fn long(&self, _: &dyn World) -> String {
-            "Character description and perhaps items which it is carrying".into()
-        }
-    }
+    impl Description for TestCharacter {}
 
     impl AsAny for TestCharacter {
         fn as_any(&self) -> &dyn Any {
@@ -351,14 +352,7 @@ pub mod test {
         }
     }
 
-    impl Description for TestItem {
-        fn short(&self, _: &dyn World) -> String {
-            "Test Scene".into()
-        }
-        fn long(&self, _: &dyn World) -> String {
-            "Test scene detailed description".into()
-        }
-    }
+    impl Description for TestItem {}
 
     impl AsAny for TestItem {
         fn as_any(&self) -> &dyn Any {
@@ -409,14 +403,7 @@ pub mod test {
         }
     }
 
-    impl Description for TestScene {
-        fn short(&self, _: &dyn World) -> String {
-            "Test Scene".into()
-        }
-        fn long(&self, _: &dyn World) -> String {
-            "Test location detailed description".into()
-        }
-    }
+    impl Description for TestScene {}
 
     impl AsAny for TestScene {
         fn as_any(&self) -> &dyn Any {
@@ -453,14 +440,7 @@ pub mod test {
         }
     }
 
-    impl Description for TestDescription {
-        fn short(&self, _: &dyn World) -> String {
-            "Test Event".into()
-        }
-        fn long(&self, _: &dyn World) -> String {
-            "Test event to do something".into()
-        }
-    }
+    impl Description for TestDescription {}
 
     #[derive(Debug, Clone)]
     struct TestEvent {

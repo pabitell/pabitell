@@ -69,11 +69,9 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     };
     res.push(
         PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
-            .title(Some(get_message(
-                "doggie_and_kitie-cake-large_pot",
-                &world.lang(),
-                None,
-            )))
+            .title(Some(
+                world.get_message("doggie_and_kitie-cake-large_pot", None),
+            ))
             .img_url(Some("images/big-pot.svg".to_owned())),
     );
 

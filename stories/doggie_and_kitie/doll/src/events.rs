@@ -1,8 +1,6 @@
 use pabitell_lib::{conditions, data, events, updates, Event, ItemState, Tagged, World};
 use serde::{Deserialize, Serialize};
 
-use crate::translations::get_message;
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "name", rename_all = "snake_case")]
 pub enum ProtocolEvent {
@@ -54,7 +52,7 @@ pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {
 
     event.set_make_action_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Talk>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_says-{}-action",
                 world.name(),
@@ -62,13 +60,12 @@ pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {
                 event.character(),
                 event.dialog(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_success_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Talk>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_says-{}-success",
                 world.name(),
@@ -76,13 +73,12 @@ pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {
                 event.character(),
                 event.dialog(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_fail_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Talk>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_says-{}-fail",
                 world.name(),
@@ -90,7 +86,6 @@ pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {
                 event.character(),
                 event.dialog(),
             ),
-            world.lang(),
             None,
         )
     })));
@@ -147,40 +142,37 @@ pub fn make_move(
 
     event.set_make_action_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_move_to_{}-action",
                 world.name(),
                 event.character(),
                 event.scene(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_success_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_move_to_{}-success",
                 world.name(),
                 event.character(),
                 event.scene(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_fail_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_move_to_{}-fail",
                 world.name(),
                 event.character(),
                 event.scene(),
             ),
-            world.lang(),
             None,
         )
     })));
@@ -220,25 +212,22 @@ pub fn make_find_doll(data: data::UseItemData) -> events::UseItem {
 
     event.set_make_action_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!("{}-{}_find_doll-action", world.name(), event.character(),),
-            world.lang(),
             None,
         )
     })));
     event.set_make_success_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!("{}-{}_find_doll-success", world.name(), event.character(),),
-            world.lang(),
             None,
         )
     })));
     event.set_make_fail_text(Some(Box::new(move |event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!("{}-{}_find_doll-fail", world.name(), event.character(),),
-            world.lang(),
             None,
         )
     })));
@@ -280,7 +269,7 @@ pub fn make_pick(name: &str, pick_data: data::PickData, scene: Option<String>) -
 
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_{}-action",
                 world.name(),
@@ -288,14 +277,13 @@ pub fn make_pick(name: &str, pick_data: data::PickData, scene: Option<String>) -
                 event.name(),
                 event.item()
             ),
-            world.lang(),
             None,
         )
     })));
 
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_{}-success",
                 world.name(),
@@ -303,14 +291,13 @@ pub fn make_pick(name: &str, pick_data: data::PickData, scene: Option<String>) -
                 event.name(),
                 event.item()
             ),
-            world.lang(),
             None,
         )
     })));
 
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Pick>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_{}_{}-fail",
                 world.name(),
@@ -318,7 +305,6 @@ pub fn make_pick(name: &str, pick_data: data::PickData, scene: Option<String>) -
                 event.name(),
                 event.item()
             ),
-            world.lang(),
             None,
         )
     })));
@@ -366,40 +352,37 @@ pub fn make_lay_down(name: &str, use_item_data: data::UseItemData) -> events::Us
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_lay_down_{}-action",
                 world.name(),
                 event.character(),
                 event.item(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_success_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_lay_down_{}-success",
                 world.name(),
                 event.character(),
                 event.item(),
             ),
-            world.lang(),
             None,
         )
     })));
     event.set_make_fail_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::UseItem>().unwrap();
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}_lay_down_{}-fail",
                 world.name(),
                 event.character(),
                 event.item(),
             ),
-            world.lang(),
             None,
         )
     })));

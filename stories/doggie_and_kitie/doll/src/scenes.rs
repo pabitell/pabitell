@@ -32,23 +32,18 @@ impl Description for DoggieSeach {
             e.get_tags().contains(&"doggie_pick".to_owned())
                 && e.state() == &ItemState::InScene("doggie_search".to_owned())
         });
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}-long-{}",
                 world.name(),
                 self.name(),
                 if start { "start" } else { "end" }
             ),
-            world.lang(),
             None,
         )
     }
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }
 
@@ -61,22 +56,17 @@ impl Description for KitieSeach {
             e.get_tags().contains(&"kitie_pick".to_owned())
                 && e.state() == &ItemState::InScene("kitie_search".to_owned())
         });
-        get_message(
+        world.get_message(
             &format!(
                 "{}-{}-long-{}",
                 world.name(),
                 self.name(),
                 if start { "start" } else { "end" }
             ),
-            world.lang(),
             None,
         )
     }
     fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
+        world.get_message(&format!("{}-{}-short", world.name(), self.name()), None)
     }
 }

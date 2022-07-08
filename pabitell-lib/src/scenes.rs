@@ -125,17 +125,15 @@ macro_rules! scene_with_dialog {
 
         impl $crate::Description for $class_name {
             fn long(&self, world: &dyn World) -> String {
-                get_message(
+                world.get_message(
                     &format!("{}-{}-long-{}", world.name(), self.name(), self.dialog),
-                    world.lang(),
                     None,
                 )
             }
 
             fn short(&self, world: &dyn World) -> String {
-                get_message(
+                world.get_message(
                     &format!("{}-{}-short", world.name(), self.name()),
-                    world.lang(),
                     None,
                 )
             }

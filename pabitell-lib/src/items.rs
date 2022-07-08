@@ -1,4 +1,3 @@
-// Note that get_message function should be provided
 #[macro_export]
 macro_rules! simple_item {
     ($class_name: ident, $name: literal, [$( $tag:expr ),* ]) => {
@@ -26,23 +25,7 @@ macro_rules! simple_item {
             }
         }
 
-        impl $crate::Description for $class_name {
-            fn long(&self, world: &dyn $crate::World) -> String {
-                get_message(
-                    &format!("{}-{}-long", world.name(), $name),
-                    world.lang(),
-                    None,
-                )
-            }
-
-            fn short(&self, world: &dyn $crate::World) -> String {
-                get_message(
-                    &format!("{}-{}-short", world.name(), $name),
-                    world.lang(),
-                    None,
-                )
-            }
-        }
+        impl $crate::Description for $class_name {}
 
         impl $crate::AsAny for $class_name {
             fn as_any(&self) -> &dyn Any {

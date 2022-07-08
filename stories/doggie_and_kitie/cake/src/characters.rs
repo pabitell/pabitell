@@ -29,23 +29,7 @@ impl Named for Kitie {
     }
 }
 
-impl Description for Kitie {
-    fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
-    }
-
-    fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
-    }
-}
+impl Description for Kitie {}
 
 impl AsAny for Kitie {
     fn as_any(&self) -> &dyn Any {
@@ -150,23 +134,7 @@ impl Named for Doggie {
     }
 }
 
-impl Description for Doggie {
-    fn short(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-short", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
-    }
-
-    fn long(&self, world: &dyn World) -> String {
-        get_message(
-            &format!("{}-{}-long", world.name(), self.name()),
-            world.lang(),
-            None,
-        )
-    }
-}
+impl Description for Doggie {}
 
 impl AsAny for Doggie {
     fn as_any(&self) -> &dyn Any {
