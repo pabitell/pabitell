@@ -95,7 +95,6 @@ optional = true
 
 
 [dev-dependencies]
-uuid = { version = "1.1", features = ["v4"] }
 
 [profile.release]
 # less code to include into binary
