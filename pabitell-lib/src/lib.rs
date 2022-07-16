@@ -10,7 +10,7 @@ pub mod updates;
 pub mod webapp;
 
 use anyhow::{anyhow, Result};
-use fluent_bundle::FluentArgs;
+use fluent::FluentArgs;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
@@ -287,7 +287,6 @@ pub mod test {
         Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
-    use fluent_bundle::FluentArgs;
     use std::{any::Any, collections::HashMap};
     use uuid::Uuid;
 

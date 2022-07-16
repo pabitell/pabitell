@@ -39,7 +39,7 @@ anyhow = "1"
 base64 = { version = "0.13", optional = true }
 data-url = { version = "0.1", optional = true }
 futures = "0.3"
-fluent-bundle = { version = "0.15" }
+fluent = { version = "0.16" }
 console_error_panic_hook = { version = "0.1", optional = true }
 image = { version = "0.24", optional = true, features = ["png"] }
 include_dir = { version = "0.7", features = ["glob"] }

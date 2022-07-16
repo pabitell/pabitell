@@ -15,7 +15,7 @@ categories = ["web-programming"]
 [dependencies]
 anyhow = "1"
 console_error_panic_hook = "0.1"
-fluent-bundle = "0.15"
+fluent = "0.16"
 gloo = "0.8"
 include_dir = { version = "0.7", features = ["glob"] }
 intl-memoizer = "0.5"

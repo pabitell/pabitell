@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use fluent_bundle::{bundle::FluentBundle, FluentArgs, FluentResource};
+use fluent::{bundle::FluentBundle, FluentArgs, FluentResource};
 use include_dir::{include_dir, Dir, DirEntry};
 use intl_memoizer::concurrent::IntlLangMemoizer;
 use lazy_static::lazy_static;

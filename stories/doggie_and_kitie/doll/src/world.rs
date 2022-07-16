@@ -226,7 +226,7 @@ impl World for DollWorld {
     fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
-    fn get_message(&self, msgid: &str, args: Option<fluent_bundle::FluentArgs>) -> String {
+    fn get_message(&self, msgid: &str, args: Option<fluent::FluentArgs>) -> String {
         get_message(msgid, &self.lang, args)
     }
 }
