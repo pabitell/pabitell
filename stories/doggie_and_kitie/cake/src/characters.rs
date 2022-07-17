@@ -1,11 +1,7 @@
 use anyhow::{anyhow, Result};
-use pabitell_lib::{
-    AsAny, Character, Description, Dumpable, Event, Named, Tagged, World, WorldBuilder,
-};
+use pabitell_lib::{AsAny, Character, Description, Dumpable, Named, Tagged};
 use serde_json::{json, Value};
 use std::any::Any;
-
-use crate::translations::get_message;
 
 #[derive(Debug, Default)]
 pub struct Kitie {
@@ -55,7 +51,7 @@ impl Dumpable for Kitie {
         )
     }
 
-    fn load(&mut self, data: Value) -> anyhow::Result<()> {
+    fn load(&mut self, data: Value) -> Result<()> {
         match &data["scene"] {
             Value::Null => self.scene = None,
             Value::String(scene) => self.scene = Some(scene.to_string()),

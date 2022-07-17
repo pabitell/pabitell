@@ -1,8 +1,6 @@
 use pabitell_lib::{simple_item, Named};
 use std::any::Any;
 
-use crate::translations::get_message;
-
 simple_item!(SandCake, "sand_cake", []);
 
 simple_item!(Flour, "flour", ["ingredient", "accepted", "batch1"]);

@@ -32,7 +32,7 @@ pub fn read_language_data(
     translation_name: &str,
 ) -> Result<String> {
     let file = resoure_dir
-        .get_file(format!("{}/{}.ftl", id.to_string(), translation_name))
+        .get_file(format!("{}/{}.ftl", id, translation_name))
         .ok_or_else(|| anyhow!("'{}' translation not found", translation_name))?;
     Ok(from_utf8(file.contents())?.to_string())
 }
@@ -93,7 +93,7 @@ pub fn get_message(
 
 pub fn get_message_global(msgid: &str, langid: &str, args: Option<FluentArgs>) -> String {
     if let Some(bundle) = BUNDLES.get(langid) {
-        get_message(bundle, msgid, args).unwrap_or(msgid.to_string())
+        get_message(bundle, msgid, args).unwrap_or_else(|_| msgid.to_string())
     } else {
         msgid.to_string()
     }

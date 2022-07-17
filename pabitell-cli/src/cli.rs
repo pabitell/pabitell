@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use lazy_static::lazy_static;
 use pabitell_lib::{Narrator, World};
 use skim::prelude::*;
 use sled::Db;
@@ -123,42 +122,39 @@ fn select_language(available_languages: Vec<String>) -> Option<String> {
 
 #[derive(Clone, Copy)]
 enum View {
-    MENU,
-    ITEMS,
-    CHARACTERS,
-    SCENES,
-    EVENTS,
-    CONTROLS,
-    RESET,
-    LOAD,
-    DELETE,
-    BACK,
-    EXIT,
+    Menu,
+    Items,
+    Characters,
+    Scenes,
+    Events,
+    Controls,
+    Reset,
+    Load,
+    Delete,
+    Back,
+    Exit,
 }
 
 impl SkimItem for View {
     fn text(&self) -> Cow<str> {
         match self {
-            Self::MENU => Cow::Borrowed("menu"),
-            Self::ITEMS => Cow::Borrowed("items"),
-            Self::CHARACTERS => Cow::Borrowed("characters"),
-            Self::SCENES => Cow::Borrowed("scenes"),
-            Self::EVENTS => Cow::Borrowed("events"),
-            Self::CONTROLS => Cow::Borrowed("controls"),
-            Self::EXIT => Cow::Borrowed("exit"),
-            Self::RESET => Cow::Borrowed("reset"),
-            Self::LOAD => Cow::Borrowed("load"),
-            Self::DELETE => Cow::Borrowed("delete"),
-            Self::BACK => Cow::Borrowed("back"),
+            Self::Menu => Cow::Borrowed("menu"),
+            Self::Items => Cow::Borrowed("items"),
+            Self::Characters => Cow::Borrowed("characters"),
+            Self::Scenes => Cow::Borrowed("scenes"),
+            Self::Events => Cow::Borrowed("events"),
+            Self::Controls => Cow::Borrowed("controls"),
+            Self::Exit => Cow::Borrowed("exit"),
+            Self::Reset => Cow::Borrowed("reset"),
+            Self::Load => Cow::Borrowed("load"),
+            Self::Delete => Cow::Borrowed("delete"),
+            Self::Back => Cow::Borrowed("back"),
         }
     }
 }
 
 fn main_menu(world: &dyn World) -> Option<View> {
-    println(
-        color::BRIGHT_BLUE,
-        format!("{}", world.description().short(world)),
-    );
+    println(color::BRIGHT_BLUE, world.description().short(world));
 
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
@@ -167,12 +163,12 @@ fn main_menu(world: &dyn World) -> Option<View> {
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
     for item in [
-        View::ITEMS,
-        View::CHARACTERS,
-        View::SCENES,
-        View::EVENTS,
-        View::CONTROLS,
-        View::EXIT,
+        View::Items,
+        View::Characters,
+        View::Scenes,
+        View::Events,
+        View::Controls,
+        View::Exit,
     ] {
         let _ = tx_item.send(Arc::new(item));
     }
@@ -182,12 +178,7 @@ fn main_menu(world: &dyn World) -> Option<View> {
     if selected_items.is_empty() {
         None
     } else {
-        Some(
-            (*selected_items[0])
-                .as_any()
-                .downcast_ref::<View>()?
-                .clone(),
-        )
+        Some(*(*selected_items[0]).as_any().downcast_ref::<View>()?)
     }
 }
 
@@ -197,8 +188,8 @@ fn select_characters(world: &dyn World) -> Option<Vec<PabitellItem>> {
         .values()
         .map(|e| PabitellItem {
             code: e.name().to_string(),
-            short: e.short(world).to_string(),
-            long: e.long(world).to_string(),
+            short: e.short(world),
+            long: e.long(world),
         })
         .collect();
 
@@ -209,7 +200,7 @@ fn select_characters(world: &dyn World) -> Option<Vec<PabitellItem>> {
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for character in characters.into_iter() {
+    for character in characters {
         let _ = tx_item.send(Arc::new(character));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -234,8 +225,8 @@ fn select_scenes(world: &dyn World) -> Option<Vec<PabitellItem>> {
         .values()
         .map(|e| PabitellItem {
             code: e.name().to_string(),
-            short: e.short(world).to_string(),
-            long: e.long(world).to_string(),
+            short: e.short(world),
+            long: e.long(world),
         })
         .collect();
 
@@ -247,7 +238,7 @@ fn select_scenes(world: &dyn World) -> Option<Vec<PabitellItem>> {
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for scene in scenes.into_iter() {
+    for scene in scenes {
         let _ = tx_item.send(Arc::new(scene));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -267,15 +258,11 @@ fn select_scenes(world: &dyn World) -> Option<Vec<PabitellItem>> {
 }
 
 fn select_items(world: &dyn World) -> Option<Vec<PabitellItem>> {
-    let items: Vec<PabitellItem> = world
-        .items()
-        .values()
-        .map(|e| PabitellItem {
-            code: e.name().to_string(),
-            short: e.short(world).to_string(),
-            long: e.long(world).to_string(),
-        })
-        .collect();
+    let items = world.items().values().map(|e| PabitellItem {
+        code: e.name().to_string(),
+        short: e.short(world),
+        long: e.long(world),
+    });
 
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
@@ -285,7 +272,7 @@ fn select_items(world: &dyn World) -> Option<Vec<PabitellItem>> {
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for item in items.into_iter() {
+    for item in items {
         let _ = tx_item.send(Arc::new(item));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -309,6 +296,7 @@ struct EventItem {
     idx: usize,
     action: String,
     success: String,
+    #[allow(dead_code)]
     fail: String,
 }
 
@@ -317,7 +305,7 @@ impl SkimItem for EventItem {
         Cow::Borrowed(&self.action)
     }
 
-    fn display<'a>(&'a self, context: DisplayContext<'a>) -> AnsiString<'a> {
+    fn display<'a>(&'a self, _context: DisplayContext<'a>) -> AnsiString<'a> {
         AnsiString::new_string(self.action.clone(), vec![])
     }
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
@@ -345,8 +333,8 @@ fn select_event(world: &dyn World, narrator: &dyn Narrator) -> Option<Vec<EventI
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for event in events.into_iter() {
-        let _ = tx_item.send(Arc::new(event));
+    for event in events {
+        let _ = tx_item.send(Arc::new(event.to_owned()));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
 
@@ -366,7 +354,7 @@ fn controls_menu() -> Option<View> {
         .unwrap();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for item in [View::RESET, View::LOAD, View::DELETE, View::BACK] {
+    for item in [View::Reset, View::Load, View::Delete, View::Back] {
         let _ = tx_item.send(Arc::new(item));
     }
     drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -375,12 +363,7 @@ fn controls_menu() -> Option<View> {
     if selected_items.is_empty() {
         None
     } else {
-        Some(
-            (*selected_items[0])
-                .as_any()
-                .downcast_ref::<View>()?
-                .clone(),
-        )
+        Some(*(*selected_items[0]).as_any().downcast_ref::<View>()?)
     }
 }
 
@@ -394,7 +377,7 @@ impl SkimItem for WorldItem {
         Cow::Borrowed(&self.uuid)
     }
 
-    fn display<'a>(&'a self, context: DisplayContext<'a>) -> AnsiString<'a> {
+    fn display<'a>(&'a self, _context: DisplayContext<'a>) -> AnsiString<'a> {
         AnsiString::new_string(self.uuid.to_string(), vec![])
     }
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
@@ -457,40 +440,40 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
 
     let mut db = sled::open(db_path).unwrap();
 
-    let mut state = View::MENU;
+    let mut state = View::Menu;
     let mut selected_characters: Vec<PabitellItem> = vec![];
     let mut selected_items: Vec<PabitellItem> = vec![];
     let mut selected_scenes: Vec<PabitellItem> = vec![];
     loop {
         match state {
-            View::MENU => match main_menu(world.as_ref()) {
-                Some(View::ITEMS) => state = View::ITEMS,
-                Some(View::CHARACTERS) => state = View::CHARACTERS,
-                Some(View::SCENES) => state = View::SCENES,
-                Some(View::EVENTS) => state = View::EVENTS,
-                Some(View::CONTROLS) => state = View::CONTROLS,
-                Some(View::EXIT) => break,
+            View::Menu => match main_menu(world.as_ref()) {
+                Some(View::Items) => state = View::Items,
+                Some(View::Characters) => state = View::Characters,
+                Some(View::Scenes) => state = View::Scenes,
+                Some(View::Events) => state = View::Events,
+                Some(View::Controls) => state = View::Controls,
+                Some(View::Exit) => break,
                 _ => break,
             },
-            View::CHARACTERS => {
+            View::Characters => {
                 if let Some(characters) = select_characters(world.as_ref()) {
                     selected_characters = characters;
                 }
-                state = View::MENU;
+                state = View::Menu;
             }
-            View::SCENES => {
+            View::Scenes => {
                 if let Some(scenes) = select_scenes(world.as_ref()) {
                     selected_scenes = scenes;
                 }
-                state = View::MENU;
+                state = View::Menu;
             }
-            View::ITEMS => {
+            View::Items => {
                 if let Some(items) = select_items(world.as_ref()) {
                     selected_items = items;
                 }
-                state = View::MENU;
+                state = View::Menu;
             }
-            View::EVENTS => {
+            View::Events => {
                 if !selected_characters.is_empty() {
                     if let Some(scene) = world
                         .characters()
@@ -534,23 +517,23 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                         continue;
                     }
                 }
-                state = View::MENU;
+                state = View::Menu;
             }
-            View::CONTROLS => {
+            View::Controls => {
                 if let Some(new_state) = controls_menu() {
                     state = new_state;
                 }
             }
-            View::BACK => match state {
-                _ => state = View::MENU,
-            },
-            View::EXIT => break,
-            View::RESET => {
+            View::Back => {
+                state = View::Menu;
+            }
+            View::Exit => break,
+            View::Reset => {
                 world.clean();
                 world.setup();
-                state = View::MENU;
+                state = View::Menu;
             }
-            View::DELETE => {
+            View::Delete => {
                 println(color::BRIGHT_MAGENTA, "Deleting world");
                 if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
                     backend::delete(&mut db, &story.code, &uuid).unwrap();
@@ -561,12 +544,12 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                 } else {
                     println(color::BRIGHT_MAGENTA, "No world selected");
                 }
-                state = View::CONTROLS;
+                state = View::Controls;
             }
-            View::LOAD => {
+            View::Load => {
                 println(color::BRIGHT_MAGENTA, "Loading world");
                 if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
-                    if let Err(error) = backend::load(&mut db, &story.code, &uuid, world.as_mut()) {
+                    if let Err(error) = backend::load(&db, &story.code, &uuid, world.as_mut()) {
                         println(
                             color::BRIGHT_RED,
                             format!("Failed to load world '{}': {}", uuid, error),
@@ -577,10 +560,10 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                             format!("World '{}' was loaded", uuid),
                         );
                     }
-                    state = View::MENU;
+                    state = View::Menu;
                 } else {
                     println(color::BRIGHT_MAGENTA, "No world selected");
-                    state = View::CONTROLS;
+                    state = View::Controls;
                 }
             }
         }

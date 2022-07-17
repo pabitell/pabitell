@@ -1,11 +1,5 @@
-use pabitell_lib::{
-    translations::get_message_global,
-    webapp::characters::{Character, CharacterQRJson},
-    Description, World,
-};
+use pabitell_lib::{translations::get_message_global, webapp::characters::Character, World};
 use std::rc::Rc;
-
-use crate::translations;
 
 pub fn make_characters(world: &dyn World) -> Rc<Vec<Rc<Character>>> {
     Rc::new(vec![

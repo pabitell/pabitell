@@ -7,32 +7,28 @@ use anyhow::Result;
 use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use pabitell_lib::{Narrator, World, WorldBuilder};
 
+type MakeStory = Result<Option<(Box<dyn World>, Box<dyn Narrator>)>>;
+
 #[cfg(feature = "with_doggie_and_kitie_cake")]
-fn make_story_doggie_and_kitie_cake(
-    initial: bool,
-) -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
+fn make_story_doggie_and_kitie_cake(initial: bool) -> MakeStory {
     let mut world: Box<dyn World> =
         Box::new(doggie_and_kitie_cake::world::CakeWorldBuilder::make_world()?);
     if initial {
         world.setup();
     }
-    let mut narrator: Box<dyn Narrator> =
-        Box::new(doggie_and_kitie_cake::narrator::Cake::default());
+    let narrator: Box<dyn Narrator> = Box::new(doggie_and_kitie_cake::narrator::Cake::default());
 
     Ok(Some((world, narrator)))
 }
 
 #[cfg(feature = "with_doggie_and_kitie_doll")]
-fn make_story_doggie_and_kitie_doll(
-    initial: bool,
-) -> Result<Option<(Box<dyn World>, Box<dyn Narrator>)>> {
+fn make_story_doggie_and_kitie_doll(initial: bool) -> MakeStory {
     let mut world: Box<dyn World> =
         Box::new(doggie_and_kitie_doll::world::DollWorldBuilder::make_world()?);
     if initial {
         world.setup();
     }
-    let mut narrator: Box<dyn Narrator> =
-        Box::new(doggie_and_kitie_doll::narrator::Doll::default());
+    let narrator: Box<dyn Narrator> = Box::new(doggie_and_kitie_doll::narrator::Doll::default());
 
     Ok(Some((world, narrator)))
 }

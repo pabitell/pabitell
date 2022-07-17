@@ -21,12 +21,7 @@ pub enum ProtocolEvent {
 }
 
 fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
-    conditions::same_scene(
-        world,
-        &vec!["doggie".to_string(), "kitie".to_string()],
-        &vec![],
-    )
-    .unwrap()
+    conditions::same_scene(world, &["doggie".to_string(), "kitie".to_string()], &[]).unwrap()
 }
 
 pub fn make_pick(name: &str, pick_data: data::PickData, consume: bool) -> events::Pick {
@@ -113,8 +108,8 @@ pub fn make_pick(name: &str, pick_data: data::PickData, consume: bool) -> events
         ingredient_cond
             && conditions::same_scene(
                 world,
-                &vec![event.character().to_string()],
-                &vec![event.item().to_string()],
+                &[event.character().to_string()],
+                &[event.item().to_string()],
             )
             .unwrap()
             && doggie_and_kitie_in_same_scene(world)
@@ -329,12 +324,8 @@ pub fn make_move_to_kitchen(move_data: data::MoveData) -> events::Move {
     event.set_condition(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
         world.items().get("sand_cake").unwrap().state() == &ItemState::Unassigned
-            && conditions::in_scenes(
-                world,
-                event.character().to_string(),
-                &vec!["playground".into()],
-            )
-            .unwrap()
+            && conditions::in_scenes(world, event.character().to_string(), &["playground".into()])
+                .unwrap()
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -392,12 +383,8 @@ pub fn make_move_to_children_garden(move_data: data::MoveData) -> events::Move {
             .values()
             .filter(|e| e.get_tags().contains(&"ingredient".to_string()))
             .all(|e| e.state() == &ItemState::Unassigned)
-            && conditions::in_scenes(
-                world,
-                event.character().to_string(),
-                &vec!["kitchen".into()],
-            )
-            .unwrap()
+            && conditions::in_scenes(world, event.character().to_string(), &["kitchen".into()])
+                .unwrap()
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
         let event = event.downcast_ref::<events::Move>().unwrap();
@@ -521,7 +508,7 @@ pub fn make_move_to_garden(move_data: data::MoveData) -> events::Move {
             && conditions::in_scenes(
                 world,
                 event.character().to_string(),
-                &vec!["children_garden".into()],
+                &["children_garden".into()],
             )
             .unwrap()
     })));
@@ -575,7 +562,7 @@ pub fn make_find_bad_dog(pick_data: data::PickData) -> events::Pick {
                 .values()
                 .map(|e| e.name().to_string())
                 .collect::<Vec<_>>(),
-            &vec![event.item().to_string()],
+            &[event.item().to_string()],
         )
         .unwrap()
             && doggie_and_kitie_in_same_scene(world)
@@ -624,7 +611,7 @@ pub fn make_move_to_children_house(move_data: data::MoveData) -> events::Move {
         let event = event.downcast_ref::<events::Move>().unwrap();
         // Found bad dog
         world.items().get("bad_dog").unwrap().state() == &ItemState::Unassigned
-            && conditions::in_scenes(world, event.character().to_string(), &vec!["garden".into()])
+            && conditions::in_scenes(world, event.character().to_string(), &["garden".into()])
                 .unwrap()
     })));
     event.set_make_action_text(Some(Box::new(|event, world| {
@@ -762,7 +749,7 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
                 "{}-{}_eat_{}-action",
                 world.name(),
                 event.character(),
-                event.item().clone().unwrap_or_else(String::new)
+                event.item().clone().unwrap_or_default()
             ),
             None,
         )
@@ -774,7 +761,7 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
                 "{}-{}_eat_{}-success",
                 world.name(),
                 event.character(),
-                event.item().clone().unwrap_or_else(String::new)
+                event.item().clone().unwrap_or_default()
             ),
             None,
         )
@@ -786,7 +773,7 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
                 "{}-{}_eat_{}-fail",
                 world.name(),
                 event.character(),
-                event.item().clone().unwrap_or_else(String::new)
+                event.item().clone().unwrap_or_default()
             ),
             None,
         )

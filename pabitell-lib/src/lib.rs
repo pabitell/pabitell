@@ -173,17 +173,17 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
             .map(|e| (e)(self.as_any(), world))
             .unwrap_or_else(String::new)
     }
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>);
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>);
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>);
+    fn set_world_update(&mut self, update: events::WorldUpdate);
+    fn set_condition(&mut self, condition: events::Condition);
+    fn set_make_action_text(&mut self, text: events::Text);
+    fn set_make_success_text(&mut self, text: events::Text);
+    fn set_make_fail_text(&mut self, text: events::Text);
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>;
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+    fn get_world_update(&self) -> &events::WorldUpdate;
+    fn get_condition(&self) -> &events::Condition;
+    fn get_make_action_text(&self) -> &events::Text;
+    fn get_make_success_text(&self) -> &events::Text;
+    fn get_make_fail_text(&self) -> &events::Text;
 
     fn initiator(&self) -> String;
     fn set_initiator(&mut self, initiator: String);
@@ -332,7 +332,7 @@ pub mod test {
             )
         }
 
-        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+        fn load(&mut self, _data: serde_json::Value) -> Result<()> {
             Ok(())
         }
     }
@@ -371,7 +371,7 @@ pub mod test {
             )
         }
 
-        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+        fn load(&mut self, _data: serde_json::Value) -> Result<()> {
             Ok(())
         }
     }
@@ -422,7 +422,7 @@ pub mod test {
             )
         }
 
-        fn load(&mut self, data: serde_json::Value) -> Result<()> {
+        fn load(&mut self, _data: serde_json::Value) -> Result<()> {
             Ok(())
         }
     }
@@ -441,8 +441,9 @@ pub mod test {
 
     impl Description for TestDescription {}
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug)]
     struct TestEvent {
+        #[allow(dead_code)]
         description: TestDescription,
     }
     impl Tagged for TestEvent {}
@@ -460,7 +461,7 @@ pub mod test {
         }
     }
     impl PartialEq<[u8]> for TestEvent {
-        fn eq(&self, other: &[u8]) -> bool {
+        fn eq(&self, _other: &[u8]) -> bool {
             false
         }
     }
@@ -525,13 +526,13 @@ pub mod test {
             "test_character".into()
         }
 
-        fn set_initiator(&mut self, initiator: String) {}
+        fn set_initiator(&mut self, _initiator: String) {}
 
         fn dump(&self) -> serde_json::Value {
             serde_json::json!({})
         }
 
-        fn matches(&self, value: &serde_json::Value) -> bool {
+        fn matches(&self, _value: &serde_json::Value) -> bool {
             false
         }
 
@@ -644,7 +645,7 @@ pub mod test {
                             (k, v) if k == "characters" => {
                                 if let serde_json::Value::Object(characters) = v {
                                     for (name, data) in characters.into_iter() {
-                                        let mut character = self
+                                        let character = self
                                             .characters_mut()
                                             .get_mut(&name)
                                             .ok_or_else(|| anyhow!(""))?;
@@ -657,7 +658,7 @@ pub mod test {
                             (k, v) if k == "items" => {
                                 if let serde_json::Value::Object(items) = v {
                                     for (name, data) in items.into_iter() {
-                                        let mut item = self
+                                        let item = self
                                             .characters_mut()
                                             .get_mut(&name)
                                             .ok_or_else(|| anyhow!(""))?;
@@ -670,7 +671,7 @@ pub mod test {
                             (k, v) if k == "scenes" => {
                                 if let serde_json::Value::Object(scenes) = v {
                                     for (name, data) in scenes.into_iter() {
-                                        let mut scene = self
+                                        let scene = self
                                             .characters_mut()
                                             .get_mut(&name)
                                             .ok_or_else(|| anyhow!(""))?;

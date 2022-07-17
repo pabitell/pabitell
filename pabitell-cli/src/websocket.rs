@@ -44,7 +44,7 @@ pub struct ClientMessage {
 }
 
 /// Should manage connected clients
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct WsManager {
     clients: HashMap<Uuid, HashMap<usize, Recipient<Message>>>,
     rng: ThreadRng,
@@ -52,10 +52,7 @@ pub struct WsManager {
 
 impl WsManager {
     pub fn new() -> WsManager {
-        WsManager {
-            clients: HashMap::new(),
-            rng: rand::thread_rng(),
-        }
+        Self::default()
     }
 }
 
@@ -66,7 +63,7 @@ impl WsManager {
         self.clients.get(id).iter().for_each(|clients| {
             clients.values().for_each(|addr| {
                 debug!("sending_message; to={:?}", addr);
-                let _ = addr.do_send(Message(message.to_owned()));
+                addr.do_send(Message(message.to_owned()));
             });
         });
     }
@@ -86,7 +83,7 @@ impl Handler<Connect> for WsManager {
         let id = self.rng.gen::<usize>();
         self.clients
             .entry(msg.world_id)
-            .or_insert(HashMap::new())
+            .or_insert_with(HashMap::new)
             .insert(id, msg.addr);
 
         debug!("clients={:?}", self.clients);
@@ -151,7 +148,7 @@ impl Actor for WsConnection {
         let addr = ctx.address();
         self.addr
             .send(Connect {
-                world_id: self.world_id.clone(),
+                world_id: self.world_id,
                 addr: addr.recipient(),
             })
             .into_actor(self)
@@ -171,7 +168,7 @@ impl Actor for WsConnection {
         debug!("Stopping");
         self.addr.do_send(Disconnect {
             id: self.id.unwrap_or_default(),
-            world_id: self.world_id.clone(),
+            world_id: self.world_id,
         });
         Running::Stop
     }
@@ -212,7 +209,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
             ws::Message::Text(text) => {
                 // Forward message between clients
                 self.addr.do_send(ClientMessage {
-                    world_id: self.world_id.clone(),
+                    world_id: self.world_id,
                     data: text.to_string(),
                 });
             }
@@ -232,7 +229,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
 impl WsConnection {
     /// ping to client every second and also this method checks heartbeats from client
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
-        let world_id = self.world_id.clone();
+        let world_id = self.world_id;
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("heartbeat;world={},act={:?}", world_id.clone(), act.id);
             // check client heartbeats

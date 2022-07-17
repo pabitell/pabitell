@@ -8,10 +8,10 @@ pub mod world;
 
 #[cfg(test)]
 pub mod tests {
-    use pabitell_lib::{Description, Dumpable, Event, ItemState, Narrator, World, WorldBuilder};
+    use pabitell_lib::{Dumpable, Event, ItemState, Narrator, World, WorldBuilder};
 
     use crate::{
-        characters, narrator,
+        narrator,
         world::{DollWorld, DollWorldBuilder},
     };
 

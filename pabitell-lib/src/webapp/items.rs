@@ -31,14 +31,12 @@ impl PartialOrd for Item {
             Some(cmp::Ordering::Less)
         } else if self_value < other_value {
             Some(cmp::Ordering::Greater)
+        } else if self.short < other.short {
+            Some(cmp::Ordering::Less)
+        } else if self.short > other.short {
+            Some(cmp::Ordering::Greater)
         } else {
-            if self.short < other.short {
-                Some(cmp::Ordering::Less)
-            } else if self.short > other.short {
-                Some(cmp::Ordering::Greater)
-            } else {
-                Some(cmp::Ordering::Equal)
-            }
+            Some(cmp::Ordering::Equal)
         }
     }
 }
@@ -53,14 +51,12 @@ impl Ord for Item {
             cmp::Ordering::Less
         } else if self_value < other_value {
             cmp::Ordering::Greater
+        } else if self.short < other.short {
+            cmp::Ordering::Less
+        } else if self.short > other.short {
+            cmp::Ordering::Greater
         } else {
-            if self.short < other.short {
-                cmp::Ordering::Less
-            } else if self.short > other.short {
-                cmp::Ordering::Greater
-            } else {
-                cmp::Ordering::Equal
-            }
+            cmp::Ordering::Equal
         }
     }
 }

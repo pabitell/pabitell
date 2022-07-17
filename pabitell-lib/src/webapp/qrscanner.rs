@@ -4,13 +4,12 @@ use gloo::{
     storage::{self, Storage},
     timers,
 };
-use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
-    Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-    Element, EventTarget, HtmlCanvasElement, HtmlInputElement, HtmlMediaElement, HtmlVideoElement,
-    ImageData, MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
-    MediaStreamTrack, MouseEvent,
+    CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement, HtmlVideoElement, ImageData,
+    MediaDeviceInfo, MediaDeviceKind, MediaStream, MediaStreamConstraints, MediaStreamTrack,
+    MouseEvent,
 };
 use yew::{html, prelude::*};
 
@@ -193,7 +192,7 @@ impl Component for QRScanner {
                         }
                     });
                 }
-                self.current_device_id = device_id.clone();
+                self.current_device_id = device_id;
                 true
             }
 

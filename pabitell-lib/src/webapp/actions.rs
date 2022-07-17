@@ -1,4 +1,4 @@
-use data_url::{mime, DataUrl};
+use data_url::DataUrl;
 use serde_json::Value;
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
@@ -9,7 +9,7 @@ use super::{
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
-use crate::{translations::get_message_global, Character, Description, World, WorldBuilder};
+use crate::translations::get_message_global;
 
 #[derive(Clone, Debug, Default, Properties)]
 pub struct Props {
@@ -146,14 +146,13 @@ impl Component for Actions {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link().clone();
         let props = ctx.props();
-        let qr_found_cb = link.callback(move |string| Msg::QRCodeScanned(string));
+        let qr_found_cb = link.callback(Msg::QRCodeScanned);
         let render_action = move |item: Rc<action_event::ActionEventItem>| {
-            let idx = item.idx;
             let event_data = item.data.clone();
             let cb = link
                 .clone()
                 .callback(move |_| Msg::TriggerEventData(event_data.clone()));
-            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
+            let show_qr_cb = link.callback(Msg::QRCodeShow);
 
             html! {
                 <action_event::ActionEvent {item} trigger_event_cb={cb} {show_qr_cb} />
@@ -219,8 +218,8 @@ impl Component for Actions {
             let use_item_scanned_cb =
                 link.callback(|(item, data)| Msg::QRCodeUseItemScanned(item, data));
 
-            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
-            let trigger_event_cb = link.callback(|data| Msg::TriggerEventData(data));
+            let show_qr_cb = link.callback(Msg::QRCodeShow);
+            let trigger_event_cb = link.callback(Msg::TriggerEventData);
             html! {
                 <action_item::ActionItem
                   item={item.clone()}
@@ -234,13 +233,13 @@ impl Component for Actions {
 
         let link = ctx.link().clone();
         let render_join = |character: &Rc<characters::Character>| {
-            let world_id = props.world_id.clone();
-            let show_qr_cb = link.callback(|data| Msg::QRCodeShow(data));
+            let world_id = props.world_id;
+            let show_qr_cb = link.callback(Msg::QRCodeShow);
             html! {
                 <action_join::ActionJoin
                   {show_qr_cb}
                   character={character.clone()}
-                  world_id={world_id}
+                  {world_id}
                   lang={ctx.props().lang.clone()}
                 />
             }
@@ -252,7 +251,7 @@ impl Component for Actions {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
                     { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
-                    { for joinable_characters.iter().map(|e| render_join(&e)) }
+                    { for joinable_characters.iter().map(|e| render_join(e)) }
                     { for items.iter().map(render_item) }
                     <QRScanner
                       qr_found={qr_found_cb}

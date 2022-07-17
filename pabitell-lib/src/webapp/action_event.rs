@@ -1,5 +1,5 @@
 use super::characters;
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 use yew::{html, prelude::*};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15,6 +15,7 @@ pub struct ActionEventItem {
 }
 
 impl ActionEventItem {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         idx: usize,
         description: String,
@@ -71,23 +72,19 @@ impl Component for ActionEvent {
         }
     }
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {}
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let item = ctx.props().item.clone();
-        let idx = item.idx;
         let description = item.description.clone();
         let character = item.character.clone();
-        let action_url = item.action_url.clone();
         let image_url = if let Some(url) = item.image_url.as_ref() {
             url.to_string()
         } else {
             "images/cog.svg".to_string()
         };
-
-        let data = item.data.clone();
 
         let qr_button = if item.show_qr {
             let show_qr_cb = ctx.link().callback(|_| Msg::ShowQRCode);
@@ -128,7 +125,7 @@ impl Component for ActionEvent {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Update when component is reused
         true
     }

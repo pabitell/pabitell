@@ -2,7 +2,7 @@ use pabitell_lib::{data, webapp::print::PrintItem, World};
 use serde_json::Value;
 use std::rc::Rc;
 
-use crate::{events::ProtocolEvent, translations::get_message};
+use crate::events::ProtocolEvent;
 
 pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
     let mut res = vec![];
@@ -52,7 +52,7 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
             .to_string();
 
             res.push(
-                PrintItem::new(Rc::new(data.to_string().as_bytes().to_vec()))
+                PrintItem::new(Rc::new(data.as_bytes().to_vec()))
                     .title(Some(e.short(world.as_ref())))
                     .img_url(Some(format!("images/{}.svg", e.name()))),
             );
@@ -156,5 +156,5 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
             );
         });
 
-    return res;
+    res
 }

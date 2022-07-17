@@ -64,7 +64,7 @@ pub fn can_give(
     item: String,
 ) -> Result<bool> {
     Ok(has_item(world, from_character.clone(), item)?
-        && same_scene(world, &vec![from_character, to_character], &vec![])?)
+        && same_scene(world, &[from_character, to_character], &[])?)
 }
 
 pub fn all_items_with_tags_in_state(world: &dyn World, tags: &[String], state: ItemState) -> bool {

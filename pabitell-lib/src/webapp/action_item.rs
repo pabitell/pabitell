@@ -59,7 +59,7 @@ impl Component for ActionItem {
         false
     }
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             qr_scanner_callback: Rc::new(RefCell::new(None)),
         }
@@ -70,7 +70,7 @@ impl Component for ActionItem {
         let link = ctx.link().clone();
 
         let show_qr = link.callback(|_| Msg::ShowQRCode);
-        let qr_found_cb = link.callback(move |string| Msg::TriggerEventByScan(string));
+        let qr_found_cb = link.callback(Msg::TriggerEventByScan);
         let scan_cb = link.callback(move |_| Msg::QRCodeScanShow);
         let scan_html = if item.scan {
             html! {
@@ -169,7 +169,7 @@ impl Component for ActionItem {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Update when component is reused
         true
     }

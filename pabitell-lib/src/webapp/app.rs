@@ -5,9 +5,9 @@ use gloo::{
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::{spawn_local, JsFuture};
-use web_sys::{OrientationLockType, Request, RequestInit, RequestMode, Response};
+use web_sys::OrientationLockType;
 use yew::prelude::*;
 
 use crate::{
@@ -27,8 +27,15 @@ use crate::{
         status::{Status, WsStatus},
         websocket_client::{Msg as WsMsg, WebsocketClient},
     },
-    Music, Narrator, Scene, World,
+    Narrator, World,
 };
+
+pub type MakeCharacters = Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>;
+pub type MakeNarrator = Option<Box<dyn Fn() -> Box<dyn Narrator>>>;
+pub type MakePrintItems = Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>;
+pub type MakeOwnedItems = Option<Box<dyn Fn(&dyn World, &Option<String>) -> Vec<Rc<Item>>>>;
+pub type MakeWorld = Option<Box<dyn Fn(&str) -> Box<dyn World>>>;
+pub type MakeLanguages = Option<Box<dyn Fn() -> Rc<Vec<String>>>>;
 
 const WS_TIMEOUT: u32 = 3000; // ws timeout in ms
 
@@ -78,34 +85,20 @@ pub struct App {
     ws_request_failed: bool,
 }
 
-#[derive(Properties)]
+#[derive(Properties, Default)]
 pub struct Props {
-    pub make_characters: Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>,
-    pub make_narrator: Option<Box<dyn Fn() -> Box<dyn Narrator>>>,
-    pub make_print_items: Option<Box<dyn Fn(Box<dyn World>) -> Vec<PrintItem>>>,
-    pub make_owned_items: Option<Box<dyn Fn(&dyn World, &Option<String>) -> Vec<Rc<Item>>>>,
-    pub make_world: Option<Box<dyn Fn(&str) -> Box<dyn World>>>,
-    pub make_languages: Option<Box<dyn Fn() -> Rc<Vec<String>>>>,
+    pub make_characters: MakeCharacters,
+    pub make_narrator: MakeNarrator,
+    pub make_print_items: MakePrintItems,
+    pub make_owned_items: MakeOwnedItems,
+    pub make_world: MakeWorld,
+    pub make_languages: MakeLanguages,
     pub name: String,
 }
 
 impl PartialEq for Props {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         true
-    }
-}
-
-impl Default for Props {
-    fn default() -> Self {
-        Self {
-            make_characters: None,
-            make_narrator: None,
-            make_world: None,
-            make_owned_items: None,
-            make_print_items: None,
-            make_languages: None,
-            name: String::default(),
-        }
     }
 }
 
@@ -235,11 +228,7 @@ impl Component for App {
                                 .send_message(MessagesMsg::AddMessage(Rc::new(message)));
                         }
 
-                        self.request_to_trigger_event(
-                            ctx,
-                            self.world_id.unwrap().clone(),
-                            event.dump(),
-                        );
+                        self.request_to_trigger_event(ctx, self.world_id.unwrap(), event.dump());
                     } else {
                         // Can't construct event based on given data
                         // TODO some error message
@@ -271,7 +260,7 @@ impl Component for App {
                         storage::LocalStorage::set("world_id", world_id).unwrap();
                         self.world_id = Some(world_id);
 
-                        let world_id_cloned = world_id.clone();
+                        let world_id_cloned = world_id;
                         // Start ws connection
                         ctx.link()
                             .send_future(async move { Msg::WsConnect(world_id_cloned) });
@@ -304,7 +293,7 @@ impl Component for App {
                     storage::LocalStorage::delete("character");
                     self.character = Rc::new(None);
 
-                    let world_id_cloned = world_id.clone();
+                    let world_id_cloned = world_id;
                     // Start ws connection
                     ctx.link()
                         .send_future(async move { Msg::WsConnect(world_id_cloned) });
@@ -374,7 +363,7 @@ impl Component for App {
                     let db = database::init_database(&name).await;
                     database::put_world(
                         &db,
-                        &world.id(),
+                        world.id(),
                         "narrator".to_string(),
                         false,
                         world.dump(),
@@ -388,7 +377,7 @@ impl Component for App {
                 true
             }
             Msg::RefreshWorld => {
-                if let Some(world_id) = self.world_id.clone() {
+                if let Some(world_id) = self.world_id {
                     self.request_to_get_world(ctx, world_id);
                 }
                 true
@@ -412,7 +401,7 @@ impl Component for App {
 
                                     // Store event to database
                                     let name = ctx.props().name.clone();
-                                    let world_id = self.world_id.clone().unwrap();
+                                    let world_id = self.world_id.unwrap();
                                     let event_count = self.event_count;
                                     let data = event.dump();
                                     spawn_local(async move {
@@ -493,14 +482,11 @@ impl Component for App {
 
                                         let db = database::init_database(&name).await;
 
-                                        let world = if let Some(record) =
-                                            database::get_world(&db, &world_id).await.unwrap()
-                                        {
-                                            // First try to get world from database
-                                            Some(record["data"].clone())
-                                        } else {
-                                            None
-                                        };
+                                        let world = database::get_world(&db, &world_id)
+                                            .await
+                                            .unwrap()
+                                            .map(|record| record["data"].clone());
+
                                         let resp = protocol::Message::Response(
                                             protocol::ResponseMessage::GetWorld(
                                                 protocol::GetWorldResponse { msg_id, world },
@@ -549,7 +535,7 @@ impl Component for App {
                                                     log::debug!("UUUFf");
                                                     database::put_world(
                                                         &db,
-                                                        &world.id(),
+                                                        world.id(),
                                                         "narrator".to_string(),
                                                         false,
                                                         world.dump(),
@@ -619,7 +605,7 @@ impl Component for App {
                     Ok(protocol::Message::Response(response)) => match response {
                         protocol::ResponseMessage::GetWorld(get_world) => {
                             let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
-                            let world_id = self.world_id.clone();
+                            let world_id = self.world_id;
 
                             if let Some((msg_id, timeout)) = self.request_id.take() {
                                 if get_world.msg_id == msg_id {
@@ -706,7 +692,7 @@ impl Component for App {
                 self.world_id = Some(world_id);
 
                 self.request_id = Some((
-                    msg_id.clone(),
+                    msg_id,
                     Timeout::new(WS_TIMEOUT, move || link.send_message(Msg::WsFailed)),
                 ));
 
@@ -730,7 +716,7 @@ impl Component for App {
                 let msg_id = Uuid::new_v4();
                 let link = ctx.link().clone();
                 self.request_id = Some((
-                    msg_id.clone(),
+                    msg_id,
                     Timeout::new(WS_TIMEOUT, move || link.send_message(Msg::WsFailed)),
                 ));
 
@@ -766,7 +752,7 @@ impl Component for App {
                 log::debug!("Ws Status update {:?}->{:?}", self.ws_status, &status);
                 if WsStatus::CONNECTED == status && self.owned == Some(false) {
                     // Plan to redownload world
-                    if let Some(world_id) = self.world_id.clone() {
+                    if let Some(world_id) = self.world_id {
                         ctx.link()
                             .send_future(async move { Msg::WsGetWorld(world_id) });
                     }
@@ -839,11 +825,11 @@ impl Component for App {
             };
         }
 
-        let set_language_cb = link.callback(|lang| Msg::SetLanguage(lang));
+        let set_language_cb = link.callback(Msg::SetLanguage);
 
         let view = if let Some(world) = &self.world {
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
-            let set_character_callback = link.callback(|character| Msg::UpdateCharacter(character));
+            let set_character_callback = link.callback(Msg::UpdateCharacter);
             let narrator = props.make_narrator.as_ref().unwrap()();
             let events = narrator.available_events_sorted(world.as_ref());
             let characters_map: HashMap<String, Rc<characters::Character>> =
@@ -888,8 +874,7 @@ impl Component for App {
                 })
                 .collect();
 
-            let trigger_event_data_callback =
-                link.callback(|json_value| Msg::TriggerEventData(json_value));
+            let trigger_event_data_callback = link.callback(Msg::TriggerEventData);
 
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
@@ -966,7 +951,7 @@ impl Component for App {
                           character={ self.character.clone() }
                           events={ events }
                           trigger_event_data={ trigger_event_data_callback }
-                          world_id={self.world_id.unwrap_or_default().clone()}
+                          world_id={self.world_id.unwrap_or_default()}
                           actions_scope={self.actions_scope.clone()}
                           { finished }
                         />
@@ -988,7 +973,7 @@ impl Component for App {
             let character_scanned_cb = link.callback(|(character, fixed_character, world_id)| {
                 Msg::TriggerRestoreCharacter(character, fixed_character, world_id)
             });
-            let show_print_cb = link.callback(|show| Msg::ShowPrint(show));
+            let show_print_cb = link.callback(Msg::ShowPrint);
 
             let world = props.make_world.as_ref().unwrap()(&self.lang);
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
@@ -1013,7 +998,7 @@ impl Component for App {
         };
 
         let ws_ready_cb = link.callback(|_| Msg::WsFlush);
-        let ws_message_cb = link.callback(|data| Msg::WsMessageRecieved(data));
+        let ws_message_cb = link.callback(Msg::WsMessageRecieved);
 
         html! {
             <>
@@ -1125,7 +1110,7 @@ impl App {
         let name = ctx.props().name.clone();
         let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
         world.set_id(world_id);
-        let owned = self.owned.clone();
+        let owned = self.owned;
 
         ctx.link().send_future(async move {
             // first try to detect whether the world is owned

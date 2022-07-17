@@ -1,12 +1,10 @@
 use anyhow::anyhow;
 use pabitell_lib::{
     scene_base, scene_no_music, scene_with_dialog, AsAny, Description, ItemState, Music, Named,
-    Scene, World,
+    World,
 };
 use serde_json::Value;
 use std::any::Any;
-
-use crate::translations::get_message;
 
 scene_with_dialog!(Home, "home", []);
 scene_no_music!(Home);

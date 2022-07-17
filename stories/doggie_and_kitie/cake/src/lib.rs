@@ -9,14 +9,11 @@ pub mod world;
 #[cfg(test)]
 pub mod tests {
     use pabitell_lib::{
-        events as lib_events, Description, Dumpable, Event, ItemState, Narrator, World,
-        WorldBuilder,
+        events as lib_events, Dumpable, Event, ItemState, Narrator, World, WorldBuilder,
     };
-    use uuid::Uuid;
 
-    use super::events;
     use crate::{
-        characters, narrator,
+        narrator,
         world::{CakeWorld, CakeWorldBuilder},
     };
 

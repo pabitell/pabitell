@@ -9,12 +9,7 @@ pub struct LanguageProps<'a> {
 
 #[component]
 pub fn Language<'a, G: Html>(ctx: Scope<'a>, props: LanguageProps<'a>) -> View<G> {
-    let languages: Vec<String> = props
-        .languages
-        .clone()
-        .into_iter()
-        .map(|e| e.to_string())
-        .collect();
+    let languages: Vec<String> = props.languages.clone().into_iter().collect();
 
     let languages = create_signal(ctx, languages);
 

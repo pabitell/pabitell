@@ -4,16 +4,20 @@ use crate::{
 };
 use std::{any::Any, fmt};
 
+pub type WorldUpdate = Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
+pub type Condition = Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>;
+pub type Text = Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+
 #[derive(Default)]
 pub struct Pick {
     name: String,
     data: data::PickData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for Pick {
@@ -46,7 +50,7 @@ impl AsAny for Pick {
 
 impl PartialEq<[u8]> for Pick {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::PickData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::PickData>(other) {
             self.data == other_data
         } else {
             false
@@ -67,42 +71,43 @@ impl Event for Pick {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 
@@ -151,11 +156,11 @@ pub struct Give {
     name: String,
     data: data::GiveData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for Give {
@@ -189,7 +194,7 @@ impl AsAny for Give {
 
 impl PartialEq<[u8]> for Give {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::GiveData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::GiveData>(other) {
             self.data == other_data
         } else {
             false
@@ -210,43 +215,43 @@ impl Event for Give {
         self.data.set_initiator(initiator);
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
 
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 
@@ -302,11 +307,11 @@ pub struct UseItem {
     name: String,
     data: data::UseItemData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for UseItem {
@@ -339,7 +344,7 @@ impl AsAny for UseItem {
 
 impl PartialEq<[u8]> for UseItem {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::UseItemData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::UseItemData>(other) {
             self.data == other_data
         } else {
             false
@@ -360,42 +365,42 @@ impl Event for UseItem {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 
@@ -444,11 +449,11 @@ pub struct Move {
     name: String,
     data: data::MoveData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for Move {
@@ -481,7 +486,7 @@ impl AsAny for Move {
 
 impl PartialEq<[u8]> for Move {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::MoveData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::MoveData>(other) {
             self.data == other_data
         } else {
             false
@@ -502,42 +507,42 @@ impl Event for Move {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 
@@ -586,11 +591,11 @@ pub struct Void {
     name: String,
     data: data::VoidData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for Void {
@@ -623,7 +628,7 @@ impl AsAny for Void {
 
 impl PartialEq<[u8]> for Void {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::VoidData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::VoidData>(other) {
             self.data == other_data
         } else {
             false
@@ -644,42 +649,42 @@ impl Event for Void {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 
@@ -732,11 +737,11 @@ pub struct Talk {
     name: String,
     data: data::TalkData,
     tags: Vec<String>,
-    world_update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>,
-    condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>,
-    make_action_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_success_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
-    make_fail_text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>,
+    world_update: WorldUpdate,
+    condition: Condition,
+    make_action_text: Text,
+    make_success_text: Text,
+    make_fail_text: Text,
 }
 
 impl fmt::Debug for Talk {
@@ -770,7 +775,7 @@ impl AsAny for Talk {
 
 impl PartialEq<[u8]> for Talk {
     fn eq(&self, other: &[u8]) -> bool {
-        if let Ok(other_data) = serde_json::from_slice::<data::TalkData>(&other) {
+        if let Ok(other_data) = serde_json::from_slice::<data::TalkData>(other) {
             self.data == other_data
         } else {
             false
@@ -791,42 +796,42 @@ impl Event for Talk {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {
+    fn set_world_update(&mut self, update: WorldUpdate) {
         self.world_update = update;
     }
 
-    fn set_condition(&mut self, condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
+    fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_action_text(&mut self, text: Text) {
         self.make_action_text = text;
     }
 
-    fn set_make_success_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_success_text(&mut self, text: Text) {
         self.make_success_text = text;
     }
-    fn set_make_fail_text(&mut self, text: Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>) {
+    fn set_make_fail_text(&mut self, text: Text) {
         self.make_fail_text = text;
     }
 
-    fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
+    fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
-    fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
+    fn get_condition(&self) -> &Condition {
         &self.condition
     }
 
-    fn get_make_action_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_action_text(&self) -> &Text {
         &self.make_action_text
     }
 
-    fn get_make_success_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_success_text(&self) -> &Text {
         &self.make_success_text
     }
 
-    fn get_make_fail_text(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>> {
+    fn get_make_fail_text(&self) -> &Text {
         &self.make_fail_text
     }
 

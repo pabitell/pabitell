@@ -25,7 +25,7 @@ pub fn list_stored(db: &Db, story: &str) -> Result<Vec<Uuid>> {
 
 pub fn load(db: &Db, story: &str, uuid: &Uuid, world: &mut dyn World) -> Result<()> {
     let tree = db.open_tree(story)?;
-    world.set_id(uuid.clone());
+    world.set_id(*uuid);
     let data = tree
         .get(uuid.as_bytes())?
         .ok_or_else(|| anyhow!("No data"))?;

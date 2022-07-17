@@ -1,6 +1,6 @@
 // translations related stuff
 use fluent::{bundle::FluentBundle, FluentArgs, FluentResource};
-use include_dir::{include_dir, Dir, DirEntry};
+use include_dir::{include_dir, Dir};
 use intl_memoizer::concurrent::IntlLangMemoizer;
 use lazy_static::lazy_static;
 use pabitell_lib::translations::{self, get_available_locales, get_bundle};
@@ -25,7 +25,7 @@ lazy_static! {
 
 pub fn get_message(msgid: &str, langid: &str, args: Option<FluentArgs>) -> String {
     if let Some(bundle) = BUNDLES.get(langid) {
-        translations::get_message(bundle, msgid, args).unwrap_or(msgid.to_string())
+        translations::get_message(bundle, msgid, args).unwrap_or_else(|_| msgid.to_string())
     } else {
         msgid.to_string()
     }

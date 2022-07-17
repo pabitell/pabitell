@@ -93,5 +93,5 @@ pub fn make_print_items(world: Box<dyn World>) -> Vec<PrintItem> {
             );
         });
 
-    return res;
+    res
 }

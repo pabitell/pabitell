@@ -16,7 +16,7 @@ pub fn Help<'a, G: Html>(ctx: Scope<'a>, props: HelpProps<'a>) -> View<G> {
         div(class="control pr-2") {
             button(
                 class="button",
-                on:click=|_| { help_signal.set(if *help_signal.get() { false } else { true} ) },
+                on:click=|_| { help_signal.set(!(*help_signal.get())) },
             ) { strong{"?"} }
         }
         div(

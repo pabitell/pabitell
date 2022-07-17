@@ -16,12 +16,7 @@ pub enum ProtocolEvent {
 }
 
 fn doggie_and_kitie_in_same_scene(world: &dyn World) -> bool {
-    conditions::same_scene(
-        world,
-        &vec!["doggie".to_string(), "kitie".to_string()],
-        &vec![],
-    )
-    .unwrap()
+    conditions::same_scene(world, &["doggie".to_string(), "kitie".to_string()], &[]).unwrap()
 }
 
 pub fn make_talk(name: &str, data: data::TalkData) -> events::Talk {

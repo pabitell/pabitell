@@ -1,12 +1,8 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, rc::Rc};
 
-use qrcode::{render::svg, EcLevel, QrCode, Version};
+use qrcode::{render::svg, EcLevel, QrCode};
 use web_sys::Element;
-use yew::{function_component, html, prelude::*};
+use yew::{html, prelude::*};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -14,7 +10,7 @@ pub struct Props {
 }
 
 impl PartialEq<Self> for Props {
-    fn eq(&self, rhs: &Self) -> bool {
+    fn eq(&self, _rhs: &Self) -> bool {
         true
     }
 }
@@ -34,7 +30,7 @@ impl Component for QRCode {
     type Message = Msg;
     type Properties = Props;
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Show(data) => {
                 self.show_data = false;
@@ -101,7 +97,7 @@ impl Component for QRCode {
         }
     }
 
-    fn rendered(&mut self, ctx: &Context<Self>, _first_render: bool) {
+    fn rendered(&mut self, _ctx: &Context<Self>, _first_render: bool) {
         if let Some(qr_data) = self.qr_data() {
             let qrcode = QrCode::with_error_correction_level(qr_data, EcLevel::H).unwrap();
             let img = qrcode

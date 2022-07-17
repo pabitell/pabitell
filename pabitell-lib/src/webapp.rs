@@ -8,6 +8,7 @@ pub mod characters;
 pub mod database;
 pub mod intro;
 pub mod items;
+#[allow(non_snake_case)]
 pub mod jsQR;
 pub mod language_switch;
 pub mod message;

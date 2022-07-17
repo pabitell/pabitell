@@ -1,7 +1,6 @@
 use actix::*;
 use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use sled::Db;
 use std::time::Instant;
 use tracing::info;
 use tracing_actix_web::TracingLogger;

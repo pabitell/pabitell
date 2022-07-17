@@ -1,6 +1,6 @@
 use super::characters;
 use fluent::{FluentArgs, FluentValue};
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 use uuid::Uuid;
 use yew::{html, prelude::*};
 
@@ -31,8 +31,7 @@ impl Component for ActionJoin {
 
                 let character = ctx.props().character.clone();
                 let character_code: Option<String> = character.code.as_ref().clone();
-                let data =
-                    characters::CharacterQRJson::new(character_code, ctx.props().world_id.clone());
+                let data = characters::CharacterQRJson::new(character_code, ctx.props().world_id);
                 let data = Rc::new(serde_json::to_vec(&data).unwrap());
                 ctx.props().show_qr_cb.emit(data);
             }
@@ -40,7 +39,7 @@ impl Component for ActionJoin {
         false
     }
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {}
     }
 
@@ -81,7 +80,7 @@ impl Component for ActionJoin {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Update when component is reused
         true
     }

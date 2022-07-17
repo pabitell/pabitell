@@ -2,13 +2,13 @@
 // However agent are not mcuch stable in YEW yet so perhaps this should
 // wait till yew 0.20.0 is released
 
-use futures::{channel, select, stream::SplitSink, SinkExt, StreamExt};
+use futures::{stream::SplitSink, SinkExt, StreamExt};
 use gloo::net::websocket::{futures::WebSocket, Message, WebSocketError};
 use gloo::timers::callback::Timeout;
 use std::{cell::RefCell, rc::Rc};
 use stream_cancel::{StreamExt as CancelStreamExt, Trigger, Tripwire};
 use uuid::Uuid;
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::spawn_local;
 use yew::{html, prelude::*};
 
 #[derive(Clone, Debug, Properties)]
@@ -148,7 +148,7 @@ impl Component for WebsocketClient {
             Msg::Disconnected => {
                 log::debug!("WS disconneted. Reconnect was planned.");
                 props.disconnected.emit(());
-                if let Some(world_id) = self.world_id.clone() {
+                if let Some(world_id) = self.world_id {
                     self.plan_reconnect(ctx, world_id);
                 }
                 true
@@ -162,11 +162,7 @@ impl Component for WebsocketClient {
                 }
 
                 // Drop sender to disconnect
-                let resp = if let Some((_, _)) = self.sender.take() {
-                    true
-                } else {
-                    false
-                };
+                let resp = self.sender.take().is_some();
 
                 // Unset world
                 if self.world_id.is_some() {

@@ -3,7 +3,7 @@ use pabitell_lib::{
 };
 use std::any::Any;
 
-use crate::{characters, translations::get_message};
+use crate::characters;
 
 scene_base!(PlayGround, "playground", []);
 scene_no_music!(PlayGround);
@@ -71,8 +71,6 @@ scene_no_music!(Kitchen);
 
 impl Description for Kitchen {
     fn long(&self, world: &dyn World) -> String {
-        let items = world.items().values().clone().collect::<Vec<_>>();
-
         let batch1_ready = conditions::all_items_with_tags_in_state(
             world,
             &["batch1".to_string()],

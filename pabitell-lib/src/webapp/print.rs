@@ -1,7 +1,6 @@
-use ::qrcode::{render::svg, EcLevel, QrCode, Version};
-use std::{cell::RefCell, rc::Rc};
-use uuid::Uuid;
-use yew::{html, prelude::*, utils, Html};
+use ::qrcode::{render::svg, EcLevel, QrCode};
+use std::rc::Rc;
+use yew::{html, prelude::*, Html};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PrintItem {
@@ -65,7 +64,7 @@ impl Component for Print {
         false
     }
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {}
     }
 
@@ -135,7 +134,7 @@ impl Component for Print {
         let render_printable_line = |line: &[PrintItem]| {
             html! {
                 <tr class="card-print">
-                    { for line.into_iter().map(|e| render_printable(e)) }
+                    { for line.iter().map(|e| render_printable(e)) }
                 </tr>
             }
         };
@@ -159,13 +158,13 @@ impl Component for Print {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Update when component is reused
         true
     }
 
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        let mut body = web_sys::window()
+    fn rendered(&mut self, _ctx: &Context<Self>, _first_render: bool) {
+        let body = web_sys::window()
             .unwrap()
             .document()
             .unwrap()

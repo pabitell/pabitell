@@ -151,12 +151,12 @@ impl Component for Intro {
         let props = ctx.props().clone();
         let lang = props.lang.to_owned();
 
-        let qr_found_cb = link.callback(|string| Msg::QRCodeScanned(string));
+        let qr_found_cb = link.callback(Msg::QRCodeScanned);
         let show_print_cb = link.callback(|_| Msg::ShowPrint);
 
         let new_world_cb = link.callback(|_| Msg::NewWorld);
         let show_qr_cb = link.callback(|_| Msg::QRCodeScanShow);
-        let set_language_cb = link.callback(|lang| Msg::SetLanguage(lang));
+        let set_language_cb = link.callback(Msg::SetLanguage);
 
         let table = if !self.worlds.is_empty() {
             let characters: HashMap<String, _> = props
@@ -170,9 +170,8 @@ impl Component for Intro {
                     let local_time: DateTime<Local> = DateTime::from(time.to_owned());
                     let character = characters.get(&character).unwrap();
                     let characters::Character { name, icon, .. } = character.as_ref().clone();
-                    let restore_cb = cloned_link.callback(move |_| {
-                        Msg::WorldPicked(id.clone(), name.to_string(), fixed_character)
-                    });
+                    let restore_cb = cloned_link
+                        .callback(move |_| Msg::WorldPicked(id, name.to_string(), fixed_character));
                     let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
 
                     html! {
@@ -221,7 +220,7 @@ impl Component for Intro {
                         {
                             for self.worlds.iter().map(
                                 |(time, events, character, fixed_character, id)|
-                                render_stored_world(time.clone(), events, character.clone(), *fixed_character, id.clone())
+                                render_stored_world(*time, events, character.clone(), *fixed_character, *id)
                             )
                         }
                       </table>
@@ -304,12 +303,8 @@ impl Intro {
                     worlds
                         .into_iter()
                         .filter_map(|(last, id, character, fixed_character, data)| {
-                            let count = if let Some(count) = data["event_count"].as_u64() {
-                                count
-                            } else {
-                                return None;
-                            };
-                            Some((last, count as usize, character, fixed_character, id.clone()))
+                            let count = data["event_count"].as_u64()?;
+                            Some((last, count as usize, character, fixed_character, id))
                         })
                         .collect(),
                 ),

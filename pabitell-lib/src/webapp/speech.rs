@@ -1,26 +1,9 @@
-use std::{
-    cell::RefCell,
-    collections::VecDeque,
-    convert::TryInto,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, collections::VecDeque, rc::Rc};
 
-use gloo::{
-    dialogs,
-    storage::{self, Storage},
-    timers,
-};
-use js_sys::{ArrayBuffer, Function, Uint8Array};
-use wasm_bindgen::{closure::Closure, JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{
-    Blob, CanvasRenderingContext2d, ConstrainBooleanParameters, DisplayMediaStreamConstraints,
-    Element, EventTarget, HtmlCanvasElement, HtmlMediaElement, HtmlSelectElement, HtmlVideoElement,
-    MediaDeviceInfo, MediaDeviceKind, MediaDevices, MediaStream, MediaStreamConstraints,
-    MediaStreamTrack, SpeechSynthesis, SpeechSynthesisUtterance, SpeechSynthesisVoice,
-};
-use yew::{function_component, html, prelude::*, Event};
+use gloo::storage::{self, Storage};
+use wasm_bindgen::{closure::Closure, JsCast};
+use web_sys::{EventTarget, HtmlSelectElement, SpeechSynthesisUtterance, SpeechSynthesisVoice};
+use yew::{html, prelude::*, Event};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -47,6 +30,7 @@ pub struct Speech {
     retry_texts: Vec<String>,
     playing: bool,
     end: Closure<dyn Fn()>,
+    #[allow(dead_code)]
     onvoiceschanged: Closure<dyn Fn()>,
     default_voice_key: String,
     current_lang: String,
@@ -67,14 +51,14 @@ impl Component for Speech {
         match msg {
             Msg::Play(text) => {
                 let text = text
-                    .replace("\n", " ")
-                    .replace(".", ".\n")
-                    .replace("\"", "")
-                    .replace("„", "")
-                    .replace("“", ""); // converts string for better tts
+                    .replace('\n', " ")
+                    .replace('.', ".\n")
+                    .replace('\"', "")
+                    .replace('„', "")
+                    .replace('“', ""); // converts string for better tts
                 let synth = web_sys::window().unwrap().speech_synthesis().unwrap();
                 if let Some(voice) = self.voice.as_ref() {
-                    let mut ut = SpeechSynthesisUtterance::new().unwrap();
+                    let ut = SpeechSynthesisUtterance::new().unwrap();
                     ut.set_text(&text);
                     ut.set_pitch(1.0);
                     ut.set_rate(1.0);

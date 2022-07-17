@@ -1,7 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 use yew::{html, prelude::*};
-
-use super::characters;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Kind {

@@ -185,7 +185,7 @@ impl World for CakeWorld {
 
     fn set_lang(&mut self, lang: &str) -> bool {
         if let Ok(locales) = get_available_locales(&RESOURCES) {
-            if locales.iter().any(|l| l.to_string() == lang) {
+            if locales.iter().any(|l| *l == lang) {
                 self.lang = lang.into();
                 return true;
             }
@@ -284,52 +284,36 @@ impl Dumpable for CakeWorld {
             serde_json::Value::Object(root) => {
                 for item in root {
                     match item {
-                        (k, v) if k == "characters" => {
-                            if let serde_json::Value::Object(characters) = v {
-                                for (name, data) in characters.into_iter() {
-                                    let character = self
-                                        .characters_mut()
-                                        .get_mut(&name)
-                                        .ok_or_else(|| anyhow!("missing character '{}'", name))?;
-                                    character.load(data)?;
-                                }
-                            } else {
-                                return Err(anyhow!(""));
+                        (k, serde_json::Value::Object(characters)) if k == "characters" => {
+                            for (name, data) in characters.into_iter() {
+                                let character = self
+                                    .characters_mut()
+                                    .get_mut(&name)
+                                    .ok_or_else(|| anyhow!("missing character '{}'", name))?;
+                                character.load(data)?;
                             }
                         }
-                        (k, v) if k == "items" => {
-                            if let serde_json::Value::Object(items) = v {
-                                for (name, data) in items.into_iter() {
-                                    let item = self
-                                        .items_mut()
-                                        .get_mut(&name)
-                                        .ok_or_else(|| anyhow!("missing item '{}'", name))?;
-                                    item.load(data)?;
-                                }
-                            } else {
-                                return Err(anyhow!(""));
+                        (k, serde_json::Value::Object(items)) if k == "items" => {
+                            for (name, data) in items.into_iter() {
+                                let item = self
+                                    .items_mut()
+                                    .get_mut(&name)
+                                    .ok_or_else(|| anyhow!("missing item '{}'", name))?;
+                                item.load(data)?;
                             }
                         }
-                        (k, v) if k == "scenes" => {
-                            if let serde_json::Value::Object(scenes) = v {
-                                for (name, data) in scenes.into_iter() {
-                                    let scene = self
-                                        .scenes_mut()
-                                        .get_mut(&name)
-                                        .ok_or_else(|| anyhow!("missing scene '{}'", name))?;
-                                    scene.load(data)?;
-                                }
-                            } else {
-                                return Err(anyhow!(""));
+                        (k, serde_json::Value::Object(scenes)) if k == "scenes" => {
+                            for (name, data) in scenes.into_iter() {
+                                let scene = self
+                                    .scenes_mut()
+                                    .get_mut(&name)
+                                    .ok_or_else(|| anyhow!("missing scene '{}'", name))?;
+                                scene.load(data)?;
                             }
                         }
-                        (k, v) if k == "event_count" => {
-                            if let serde_json::Value::Number(num) = v {
-                                if let Some(count) = num.as_u64() {
-                                    self.event_count = count as usize;
-                                } else {
-                                    return Err(anyhow!(""));
-                                }
+                        (k, serde_json::Value::Number(num)) if k == "event_count" => {
+                            if let Some(count) = num.as_u64() {
+                                self.event_count = count as usize;
                             } else {
                                 return Err(anyhow!(""));
                             }

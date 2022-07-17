@@ -1,15 +1,7 @@
-use data_url::{mime, DataUrl};
-use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use yew::prelude::*;
 
-use crate::{Character, Description, World, WorldBuilder};
-
-use super::{
-    message,
-    qrcode::{Msg as QRCodeMsg, QRCode},
-    qrscanner::{Msg as QRScannerMsg, QRScanner},
-};
+use super::message;
 
 #[derive(Clone, Debug, Default, Properties)]
 pub struct Props {
@@ -17,7 +9,7 @@ pub struct Props {
 }
 
 impl PartialEq<Self> for Props {
-    fn eq(&self, rhs: &Self) -> bool {
+    fn eq(&self, _rhs: &Self) -> bool {
         true
     }
 }
@@ -45,7 +37,7 @@ impl Component for Messages {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Close(idx) => self.messages.remove(&idx).is_some(),
             Msg::AddMessage(message) => {
