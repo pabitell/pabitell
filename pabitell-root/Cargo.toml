@@ -21,11 +21,19 @@ include_dir = { version = "0.7", features = ["glob"] }
 intl-memoizer = "0.5"
 lazy_static = "1"
 log = "0.4"
+qrcode = { version = "0.12", features = ["svg"] }
 sycamore = "0.8.0-beta.7"
 sycamore-router = "0.8.0-beta.7"
 unic-langid = { version = "0.9", features = ["macros"] }
 wasm-logger = "0.2"
 wee_alloc = "0.4"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+	"Window",
+	"Location",
+]
 
 [profile.release]
 # less code to include into binary

@@ -1920,10 +1920,12 @@ dependencies = [
  "intl-memoizer",
  "lazy_static",
  "log",
+ "qrcode",
  "sycamore",
  "sycamore-router",
  "unic-langid",
  "wasm-logger",
+ "web-sys",
  "wee_alloc",
 ]
 

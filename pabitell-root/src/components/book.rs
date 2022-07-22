@@ -1,4 +1,6 @@
+use qrcode::{render::svg, EcLevel, QrCode};
 use sycamore::prelude::*;
+use web_sys::window;
 
 use crate::data::{Book, Chapter};
 use crate::translations::get_message_global;
@@ -41,6 +43,20 @@ pub struct ChapterProps<'a> {
 
 #[component]
 pub fn Chapter<'a, G: Html>(ctx: Scope<'a>, props: ChapterProps<'a>) -> View<G> {
+    // Prepare qrcode with url
+    let location = window().unwrap().location();
+    let url = format!("{}/{}", location.href().unwrap(), &props.chapter.name);
+
+    let qrcode = QrCode::with_error_correction_level(url, EcLevel::H).unwrap();
+    let img = qrcode
+        .render()
+        .min_dimensions(250, 250)
+        .dark_color(svg::Color("#000000"))
+        .light_color(svg::Color("#ffffff"))
+        .build();
+
+    let show_qr = create_signal(ctx, false);
+
     view! { ctx,
         div(class="column card is-12-mobile is-6-tablet is-4-desktop is-4-widescreen is-4-fullhd m-1") {
             div(class="card-content") {
@@ -71,7 +87,25 @@ pub fn Chapter<'a, G: Html>(ctx: Scope<'a>, props: ChapterProps<'a>) -> View<G> 
                     )
                 )}
             }
-            footer(class="card-footer") {}
+            footer(class="card-footer") {
+                button(
+                    class="button is-large card-footer-item",
+                    on:click=|_| { show_qr.set(true) }
+                ) {
+                    i(class="fas fa-qrcode") {}
+                }
+            }
+            div(class=if *show_qr.get() { "modal is-active" } else { "modal" }) {
+                div(class="modal-background")
+                div(class="modal-content has-text-centered") {
+                    div(dangerously_set_inner_html=&img)
+                }
+                button(
+                    class="modal-close is-large delete",
+                    aria-label="close",
+                    on:click=|_| { show_qr.set(false) }
+                )
+            }
         }
     }
 }
