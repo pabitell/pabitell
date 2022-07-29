@@ -60,6 +60,7 @@ features = [
 	"Navigator",
 	"Element",
 	"EventTarget",
+	"HtmlAnchorElement",
 	"HtmlMediaElement",
 	"HtmlCanvasElement",
 	"HtmlVideoElement",
@@ -69,6 +70,7 @@ features = [
 	"SpeechSynthesis",
 	"SpeechSynthesisUtterance",
 	"SpeechSynthesisVoice",
+	"Url",
 ]
 optional = true
 

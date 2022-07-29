@@ -1,15 +1,20 @@
 use chrono::{DateTime, Datelike, Local, Timelike, Utc};
 use data_url::DataUrl;
+use js_sys::{Array, Uint8Array};
+use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
-use yew::{html, prelude::*};
+use yew::{html, prelude::*, NodeRef};
 
 use super::{
     characters, database,
     language_switch::LanguageSwitch,
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
+
+use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, Url};
 
 use crate::translations;
 
@@ -32,15 +37,17 @@ pub enum Msg {
     QRCodeScanShow,
     QRCodeScanned(String),
     ShowPrint,
-    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid)>),
+    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value)>),
     WorldDelete(Uuid),
     WorldPicked(Uuid, String, bool),
     SetLanguage(String),
+    DownloadWorld(Uuid, Value),
 }
 
 pub struct Intro {
+    pub link_ref: NodeRef,
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
-    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid)>,
+    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value)>,
 }
 
 impl Component for Intro {
@@ -143,6 +150,32 @@ impl Component for Intro {
                 ctx.props().set_language.emit(lang);
                 true
             }
+            Msg::DownloadWorld(id, world) => {
+                let world_data = world.to_string();
+
+                // Input of Blob::new_with_u8_array_sequence_and_options is array of Uint8Array
+                let array = Array::new_with_length(1);
+                array.set(0, JsValue::from(Uint8Array::from(world_data.as_bytes())));
+
+                let mut blob_props = BlobPropertyBag::new();
+                blob_props.type_("application/json");
+
+                let blob =
+                    Blob::new_with_u8_array_sequence_and_options(&array, &blob_props).unwrap();
+
+                // Prepare url
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let link = self.link_ref.cast::<HtmlAnchorElement>().unwrap();
+                link.set_href(&url);
+                link.set_download(&format!("{}.json", id));
+
+                // Trigger file download
+                link.click();
+
+                // Cleanup
+                Url::revoke_object_url(&url).unwrap();
+                false
+            }
         }
     }
 
@@ -165,50 +198,62 @@ impl Component for Intro {
                 .map(|e| (e.name.to_string(), e))
                 .collect();
             let cloned_link = link.clone();
-            let render_stored_world =
-                |time: DateTime<Utc>, events, character: String, fixed_character, id: Uuid| {
-                    let local_time: DateTime<Local> = DateTime::from(time.to_owned());
-                    let character = characters.get(&character).unwrap();
-                    let characters::Character { name, icon, .. } = character.as_ref().clone();
-                    let restore_cb = cloned_link
-                        .callback(move |_| Msg::WorldPicked(id, name.to_string(), fixed_character));
-                    let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
+            let render_stored_world = move |time: DateTime<Utc>,
+                                            events,
+                                            character: String,
+                                            fixed_character,
+                                            id: Uuid,
+                                            world: Value| {
+                let local_time: DateTime<Local> = DateTime::from(time.to_owned());
+                let character = characters.get(&character).unwrap();
+                let characters::Character { name, icon, .. } = character.as_ref().clone();
+                let restore_cb = cloned_link
+                    .callback(move |_| Msg::WorldPicked(id, name.to_string(), fixed_character));
+                let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
 
-                    html! {
-                        <tr>
-                            <td>
-                                {{
-                                    format!(
-                                        "{:04}-{:02}-{:02} {:02}:{:02}",
-                                        local_time.year(),
-                                        local_time.month(),
-                                        local_time.day(),
-                                        local_time.hour(),
-                                        local_time.minute(),
-                                    )
-                                }}
-                            </td>
-                            <td class="has-text-centered">{{ events }}</td>
-                            <td class="has-text-centered">
-                                <span class="icon is-small">
-                                    <i class={ icon.to_string() }></i>
+                let download_cb =
+                    cloned_link.callback(move |_| Msg::DownloadWorld(id, world.clone()));
+
+                html! {
+                    <tr>
+                        <td>
+                            {{
+                                format!(
+                                    "{:04}-{:02}-{:02} {:02}:{:02}",
+                                    local_time.year(),
+                                    local_time.month(),
+                                    local_time.day(),
+                                    local_time.hour(),
+                                    local_time.minute(),
+                                )
+                            }}
+                        </td>
+                        <td class="has-text-centered">{{ events }}</td>
+                        <td class="has-text-centered">
+                            <span class="icon is-small">
+                                <i class={ icon.to_string() }></i>
+                            </span>
+                        </td>
+                        <td class="has-text-centered">
+                            <button class="button is-small is-info is-outlined mr-1">
+                                <span class="icon">
+                                    <i class="fas fa-sign-in-alt" onclick={restore_cb}></i>
                                 </span>
-                            </td>
-                            <td class="has-text-centered">
-                                <button class="button is-small is-info is-outlined mr-1">
-                                    <span class="icon">
-                                        <i class="fas fa-sign-in-alt" onclick={restore_cb}></i>
-                                    </span>
-                                </button>
-                                <button class="button is-small is-danger is-outlined ml-1">
-                                    <span class="icon">
-                                        <i class="fas fa-trash-alt" onclick={delete_cb}></i>
-                                    </span>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                };
+                            </button>
+                            <button class="button is-small is-info is-outlined mr-1 ml-1">
+                                <span class="icon">
+                                    <i class="fas fa-download" onclick={download_cb}></i>
+                                </span>
+                            </button>
+                            <button class="button is-small is-danger is-outlined ml-1">
+                                <span class="icon">
+                                    <i class="fas fa-trash-alt" onclick={delete_cb}></i>
+                                </span>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            };
 
             let last_stories = translations::get_message_global("last_stories", &lang, None);
             html! {
@@ -219,12 +264,13 @@ impl Component for Intro {
                       <table class="table is-bordered">
                         {
                             for self.worlds.iter().map(
-                                |(time, events, character, fixed_character, id)|
-                                render_stored_world(*time, events, character.clone(), *fixed_character, *id)
+                                |(time, events, character, fixed_character, id, world)|
+                                render_stored_world(*time, events, character.clone(), *fixed_character, *id, world.to_owned())
                             )
                         }
                       </table>
                     </div>
+                    <a style="display:none" ref={self.link_ref.clone()}></a>
                 </div>
             }
         } else {
@@ -288,6 +334,7 @@ impl Component for Intro {
     fn create(ctx: &Context<Self>) -> Self {
         Intro::update_worlds(ctx.props().name.clone(), ctx.link().clone());
         Self {
+            link_ref: NodeRef::default(),
             qr_scanner_character_callback: Rc::new(RefCell::new(None)),
             worlds: vec![],
         }
@@ -304,7 +351,7 @@ impl Intro {
                         .into_iter()
                         .filter_map(|(last, id, character, fixed_character, data)| {
                             let count = data["event_count"].as_u64()?;
-                            Some((last, count as usize, character, fixed_character, id))
+                            Some((last, count as usize, character, fixed_character, id, data))
                         })
                         .collect(),
                 ),
