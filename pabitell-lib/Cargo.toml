@@ -47,6 +47,8 @@ features = [
 	"ConstrainBooleanParameters",
 	"DisplayMediaStreamConstraints",
 	"Document",
+	"FileList",
+	"FileReader",
 	"ImageData",
 	"OrientationLockType",
 	"MediaDevices",

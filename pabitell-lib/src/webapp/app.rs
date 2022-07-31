@@ -17,7 +17,7 @@ use crate::{
         actions::{Actions, Msg as ActionsMsg},
         character_switch::CharacterSwitch,
         characters, database,
-        intro::Intro,
+        intro::{FailedLoadState, Intro},
         items::Item,
         language_switch::LanguageSwitch,
         message::{Kind as MessageKind, MessageItem},
@@ -59,6 +59,8 @@ pub enum Msg {
     ShowPrint(bool),
     ScreenOrientationLocked(Option<JsValue>),
     SetLanguage(String),
+    LoadWorld(Value),
+    SetFailedLoadState(FailedLoadState),
 }
 
 pub struct App {
@@ -83,6 +85,7 @@ pub struct App {
     event_count: usize,
     ws_status: WsStatus,
     ws_request_failed: bool,
+    load_failed: Option<FailedLoadState>,
 }
 
 #[derive(Properties, Default)]
@@ -163,6 +166,7 @@ impl Component for App {
             ws_status: WsStatus::default(),
             ws_request_failed: false,
             lang,
+            load_failed: None,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -243,6 +247,7 @@ impl Component for App {
             Msg::TriggerRestoreCharacter(character, fixed_character, world_id) => {
                 // check whether character exists in the world
                 let world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
+                self.load_failed = None;
 
                 // update charactes
                 storage::LocalStorage::set(
@@ -356,6 +361,7 @@ impl Component for App {
             Msg::CreateNewWorld => {
                 self.fixed_character = false;
                 let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
+                self.load_failed = None;
                 world.setup();
                 let name = ctx.props().name.clone();
                 let link = ctx.link().clone();
@@ -790,6 +796,38 @@ impl Component for App {
 
                 true
             }
+            Msg::LoadWorld(world_json) => {
+                self.fixed_character = false;
+                self.load_failed = None;
+                let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
+                if world.load(world_json).is_ok() {
+                    let name = ctx.props().name.clone();
+                    let link = ctx.link().clone();
+                    spawn_local(async move {
+                        let db = database::init_database(&name).await;
+                        database::put_world(
+                            &db,
+                            world.id(),
+                            "narrator".to_string(),
+                            false,
+                            world.dump(),
+                            true,
+                        )
+                        .await
+                        .unwrap();
+                        link.send_message(Msg::WsConnect(world.id().to_owned()));
+                        link.send_message(Msg::WorldUpdateFetched(world, true))
+                    });
+                } else {
+                    ctx.link()
+                        .send_message(Msg::SetFailedLoadState(FailedLoadState::WrongJson));
+                }
+                true
+            }
+            Msg::SetFailedLoadState(state) => {
+                self.load_failed = Some(state);
+                true
+            }
         }
     }
 
@@ -977,6 +1015,8 @@ impl Component for App {
 
             let world = props.make_world.as_ref().unwrap()(&self.lang);
             let available_characters = props.make_characters.as_ref().unwrap()(world.as_ref());
+            let load_failed_cb = link.callback(|state| Msg::SetFailedLoadState(state));
+            let try_load_world_cb = link.callback(|json_world| Msg::LoadWorld(json_world));
             html! {
                 <>
                     <Intro
@@ -990,7 +1030,9 @@ impl Component for App {
                         story_detail={world.description().long(world.as_ref())}
                         character_scanned={character_scanned_cb}
                         show_print={show_print_cb}
-
+                        load_failed={self.load_failed.clone()}
+                        {load_failed_cb}
+                        {try_load_world_cb}
                     />
                     { loading }
                 </>

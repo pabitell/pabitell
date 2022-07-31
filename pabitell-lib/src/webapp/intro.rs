@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::spawn_local;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
 use yew::{html, prelude::*, NodeRef};
 
 use super::{
@@ -14,14 +14,23 @@ use super::{
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
 
-use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, Url};
+use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, HtmlInputElement, Url};
 
 use crate::translations;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum FailedLoadState {
+    WrongJson,
+    NotJson,
+}
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
     pub new_world: Callback<()>,
     pub show_print: Callback<bool>,
+    pub try_load_world_cb: Callback<Value>,
+    pub load_failed_cb: Callback<FailedLoadState>,
+    pub load_failed: Option<FailedLoadState>,
     pub set_language: Callback<String>,
     pub languages: Rc<Vec<String>>,
     pub name: String,
@@ -34,6 +43,7 @@ pub struct Props {
 
 pub enum Msg {
     NewWorld,
+    LoadWorld(Value),
     QRCodeScanShow,
     QRCodeScanned(String),
     ShowPrint,
@@ -42,10 +52,14 @@ pub enum Msg {
     WorldPicked(Uuid, String, bool),
     SetLanguage(String),
     DownloadWorld(Uuid, Value),
+    ShowUpload,
+    FileChanged,
+    FileReadFailed,
 }
 
 pub struct Intro {
     pub link_ref: NodeRef,
+    pub file_ref: NodeRef,
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
     pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value)>,
 }
@@ -176,6 +190,37 @@ impl Component for Intro {
                 Url::revoke_object_url(&url).unwrap();
                 false
             }
+            Msg::LoadWorld(world) => {
+                ctx.props().try_load_world_cb.emit(world);
+                true
+            }
+            Msg::ShowUpload => {
+                let link = self.file_ref.cast::<HtmlInputElement>().unwrap();
+                link.click();
+                false
+            }
+            Msg::FileChanged => {
+                let link = self.file_ref.cast::<HtmlInputElement>().unwrap();
+                let files = link.files().unwrap();
+                if files.length() == 0 {
+                    return false;
+                }
+                let file = link.files().unwrap().item(0).unwrap();
+                let promise = file.text();
+                ctx.link().send_future(async move {
+                    if let Ok(value) = JsFuture::from(promise).await {
+                        if let Ok(data) = serde_json::from_str(&value.as_string().unwrap()) {
+                            return Msg::LoadWorld(data);
+                        }
+                    }
+                    Msg::FileReadFailed
+                });
+                false
+            }
+            Msg::FileReadFailed => {
+                ctx.props().load_failed_cb.emit(FailedLoadState::NotJson);
+                true
+            }
         }
     }
 
@@ -190,6 +235,9 @@ impl Component for Intro {
         let new_world_cb = link.callback(|_| Msg::NewWorld);
         let show_qr_cb = link.callback(|_| Msg::QRCodeScanShow);
         let set_language_cb = link.callback(Msg::SetLanguage);
+
+        let show_upload_cb = link.callback(|_| Msg::ShowUpload);
+        let file_picked_cb = link.callback(|_| Msg::FileChanged);
 
         let table = if !self.worlds.is_empty() {
             let characters: HashMap<String, _> = props
@@ -277,6 +325,33 @@ impl Component for Intro {
             html! {}
         };
 
+        let wrong_json = translations::get_message_global("wrong_json", &lang, None);
+        let not_json = translations::get_message_global("not_json", &lang, None);
+
+        let load_error = match ctx.props().load_failed {
+            Some(FailedLoadState::WrongJson) => {
+                html! {
+                    <div class="notification is-danger">
+                        <span class="icon">
+                            <i class="fas fa-exclamation"></i>
+                        </span>
+                        <span>{ wrong_json }</span>
+                    </div>
+                }
+            }
+            Some(FailedLoadState::NotJson) => {
+                html! {
+                    <div class="notification is-danger is-light">
+                        <span class="icon">
+                            <i class="fas fa-exclamation"></i>
+                        </span>
+                        <span>{ not_json }</span>
+                    </div>
+                }
+            }
+            None => html! {},
+        };
+
         html! {
             <div class="modal is-active">
                 <div class="modal-background"></div>
@@ -305,23 +380,44 @@ impl Component for Intro {
                         {table}
                     </section>
                     <footer class="modal-card-foot is-justify-content-center">
-                        <button class="button is-medium is-success is-outlined">
-                            <span class="icon">
-                                <i class="fas fa-plus-circle" onclick={new_world_cb}></i>
-                            </span>
-                        </button>
-                        <button class="button is-medium is-info is-outlined">
-                            <span class="icon">
-                                <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
-                            </span>
-                        </button>
-                        <button class="button is-medium is-outlined is-dark is-hidden-touch" onclick={show_print_cb}>
-                            <span class="icon">
-                                <i class="fas fa-print"></i>
-                            </span>
-                        </button>
+                        <div class="content">
+                        <div class="columns">
+                            <div class="column is-justify-content-center is-flex">
+                                <button class="button is-medium is-success is-outlined mx-1">
+                                    <span class="icon">
+                                        <i class="fas fa-plus-circle" onclick={new_world_cb}></i>
+                                    </span>
+                                </button>
+                                <button class="button is-medium is-info is-outlined mx-1">
+                                    <span class="icon">
+                                        <i class="fas fa-upload" onclick={show_upload_cb}></i>
+                                    </span>
+                                </button>
+                                <button class="button is-medium is-info is-outlined mx-1">
+                                    <span class="icon">
+                                        <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
+                                    </span>
+                                </button>
+                                <button class="button is-medium is-outlined mx-1 is-dark is-hidden-touch" onclick={show_print_cb}>
+                                    <span class="icon">
+                                        <i class="fas fa-print"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="columns">
+                            <div class="column is-size-7">{ load_error }</div>
+                        </div>
+                        </div>
                     </footer>
                 </div>
+                <input
+                  type="file"
+                  ref={self.file_ref.clone()}
+                  style="display:none"
+                  onchange={file_picked_cb}
+                  accepts="application/json"
+                />
             </div>
         }
     }
@@ -335,6 +431,7 @@ impl Component for Intro {
         Intro::update_worlds(ctx.props().name.clone(), ctx.link().clone());
         Self {
             link_ref: NodeRef::default(),
+            file_ref: NodeRef::default(),
             qr_scanner_character_callback: Rc::new(RefCell::new(None)),
             worlds: vec![],
         }

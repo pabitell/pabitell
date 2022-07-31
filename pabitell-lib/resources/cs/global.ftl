@@ -8,3 +8,5 @@ last_stories = Poslední příběhy
 no_camera = Vybraná kamera není dostupná
 built_on = Sestaveno
 will_join_the_game = {$characterName} se připojí ke hře.
+not_json = Nahraný soubor není v JSON formátu.
+wrong_json = Formát nahraného souboru není platný.
