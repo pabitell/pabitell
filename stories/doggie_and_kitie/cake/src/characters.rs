@@ -1,16 +1,13 @@
 use anyhow::{anyhow, Result};
 use pabitell_lib::{AsAny, Character, Description, Dumpable, Named, Tagged};
 use serde_json::{json, Value};
-use std::any::Any;
+use std::{any::Any, collections::HashSet};
 
 #[derive(Debug, Default)]
 pub struct Kitie {
     scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
-    pub consumed_pie: bool,
-    pub consumed_soup: bool,
-    pub consumed_dumplings: bool,
-    pub consumed_meat: bool,
+    pub consumed: HashSet<String>,
 }
 
 impl Tagged for Kitie {
@@ -38,15 +35,14 @@ impl AsAny for Kitie {
 
 impl Dumpable for Kitie {
     fn dump(&self) -> Value {
+        let mut consumed: Vec<String> = self.consumed.iter().map(|e| e.to_owned()).collect();
+        consumed.sort();
         json!(
             {
                 "name": self.name(),
                 "scene": self.scene,
                 "sand_cake_last": self.sand_cake_last, // last character to eat the sand cake
-                "consumed_pie": self.consumed_pie,
-                "consumed_soup": self.consumed_soup,
-                "consumed_dumplings": self.consumed_dumplings,
-                "consumed_meat": self.consumed_meat,
+                "consumed": consumed,
             }
         )
     }
@@ -64,26 +60,17 @@ impl Dumpable for Kitie {
             return Err(anyhow!("Wrong format of character '{}'", self.name()));
         }
 
-        if let Value::Bool(value) = data["consumed_pie"] {
-            self.consumed_pie = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_soup"] {
-            self.consumed_soup = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_dumplings"] {
-            self.consumed_dumplings = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_meat"] {
-            self.consumed_meat = value;
+        if let Value::Array(consumed) = &data["consumed"] {
+            self.consumed = consumed
+                .into_iter()
+                .map(|e| {
+                    if let Value::String(meal) = e {
+                        Ok(meal.to_string())
+                    } else {
+                        return Err(anyhow!("Wrong format of character '{}'", self.name()));
+                    }
+                })
+                .collect::<Result<HashSet<String>>>()?;
         } else {
             return Err(anyhow!("Wrong format of character '{}'", self.name()));
         }
@@ -104,7 +91,11 @@ impl Character for Kitie {
 
 impl Kitie {
     pub fn full(&self) -> bool {
-        self.consumed_meat && self.consumed_dumplings && self.consumed_soup && self.consumed_pie
+        self.consumed
+            == vec!["meat", "dumplings", "soup", "pie"]
+                .into_iter()
+                .map(|e| e.to_owned())
+                .collect()
     }
 }
 
@@ -112,10 +103,7 @@ impl Kitie {
 pub struct Doggie {
     scene: Option<String>,
     pub sand_cake_last: bool, // last character to eat the sand cake
-    pub consumed_pie: bool,
-    pub consumed_soup: bool,
-    pub consumed_dumplings: bool,
-    pub consumed_meat: bool,
+    pub consumed: HashSet<String>,
 }
 
 impl Tagged for Doggie {
@@ -143,15 +131,14 @@ impl AsAny for Doggie {
 
 impl Dumpable for Doggie {
     fn dump(&self) -> Value {
+        let mut consumed: Vec<String> = self.consumed.iter().map(|e| e.to_owned()).collect();
+        consumed.sort();
         json!(
             {
                 "name": self.name(),
                 "scene": self.scene,
                 "sand_cake_last": self.sand_cake_last, // last character to eat the sand cake
-                "consumed_pie": self.consumed_pie,
-                "consumed_soup": self.consumed_soup,
-                "consumed_dumplings": self.consumed_dumplings,
-                "consumed_meat": self.consumed_meat,
+                "consumed": consumed,
             }
         )
     }
@@ -169,26 +156,17 @@ impl Dumpable for Doggie {
             return Err(anyhow!("Wrong format of character '{}'", self.name()));
         }
 
-        if let Value::Bool(value) = data["consumed_pie"] {
-            self.consumed_pie = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_soup"] {
-            self.consumed_soup = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_dumplings"] {
-            self.consumed_dumplings = value;
-        } else {
-            return Err(anyhow!("Wrong format of character '{}'", self.name()));
-        }
-
-        if let Value::Bool(value) = data["consumed_meat"] {
-            self.consumed_meat = value;
+        if let Value::Array(consumed) = &data["consumed"] {
+            self.consumed = consumed
+                .into_iter()
+                .map(|e| {
+                    if let Value::String(meal) = e {
+                        Ok(meal.to_string())
+                    } else {
+                        return Err(anyhow!("Wrong format of character '{}'", self.name()));
+                    }
+                })
+                .collect::<Result<HashSet<String>>>()?;
         } else {
             return Err(anyhow!("Wrong format of character '{}'", self.name()));
         }
@@ -209,7 +187,11 @@ impl Character for Doggie {
 
 impl Doggie {
     pub fn full(&self) -> bool {
-        self.consumed_meat && self.consumed_dumplings && self.consumed_soup && self.consumed_pie
+        self.consumed
+            == vec!["meat", "dumplings", "soup", "pie"]
+                .into_iter()
+                .map(|e| e.to_owned())
+                .collect()
     }
 }
 

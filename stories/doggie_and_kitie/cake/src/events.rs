@@ -664,22 +664,14 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
             .as_any_mut();
 
         if let Some(kitie) = character.downcast_mut::<characters::Kitie>() {
-            match event.item() {
-                Some(i) if i == "meat" => kitie.consumed_meat = true,
-                Some(i) if i == "dumplings" => kitie.consumed_dumplings = true,
-                Some(i) if i == "soup" => kitie.consumed_soup = true,
-                Some(i) if i == "pie" => kitie.consumed_pie = true,
-                _ => unreachable!(),
+            if let Some(meal) = event.item() {
+                kitie.consumed.insert(meal.to_owned());
             }
         }
 
         if let Some(doggie) = character.downcast_mut::<characters::Doggie>() {
-            match event.item() {
-                Some(i) if i == "meat" => doggie.consumed_meat = true,
-                Some(i) if i == "dumplings" => doggie.consumed_dumplings = true,
-                Some(i) if i == "soup" => doggie.consumed_soup = true,
-                Some(i) if i == "pie" => doggie.consumed_pie = true,
-                _ => unreachable!(),
+            if let Some(meal) = event.item() {
+                doggie.consumed.insert(meal.to_owned());
             }
         }
 
@@ -730,8 +722,31 @@ pub fn make_eat_meal(void_data: data::VoidData) -> events::Void {
         if character.scene() != &Some("children_house".into()) {
             return false;
         }
+        let consumed_meals = match event.character() {
+            "doggie" => {
+                let doggie = character
+                    .as_any()
+                    .downcast_ref::<characters::Doggie>()
+                    .unwrap();
+                &doggie.consumed
+            }
+            "kitie" => {
+                let kitie = character
+                    .as_any()
+                    .downcast_ref::<characters::Kitie>()
+                    .unwrap();
+                &kitie.consumed
+            }
+            _ => {
+                return false;
+            }
+        };
         // item is meal
         if let Some(item) = event.item() {
+            if consumed_meals.contains(item) {
+                // Can't consume same meal twice
+                return false;
+            }
             world
                 .items()
                 .get(item)
