@@ -20,7 +20,7 @@ pub trait AsAny: Any {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub enum ItemState {
     Owned(String),
     InScene(String),
