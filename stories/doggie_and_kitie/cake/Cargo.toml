@@ -1,6 +1,6 @@
 [package]
 name = "doggie_and_kitie_cake"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Stepan Henek <stepan@henek.name>"]
 edition = "2021"
 description = "Interactive storytelling - doggie and kitie cake story"
