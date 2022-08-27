@@ -40,6 +40,6 @@ tracing-actix-web = "0.6"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "1.1", features = ["serde"] }
 
-# Stories
-doggie_and_kitie_cake = { path = "../stories/doggie_and_kitie/cake/", optional = true }
-doggie_and_kitie_doll = { path = "../stories/doggie_and_kitie/doll/", optional = true }
+# Stories (needs to be cloned in the same directory as this repo - too large for crates.io)
+doggie_and_kitie_cake = { path = "../../doggie_and_kitie-cake/", optional = true }
+doggie_and_kitie_doll = { path = "../../doggie_and_kitie-doll/", optional = true }

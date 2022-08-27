@@ -45,7 +45,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install stable wasm toolchain
         uses: actions-rs/toolchain@v1
@@ -71,60 +71,10 @@ jobs:
           name: pabitell-root
           path: pabitell-root/dist
 
-
-  build-stories:
-    name: Build stories
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - story_dir: doggie_and_kitie/cake
-            story_slug: doggie_and_kitie-cake
-          - story_dir: doggie_and_kitie/doll
-            story_slug: doggie_and_kitie-doll
-    defaults:
-      run:
-        working-directory: stories/${{ matrix.story_dir }}/
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@master
-        with:
-          submodules: true
-
-      - name: Install stable wasm toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-
-      - name: Install trunk to compile story
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --locked trunk
-
-      - name: Prepare the directory structure
-        run:
-          mkdir -p dist/${{ matrix.story_dir }}
-
-      - name: Build sources using trunk
-        run:
-          trunk build --release --public-url ${{ matrix.story_dir }} --dist dist/${{ matrix.story_dir }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{ matrix.story_slug }}
-          path: stories/${{ matrix.story_dir }}/dist
-
-
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: ['build-server', 'build-stories']
+    needs: ['build-server', 'build-root']
 
     steps:
       - name: Download pabitell-cli
@@ -137,18 +87,6 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: pabitell-root
-          path: pabitell-static
-
-      - name: Download doggie_and_kitie/cake story
-        uses: actions/download-artifact@v1
-        with:
-          name: doggie_and_kitie-cake
-          path: pabitell-static
-
-      - name: Download doggie_and_kitie/doll story
-        uses: actions/download-artifact@v1
-        with:
-          name: doggie_and_kitie-doll
           path: pabitell-static
 
       - name: Pack static
