@@ -26,13 +26,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: -p pabitell-cli --all-features --release
+          args: -p pabitell-webserver --all-features --release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: pabitell-cli
-          path: target/release/pabitell-cli
+          name: pabitell-webserver
+          path: target/release/pabitell-webserver
 
   build-root:
     name: Build web root
@@ -77,11 +77,11 @@ jobs:
     needs: ['build-server', 'build-root']
 
     steps:
-      - name: Download pabitell-cli
+      - name: Download pabitell-webserver
         uses: actions/download-artifact@v1
         with:
-          name: pabitell-cli
-          path: pabitell-cli
+          name: pabitell-webserver
+          path: pabitell-webserver
 
       - name: Download pabitell-root
         uses: actions/download-artifact@v1
@@ -125,6 +125,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: pabitell-cli/pabitell-cli
-          asset_name: pabitell-cli
+          asset_path: pabitell-webserver/pabitell-webserver
+          asset_name: pabitell-webserver
           asset_content_type: application/bin

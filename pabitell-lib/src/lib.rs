@@ -1,3 +1,5 @@
+#[cfg(feature = "with_cli")]
+pub mod cli;
 pub mod conditions;
 pub mod data;
 pub mod events;
@@ -229,7 +231,7 @@ where
 }
 
 pub trait World: Named + Dumpable {
-    fn available_languages(&self) -> Vec<&str>;
+    fn available_languages(&self) -> Vec<String>;
     fn lang(&self) -> &str;
     fn set_lang(&mut self, lang: &str) -> bool;
     fn description(&self) -> Box<dyn Description>;
@@ -599,8 +601,8 @@ pub mod test {
             true
         }
 
-        fn available_languages(&self) -> Vec<&str> {
-            vec!["en-US"]
+        fn available_languages(&self) -> Vec<String> {
+            vec!["en-US".to_string()]
         }
 
         fn setup(&mut self) {}

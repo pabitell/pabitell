@@ -1,6 +1,6 @@
 [package]
-name = "pabitell-cli"
-version = "0.2.0"
+name = "pabitell-webserver"
+version = "0.1.0"
 authors = ["Stepan Henek <stepan@henek.name>"]
 edition = "2021"
 description = "Interactive storytelling - CLI and web backend"
@@ -12,12 +12,6 @@ categories = ["games-engines", "web-programming"]
 
 [features]
 default = []
-with_doggie_and_kitie_cake = ["doggie_and_kitie_cake"]
-with_doggie_and_kitie_doll = ["doggie_and_kitie_doll"]
-with_doggie_and_kitie = [
-	"with_doggie_and_kitie_cake",
-	"with_doggie_and_kitie_doll",
-]
 
 [dependencies]
 actix = "0.13"
@@ -39,7 +33,3 @@ tracing = "0.1"
 tracing-actix-web = "0.6"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "1.1", features = ["serde"] }
-
-# Stories (needs to be cloned in the same directory as this repo - too large for crates.io)
-doggie_and_kitie_cake = { path = "../../doggie_and_kitie-cake/", optional = true }
-doggie_and_kitie_doll = { path = "../../doggie_and_kitie-doll/", optional = true }

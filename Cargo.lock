@@ -824,44 +824,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
-name = "doggie_and_kitie_cake"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "console_error_panic_hook",
- "fluent",
- "include_dir",
- "intl-memoizer",
- "lazy_static",
- "pabitell-lib 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde",
- "serde_json",
- "uuid",
- "wasm-logger",
- "wee_alloc",
- "yew",
-]
-
-[[package]]
-name = "doggie_and_kitie_doll"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "console_error_panic_hook",
- "fluent",
- "include_dir",
- "intl-memoizer",
- "lazy_static",
- "pabitell-lib 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde",
- "serde_json",
- "uuid",
- "wasm-logger",
- "wee_alloc",
- "yew",
-]
-
-[[package]]
 name = "either"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1824,93 +1786,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21326818e99cfe6ce1e524c2a805c189a99b5ae555a35d19f9a284b427d86afa"
 
 [[package]]
-name = "pabitell-cli"
+name = "pabitell-lib"
 version = "0.2.0"
 dependencies = [
- "actix",
- "actix-web",
- "actix-web-actors",
  "anyhow",
+ "base64",
+ "build-time",
+ "chrono",
  "clap 3.2.12",
- "doggie_and_kitie_cake",
- "doggie_and_kitie_doll",
+ "console_error_panic_hook",
+ "data-url",
+ "fluent",
  "futures",
+ "gloo 0.8.0",
+ "gloo-net",
+ "image 0.24.2",
+ "include_dir",
+ "intl-memoizer",
+ "js-sys",
  "lazy_static",
- "pabitell-lib 0.2.0",
- "rand",
+ "log",
+ "qrcode",
+ "rexie",
  "serde",
  "serde_json",
  "skim",
  "sled",
+ "stream-cancel",
  "term",
- "tokio",
- "tracing",
- "tracing-actix-web",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "pabitell-lib"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "base64",
- "build-time",
- "chrono",
- "console_error_panic_hook",
- "data-url",
- "fluent",
- "futures",
- "gloo 0.8.0",
- "gloo-net",
- "image 0.24.2",
- "include_dir",
- "intl-memoizer",
- "js-sys",
- "lazy_static",
- "log",
- "qrcode",
- "rexie",
- "serde",
- "serde_json",
- "stream-cancel",
- "unic-langid",
- "uuid",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-logger",
- "web-sys",
- "yew",
-]
-
-[[package]]
-name = "pabitell-lib"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "becdd299040f515880853826fa48632880dfbe5ba591e4ed2a6efbaaa3ce5a15"
-dependencies = [
- "anyhow",
- "base64",
- "build-time",
- "chrono",
- "console_error_panic_hook",
- "data-url",
- "fluent",
- "futures",
- "gloo 0.8.0",
- "gloo-net",
- "image 0.24.2",
- "include_dir",
- "intl-memoizer",
- "js-sys",
- "lazy_static",
- "log",
- "qrcode",
- "rexie",
- "serde",
- "serde_json",
- "stream-cancel",
  "unic-langid",
  "uuid",
  "wasm-bindgen",
@@ -1939,6 +1842,31 @@ dependencies = [
  "wasm-logger",
  "web-sys",
  "wee_alloc",
+]
+
+[[package]]
+name = "pabitell-webserver"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-web",
+ "actix-web-actors",
+ "anyhow",
+ "clap 3.2.12",
+ "futures",
+ "lazy_static",
+ "pabitell-lib",
+ "rand",
+ "serde",
+ "serde_json",
+ "skim",
+ "sled",
+ "term",
+ "tokio",
+ "tracing",
+ "tracing-actix-web",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

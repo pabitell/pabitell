@@ -1,22 +1,20 @@
+pub mod backend;
+pub mod cmdline;
+
 use anyhow::{anyhow, Result};
-use pabitell_lib::{Narrator, World};
 use skim::prelude::*;
 use sled::Db;
 use std::io::prelude::*;
 use term::color::{self, Color};
 use uuid::Uuid;
 
-use crate::backend;
-#[cfg(feature = "with_doggie_and_kitie_cake")]
-use crate::make_story_doggie_and_kitie_cake;
-#[cfg(feature = "with_doggie_and_kitie_doll")]
-use crate::make_story_doggie_and_kitie_doll;
+use crate::{Narrator, World};
 
 #[derive(Clone)]
-struct PabitellItem {
-    code: String,
-    short: String,
-    long: String,
+pub struct PabitellItem {
+    pub code: String,
+    pub short: String,
+    pub long: String,
 }
 
 fn println<S>(text_color: Color, text: S)
@@ -39,63 +37,6 @@ impl SkimItem for PabitellItem {
     }
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
         ItemPreview::AnsiText(self.long.clone())
-    }
-}
-
-fn select_story(lang: &str) -> Result<Option<PabitellItem>> {
-    let mut stories: Vec<PabitellItem> = vec![];
-
-    #[cfg(feature = "with_doggie_and_kitie_cake")]
-    {
-        let (mut world, _): (Box<dyn World>, Box<dyn Narrator>) =
-            make_story_doggie_and_kitie_cake(true)?.unwrap();
-        world.set_lang(lang);
-        let description = world.description();
-        stories.push(PabitellItem {
-            code: "doggie_and_kitie_cake".into(),
-            short: description.short(world.as_ref()),
-            long: description.long(world.as_ref()),
-        });
-    }
-
-    #[cfg(feature = "with_doggie_and_kitie_doll")]
-    {
-        let (mut world, _): (Box<dyn World>, Box<dyn Narrator>) =
-            make_story_doggie_and_kitie_doll(true)?.unwrap();
-        world.set_lang(lang);
-        let description = world.description();
-        stories.push(PabitellItem {
-            code: "doggie_and_kitie_doll".into(),
-            short: description.short(world.as_ref()),
-            long: description.long(world.as_ref()),
-        });
-    }
-
-    let options = SkimOptionsBuilder::default()
-        .height(Some("50%"))
-        .preview(Some(""))
-        .build()
-        .unwrap();
-
-    let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
-    for story in stories.into_iter() {
-        let _ = tx_item.send(Arc::new(story));
-    }
-    drop(tx_item); // so that skim could know when to stop waiting for more items.
-
-    let selected_items = Skim::run_with(&options, Some(rx_item))
-        .map(|out| out.selected_items)
-        .ok_or_else(|| anyhow!("Failed to choose"))?;
-    if selected_items.is_empty() {
-        Ok(None)
-    } else {
-        Ok(Some(
-            (*selected_items[0])
-                .as_any()
-                .downcast_ref::<PabitellItem>()
-                .unwrap()
-                .clone(),
-        ))
     }
 }
 
@@ -418,16 +359,14 @@ fn select_stored_world(db: &Db, story: &str) -> Result<Option<Uuid>> {
     }
 }
 
-pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
-    let story = select_story(default_lang)?.ok_or_else(|| anyhow!("No story picked"))?;
-    println(color::BRIGHT_MAGENTA, format!("story: {}", story.short));
-    let (mut world, narrator): (Box<dyn World>, Box<dyn Narrator>) = match story.code.as_str() {
-        #[cfg(feature = "with_doggie_and_kitie_cake")]
-        "doggie_and_kitie_cake" => make_story_doggie_and_kitie_cake(true)?.unwrap(),
-        #[cfg(feature = "with_doggie_and_kitie_doll")]
-        "doggie_and_kitie_doll" => make_story_doggie_and_kitie_doll(true)?.unwrap(),
-        _ => unreachable!(),
-    };
+pub fn start_cli_app<W, N, S>(db_path: &str, story: S, mut world: W, narrator: N) -> Result<()>
+where
+    W: World,
+    N: Narrator,
+    S: ToString,
+{
+    let story = story.to_string();
+
     let lang = select_language(
         world
             .available_languages()
@@ -436,6 +375,15 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
             .collect(),
     )
     .ok_or_else(|| anyhow!("no language selected"))?;
+
+    // Set up world
+    world.set_lang(&lang);
+    world.clean();
+    world.setup();
+
+    dbg!("LANG", world.lang());
+    dbg!("lang", &lang);
+
     println(color::BRIGHT_MAGENTA, format!("lang: {lang}"));
 
     let mut db = sled::open(db_path).unwrap();
@@ -446,7 +394,7 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
     let mut selected_scenes: Vec<PabitellItem> = vec![];
     loop {
         match state {
-            View::Menu => match main_menu(world.as_ref()) {
+            View::Menu => match main_menu(&world) {
                 Some(View::Items) => state = View::Items,
                 Some(View::Characters) => state = View::Characters,
                 Some(View::Scenes) => state = View::Scenes,
@@ -456,19 +404,19 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                 _ => break,
             },
             View::Characters => {
-                if let Some(characters) = select_characters(world.as_ref()) {
+                if let Some(characters) = select_characters(&world) {
                     selected_characters = characters;
                 }
                 state = View::Menu;
             }
             View::Scenes => {
-                if let Some(scenes) = select_scenes(world.as_ref()) {
+                if let Some(scenes) = select_scenes(&world) {
                     selected_scenes = scenes;
                 }
                 state = View::Menu;
             }
             View::Items => {
-                if let Some(items) = select_items(world.as_ref()) {
+                if let Some(items) = select_items(&world) {
                     selected_items = items;
                 }
                 state = View::Menu;
@@ -490,30 +438,27 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
                             .scenes()
                             .get(scene)
                             .ok_or_else(|| anyhow!("Failed to find a scene {}", scene))?;
-                        println(
-                            color::BRIGHT_GREEN,
-                            format!("\n{}\n\n", scene.long(world.as_ref())),
-                        );
+                        println(color::BRIGHT_GREEN, format!("\n{}\n\n", scene.long(&world)));
                     }
                 }
-                if let Some(events) = select_event(world.as_mut(), narrator.as_ref()) {
+                if let Some(events) = select_event(&mut world, &narrator) {
                     if !events.is_empty() {
                         let idx = events[0].idx;
-                        let mut events = narrator.available_events_sorted(world.as_ref());
-                        if events[idx].can_be_triggered(world.as_ref()) {
+                        let mut events = narrator.available_events_sorted(&world);
+                        if events[idx].can_be_triggered(&world) {
                             println(
                                 color::BRIGHT_CYAN,
                                 format!(
                                     "{}. {}",
                                     world.event_count() + 1,
-                                    events[idx].success_text(world.as_ref())
+                                    events[idx].success_text(&world)
                                 ),
                             );
                         } else {
-                            println(color::BRIGHT_RED, events[idx].fail_text(world.as_ref()));
+                            println(color::BRIGHT_RED, events[idx].fail_text(&world));
                         }
-                        events[idx].trigger(world.as_mut());
-                        backend::store(&mut db, &story.code, world.as_ref()).unwrap();
+                        events[idx].trigger(&mut world);
+                        backend::store(&mut db, &story, &world).unwrap();
                         continue;
                     }
                 }
@@ -535,8 +480,8 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
             }
             View::Delete => {
                 println(color::BRIGHT_MAGENTA, "Deleting world");
-                if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
-                    backend::delete(&mut db, &story.code, &uuid).unwrap();
+                if let Some(uuid) = select_stored_world(&db, &story).unwrap() {
+                    backend::delete(&mut db, &story, &uuid).unwrap();
                     println(
                         color::BRIGHT_MAGENTA,
                         format!("World '{}' was deleted", uuid),
@@ -548,8 +493,8 @@ pub fn start_cli_app(default_lang: &str, db_path: &str) -> Result<()> {
             }
             View::Load => {
                 println(color::BRIGHT_MAGENTA, "Loading world");
-                if let Some(uuid) = select_stored_world(&db, &story.code).unwrap() {
-                    if let Err(error) = backend::load(&db, &story.code, &uuid, world.as_mut()) {
+                if let Some(uuid) = select_stored_world(&db, &story).unwrap() {
+                    if let Err(error) = backend::load(&db, &story, &uuid, &mut world) {
                         println(
                             color::BRIGHT_RED,
                             format!("Failed to load world '{}': {}", uuid, error),

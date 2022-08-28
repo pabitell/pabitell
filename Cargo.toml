@@ -2,7 +2,7 @@
 
 members = [
 	"pabitell-lib",
-	"pabitell-cli",
+	"pabitell-webserver",
 	"pabitell-root",
 ]
 
