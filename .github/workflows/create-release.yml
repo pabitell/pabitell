@@ -34,47 +34,11 @@ jobs:
           name: pabitell-webserver
           path: target/release/pabitell-webserver
 
-  build-root:
-    name: Build web root
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: pabitell-root
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@master
-        with:
-          submodules: recursive
-
-      - name: Install stable wasm toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-
-      - name: Install trunk to compile pabitell-root
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --locked trunk
-
-      - name: Build pabitell-root
-        run:
-          trunk build --release
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: pabitell-root
-          path: pabitell-root/dist
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: ['build-server', 'build-root']
+    needs: ['build-server']
 
     steps:
       - name: Download pabitell-webserver
@@ -82,16 +46,6 @@ jobs:
         with:
           name: pabitell-webserver
           path: pabitell-webserver
-
-      - name: Download pabitell-root
-        uses: actions/download-artifact@v1
-        with:
-          name: pabitell-root
-          path: pabitell-static
-
-      - name: Pack static
-        run:
-          tar czf pabitell-static.tar.gz pabitell-static
 
       - name: Get description
         id: get_description
@@ -108,16 +62,6 @@ jobs:
           body: "${{ steps.get_description.outputs.description }}"
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: pabitell-static.tar.gz
-          asset_name: pabitell-static.tar.gz
-          asset_content_type: application/bin
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1.0.1
