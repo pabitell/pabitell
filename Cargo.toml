@@ -3,7 +3,6 @@
 members = [
 	"pabitell-lib",
 	"pabitell-webserver",
-	"pabitell-root",
 ]
 
 default-members = [
