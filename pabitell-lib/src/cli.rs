@@ -381,9 +381,6 @@ where
     world.clean();
     world.setup();
 
-    dbg!("LANG", world.lang());
-    dbg!("lang", &lang);
-
     println(color::BRIGHT_MAGENTA, format!("lang: {lang}"));
 
     let mut db = sled::open(db_path).unwrap();
