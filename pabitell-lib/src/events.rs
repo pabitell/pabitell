@@ -6,7 +6,7 @@ use std::{any::Any, fmt};
 
 pub type WorldUpdate = Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
 pub type Condition = Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>;
-pub type Text = Option<Box<dyn Fn(&dyn Any, &dyn World) -> String>>;
+pub type Text = Option<Box<dyn Fn(&dyn Event, &dyn World) -> String>>;
 
 #[derive(Default)]
 pub struct Pick {
@@ -15,9 +15,6 @@ pub struct Pick {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for Pick {
@@ -79,36 +76,12 @@ impl Event for Pick {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -127,6 +100,10 @@ impl Event for Pick {
 
     fn characters(&self) -> Vec<String> {
         vec![self.character().to_string()]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!("{}-{}_{}", world.name(), self.character(), self.name(),)
     }
 }
 
@@ -158,9 +135,6 @@ pub struct Give {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for Give {
@@ -223,36 +197,12 @@ impl Event for Give {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -274,6 +224,16 @@ impl Event for Give {
             self.from_character().to_string(),
             self.to_character().to_string(),
         ]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!(
+            "{}-{}_give_{}_to_{}",
+            world.name(),
+            self.from_character(),
+            self.item(),
+            self.to_character(),
+        )
     }
 }
 
@@ -309,9 +269,6 @@ pub struct UseItem {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for UseItem {
@@ -373,35 +330,12 @@ impl Event for UseItem {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -420,6 +354,10 @@ impl Event for UseItem {
 
     fn characters(&self) -> Vec<String> {
         vec![self.character().to_string()]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!("{}-{}_{}", world.name(), self.character(), self.name(),)
     }
 }
 
@@ -451,9 +389,6 @@ pub struct Move {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for Move {
@@ -515,35 +450,12 @@ impl Event for Move {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -562,6 +474,10 @@ impl Event for Move {
 
     fn characters(&self) -> Vec<String> {
         vec![self.character().to_string()]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!("{}-{}_{}", world.name(), self.character(), self.name(),)
     }
 }
 
@@ -593,9 +509,6 @@ pub struct Void {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for Void {
@@ -657,35 +570,12 @@ impl Event for Void {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -708,6 +598,16 @@ impl Event for Void {
 
     fn characters(&self) -> Vec<String> {
         vec![self.character().to_string()]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!(
+            "{}-{}_{}_{}",
+            world.name(),
+            self.character(),
+            self.name(),
+            self.item().clone().unwrap_or_default(),
+        )
     }
 }
 
@@ -739,9 +639,6 @@ pub struct Talk {
     tags: Vec<String>,
     world_update: WorldUpdate,
     condition: Condition,
-    make_action_text: Text,
-    make_success_text: Text,
-    make_fail_text: Text,
 }
 
 impl fmt::Debug for Talk {
@@ -804,35 +701,12 @@ impl Event for Talk {
         self.condition = condition;
     }
 
-    fn set_make_action_text(&mut self, text: Text) {
-        self.make_action_text = text;
-    }
-
-    fn set_make_success_text(&mut self, text: Text) {
-        self.make_success_text = text;
-    }
-    fn set_make_fail_text(&mut self, text: Text) {
-        self.make_fail_text = text;
-    }
-
     fn get_world_update(&self) -> &WorldUpdate {
         &self.world_update
     }
 
     fn get_condition(&self) -> &Condition {
         &self.condition
-    }
-
-    fn get_make_action_text(&self) -> &Text {
-        &self.make_action_text
-    }
-
-    fn get_make_success_text(&self) -> &Text {
-        &self.make_success_text
-    }
-
-    fn get_make_fail_text(&self) -> &Text {
-        &self.make_fail_text
     }
 
     fn dump(&self) -> serde_json::Value {
@@ -851,6 +725,16 @@ impl Event for Talk {
 
     fn characters(&self) -> Vec<String> {
         vec![self.character().to_string()]
+    }
+
+    fn msg_base(&self, world: &dyn World) -> String {
+        format!(
+            "{}-{}_{}_says-{}",
+            world.name(),
+            self.scene(),
+            self.character(),
+            self.dialog()
+        )
     }
 }
 
