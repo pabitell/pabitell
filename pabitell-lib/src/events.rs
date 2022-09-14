@@ -1,11 +1,11 @@
 use crate::{
     conditions::Condition,
     data::{self, EventData},
+    updates::Change,
     AsAny, Event, Tagged, World,
 };
 use std::{any::Any, fmt};
 
-pub type WorldUpdate = Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
 pub type Text = Option<Box<dyn Fn(&dyn Event, &dyn World) -> String>>;
 
 #[derive(Default)]
@@ -13,7 +13,7 @@ pub struct Pick {
     name: String,
     data: data::PickData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -68,16 +68,16 @@ impl Event for Pick {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {
@@ -133,7 +133,7 @@ pub struct Give {
     name: String,
     data: data::GiveData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -189,16 +189,16 @@ impl Event for Give {
         self.data.set_initiator(initiator);
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {
@@ -267,7 +267,7 @@ pub struct UseItem {
     name: String,
     data: data::UseItemData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -322,16 +322,16 @@ impl Event for UseItem {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {
@@ -387,7 +387,7 @@ pub struct Move {
     name: String,
     data: data::MoveData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -442,16 +442,16 @@ impl Event for Move {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {
@@ -507,7 +507,7 @@ pub struct Void {
     name: String,
     data: data::VoidData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -562,16 +562,16 @@ impl Event for Void {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {
@@ -637,7 +637,7 @@ pub struct Talk {
     name: String,
     data: data::TalkData,
     tags: Vec<String>,
-    world_update: WorldUpdate,
+    world_updates: Vec<Box<dyn Change>>,
     condition: Condition,
 }
 
@@ -693,16 +693,16 @@ impl Event for Talk {
         self.data.set_initiator(initiator)
     }
 
-    fn set_world_update(&mut self, update: WorldUpdate) {
-        self.world_update = update;
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn Change>>) {
+        self.world_updates = updates;
     }
 
     fn set_condition(&mut self, condition: Condition) {
         self.condition = condition;
     }
 
-    fn get_world_update(&self) -> &WorldUpdate {
-        &self.world_update
+    fn get_world_updates(&self) -> &[Box<dyn Change>] {
+        &self.world_updates
     }
 
     fn get_condition(&self) -> &Condition {

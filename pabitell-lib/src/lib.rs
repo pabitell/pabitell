@@ -137,15 +137,15 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
         self.get_condition().check(world).unwrap()
     }
     fn trigger(&mut self, world: &mut dyn World) {
-        if let Some(world_update) = self.get_world_update().as_ref() {
-            (world_update)(self.as_any(), world);
-            world.event_inc();
+        for update in self.get_world_updates() {
+            update.change(world).unwrap();
             for item in self.items() {
                 let last_event = world.event_count();
                 let item = world.items_mut().get_mut(&item).unwrap();
                 item.set_last_event(last_event);
             }
         }
+        world.event_inc();
     }
     fn perform(&mut self, world: &mut dyn World) -> bool {
         if self.can_be_triggered(world) {
@@ -167,14 +167,14 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
         let msg = format!("{}-fail", self.msg_base(world));
         world.get_message(&msg, None)
     }
-    fn set_world_update(&mut self, update: events::WorldUpdate);
+    fn set_world_updates(&mut self, updates: Vec<Box<dyn updates::Change>>);
     fn set_condition(&mut self, condition: conditions::Condition);
 
     fn msg_base(&self, world: &dyn World) -> String {
         format!("{}-{}", world.name(), self.name())
     }
 
-    fn get_world_update(&self) -> &events::WorldUpdate;
+    fn get_world_updates(&self) -> &[Box<dyn updates::Change>];
     fn get_condition(&self) -> &conditions::Condition;
 
     fn initiator(&self) -> String;
@@ -275,8 +275,8 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        conditions, AsAny, Character, Description, Dumpable, Event, Item, ItemState, Music, Named,
-        Scene, Tagged, World, WorldBuilder,
+        conditions, updates, AsAny, Character, Description, Dumpable, Event, Item, ItemState,
+        Music, Named, Scene, Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
     use std::{any::Any, collections::HashMap};
@@ -481,10 +481,10 @@ pub mod test {
             "fail".into()
         }
 
-        fn set_world_update(&mut self, _update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {}
+        fn set_world_updates(&mut self, _updates: Vec<Box<dyn updates::Change>>) {}
         fn set_condition(&mut self, _condition: conditions::Condition) {}
-        fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
-            &None
+        fn get_world_updates(&self) -> &[Box<dyn updates::Change>] {
+            &[]
         }
         fn get_condition(&self) -> &conditions::Condition {
             &self.condition
