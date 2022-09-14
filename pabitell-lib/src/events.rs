@@ -1,11 +1,11 @@
 use crate::{
+    conditions::Condition,
     data::{self, EventData},
     AsAny, Event, Tagged, World,
 };
 use std::{any::Any, fmt};
 
 pub type WorldUpdate = Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>;
-pub type Condition = Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>;
 pub type Text = Option<Box<dyn Fn(&dyn Event, &dyn World) -> String>>;
 
 #[derive(Default)]

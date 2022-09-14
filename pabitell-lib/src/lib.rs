@@ -17,6 +17,8 @@ use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, fmt};
 use uuid::Uuid;
 
+use conditions::Check;
+
 pub trait AsAny: Any {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -132,11 +134,7 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
     }
     fn name(&self) -> &str;
     fn can_be_triggered(&self, world: &dyn World) -> bool {
-        if let Some(condition) = self.get_condition().as_ref() {
-            (condition)(self.as_any(), world)
-        } else {
-            true
-        }
+        self.get_condition().check(world).unwrap()
     }
     fn trigger(&mut self, world: &mut dyn World) {
         if let Some(world_update) = self.get_world_update().as_ref() {
@@ -170,14 +168,14 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
         world.get_message(&msg, None)
     }
     fn set_world_update(&mut self, update: events::WorldUpdate);
-    fn set_condition(&mut self, condition: events::Condition);
+    fn set_condition(&mut self, condition: conditions::Condition);
 
     fn msg_base(&self, world: &dyn World) -> String {
         format!("{}-{}", world.name(), self.name())
     }
 
     fn get_world_update(&self) -> &events::WorldUpdate;
-    fn get_condition(&self) -> &events::Condition;
+    fn get_condition(&self) -> &conditions::Condition;
 
     fn initiator(&self) -> String;
     fn set_initiator(&mut self, initiator: String);
@@ -277,8 +275,8 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        AsAny, Character, Description, Dumpable, Event, Item, ItemState, Music, Named, Scene,
-        Tagged, World, WorldBuilder,
+        conditions, AsAny, Character, Description, Dumpable, Event, Item, ItemState, Music, Named,
+        Scene, Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
     use std::{any::Any, collections::HashMap};
@@ -439,6 +437,7 @@ pub mod test {
     struct TestEvent {
         #[allow(dead_code)]
         description: TestDescription,
+        condition: conditions::Condition,
     }
     impl Tagged for TestEvent {}
     impl Named for TestEvent {
@@ -483,13 +482,12 @@ pub mod test {
         }
 
         fn set_world_update(&mut self, _update: Option<Box<dyn Fn(&dyn Any, &mut dyn World)>>) {}
-        fn set_condition(&mut self, _condition: Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>>) {
-        }
+        fn set_condition(&mut self, _condition: conditions::Condition) {}
         fn get_world_update(&self) -> &Option<Box<dyn Fn(&dyn Any, &mut dyn World)>> {
             &None
         }
-        fn get_condition(&self) -> &Option<Box<dyn Fn(&dyn Any, &dyn World) -> bool>> {
-            &None
+        fn get_condition(&self) -> &conditions::Condition {
+            &self.condition
         }
 
         fn initiator(&self) -> String {
