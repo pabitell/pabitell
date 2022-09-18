@@ -17,6 +17,8 @@ pub enum NotificationMessage {
     Event(EventNotification),
     /// Character joined
     Joined(JoinedNotification),
+    /// World was reseted
+    WorldReset,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

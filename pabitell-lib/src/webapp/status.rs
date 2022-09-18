@@ -5,9 +5,11 @@ pub struct Props {
     pub connect_ws: Callback<()>,
     pub refresh_world: Callback<()>,
     pub reset_world: Callback<()>,
+    pub leave_world: Callback<()>,
     pub event_count: usize,
     pub status: WsStatus,
     pub ws_request_failed: bool,
+    pub can_reset: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -48,6 +50,7 @@ pub enum Msg {
     Connect,
     RefreshWorld,
     ResetWorld,
+    LeaveWorld,
 }
 
 impl Component for Status {
@@ -61,6 +64,9 @@ impl Component for Status {
             }
             Msg::RefreshWorld => {
                 ctx.props().refresh_world.emit(());
+            }
+            Msg::LeaveWorld => {
+                ctx.props().leave_world.emit(());
             }
             Msg::ResetWorld => {
                 ctx.props().reset_world.emit(());
@@ -78,7 +84,20 @@ impl Component for Status {
         let onclick = link.callback(|_| Msg::Connect);
 
         let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
-        let reset_world_cb = link.callback(|_| Msg::ResetWorld);
+        let leave_world_cb = link.callback(|_| Msg::LeaveWorld);
+
+        let reset_part = if ctx.props().can_reset {
+            let reset_world_cb = link.callback(|_| Msg::ResetWorld);
+            html! {
+                <button class="button is-outlined is-medium" onclick={reset_world_cb}>
+                    <span class="icon has-text-danger">
+                        <i class="fas fa-redo"></i>
+                    </span>
+                </button>
+            }
+        } else {
+            html! {}
+        };
 
         let status_part = if !ctx.props().ws_request_failed {
             html! {
@@ -109,11 +128,12 @@ impl Component for Status {
                     </span>
                 </button>
                 { status_part }
-                <button class="button is-outlined is-medium" onclick={reset_world_cb}>
+                <button class="button is-outlined is-medium" onclick={leave_world_cb}>
                     <span class="icon has-text-danger">
                         <i class="fas fa-sign-out-alt"></i>
                     </span>
                 </button>
+                { reset_part }
             </>
         }
     }

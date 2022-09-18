@@ -44,6 +44,7 @@ pub enum Msg {
     TriggerEventData(Value),
     TriggerRestoreCharacter(Option<String>, bool, Uuid),
     PlayText(String),
+    Leave,
     Reset,
     CreateNewWorld,
     WorldUpdateFetched(Box<dyn World>, bool),
@@ -52,6 +53,7 @@ pub enum Msg {
     WsMessageRecieved(String),
     WsGetWorld(Uuid),
     WsTriggerEvent(Uuid, Value),
+    WsNotifyResetWorld,
     WsFailed,
     WsConnect(Uuid),
     WsStatusUpdate(WsStatus),
@@ -318,7 +320,7 @@ impl Component for App {
                 }
                 false
             }
-            Msg::Reset => {
+            Msg::Leave => {
                 self.world = None;
                 storage::LocalStorage::delete("world_id");
                 storage::LocalStorage::delete("fixed_character");
@@ -329,16 +331,49 @@ impl Component for App {
 
                 // Disconnect from WS
                 ctx.link().send_message(Msg::WsDisconnect);
-                // Reset picked character
+                // clear picked character
                 self.character = Rc::new(None);
-                // Reset owned flag
+                // clear owned flag
                 self.owned = None;
 
-                // Clear loding state
+                // clear loding state
                 *self.loading.borrow_mut() = false;
                 self.ws_request_failed = false;
 
                 true
+            }
+            Msg::Reset => {
+                // Only for owned world otherwise ignore
+                if self.owned == Some(true) {
+                    if let Some(orig_world) = self.world.as_ref() {
+                        log::debug!("World {} is going to be reseted", &orig_world.id());
+                        let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
+                        world.setup();
+                        world.set_id(orig_world.id().to_owned());
+
+                        let name = ctx.props().name.clone();
+                        let link = ctx.link().clone();
+
+                        // Update db and send notifications
+                        spawn_local(async move {
+                            let db = database::init_database(&name).await;
+                            database::put_world(
+                                &db,
+                                world.id(),
+                                "narrator".to_string(),
+                                false,
+                                world.dump(),
+                                true,
+                            )
+                            .await
+                            .unwrap();
+                            link.send_message(Msg::WorldUpdateFetched(world, true));
+                            link.send_message(Msg::WsNotifyResetWorld);
+                        });
+                        return true;
+                    }
+                }
+                false
             }
             Msg::WorldUpdateFetched(world, owned) => {
                 self.owned = Some(owned);
@@ -474,6 +509,15 @@ impl Component for App {
                                     actions_scope.send_message(ActionsMsg::QRCodeHide);
                                 }
                             }
+                            protocol::NotificationMessage::WorldReset => {
+                                if let Some(world) = self.world.as_ref() {
+                                    if !self.owned.unwrap_or(false) {
+                                        log::info!("World reset performed. Fetch new world");
+                                        ctx.link()
+                                            .send_message(Msg::WsGetWorld(world.id().to_owned()));
+                                    }
+                                }
+                            }
                         }
                     }
                     Ok(protocol::Message::Request(request)) => {
@@ -538,7 +582,6 @@ impl Component for App {
                                                     event.trigger(world.as_mut());
 
                                                     // Store world
-                                                    log::debug!("UUUFf");
                                                     database::put_world(
                                                         &db,
                                                         world.id(),
@@ -646,7 +689,7 @@ impl Component for App {
                                         // usually if response comes it should contain data
                                         // aways reset is quite good response in this situation,
                                         // because world on onwer is lost...
-                                        ctx.link().send_message(Msg::Reset);
+                                        ctx.link().send_message(Msg::Leave);
                                     }
                                 } else {
                                     self.request_id = Some((msg_id, timeout));
@@ -715,6 +758,19 @@ impl Component for App {
                 // Plan flushing of WS messages
                 ctx.link().send_future(async { Msg::WsFlush });
 
+                true
+            }
+            Msg::WsNotifyResetWorld => {
+                // Just send notification that the reset of the world was performed
+                self.ws_queue.push(
+                    serde_json::to_string(&protocol::Message::Notification(
+                        protocol::NotificationMessage::WorldReset,
+                    ))
+                    .unwrap(),
+                );
+
+                // Plan flushing of WS messages
+                ctx.link().send_future(async { Msg::WsFlush });
                 true
             }
             Msg::WsTriggerEvent(world_id, event) => {
@@ -914,6 +970,7 @@ impl Component for App {
 
             let trigger_event_data_callback = link.callback(Msg::TriggerEventData);
 
+            let leave_cb = link.callback(|_| Msg::Leave);
             let reset_cb = link.callback(|_| Msg::Reset);
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
@@ -964,7 +1021,9 @@ impl Component for App {
                                   <div class="has-text-centered">
                                       <Status
                                         refresh_world={refresh_world_cb}
+                                        leave_world={leave_cb}
                                         reset_world={reset_cb}
+                                        can_reset={self.owned.unwrap_or(false)}
                                         connect_ws={link.callback(move |_| Msg::WsConnect(world_id))}
                                         event_count={self.event_count}
                                         status={self.ws_status.clone()}
@@ -1169,7 +1228,7 @@ impl App {
                         Msg::WorldUpdateFetched(world, true)
                     } else {
                         // Got to intro page
-                        Msg::Reset
+                        Msg::Leave
                     }
                 }
                 Some(false) => {
