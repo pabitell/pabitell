@@ -39,6 +39,7 @@ pub struct Props {
     pub story_detail: String,
     pub character_scanned: Callback<(Option<String>, bool, Uuid)>,
     pub lang: String,
+    pub world_version: usize,
 }
 
 pub enum Msg {
@@ -47,7 +48,7 @@ pub enum Msg {
     QRCodeScanShow,
     QRCodeScanned(String),
     ShowPrint,
-    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value)>),
+    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value, usize)>),
     WorldDelete(Uuid),
     WorldPicked(Uuid, String, bool),
     SetLanguage(String),
@@ -61,7 +62,7 @@ pub struct Intro {
     pub link_ref: NodeRef,
     pub file_ref: NodeRef,
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
-    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value)>,
+    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value, usize)>,
 }
 
 impl Component for Intro {
@@ -152,10 +153,11 @@ impl Component for Intro {
             Msg::WorldDelete(id) => {
                 let name = ctx.props().name.clone();
                 let link = ctx.link().clone();
+                let version = ctx.props().world_version;
                 spawn_local(async move {
                     let db = database::init_database(&name).await;
                     if database::del_world(&db, &id).await.is_ok() {
-                        Self::update_worlds(name, link);
+                        Self::update_worlds(name, link, version);
                     }
                 });
                 false
@@ -181,7 +183,12 @@ impl Component for Intro {
                 let url = Url::create_object_url_with_blob(&blob).unwrap();
                 let link = self.link_ref.cast::<HtmlAnchorElement>().unwrap();
                 link.set_href(&url);
-                link.set_download(&format!("{}.json", id));
+                link.set_download(&format!(
+                    "{}-V{}-{}.json",
+                    ctx.props().name,
+                    ctx.props().world_version,
+                    id
+                ));
 
                 // Trigger file download
                 link.click();
@@ -251,7 +258,8 @@ impl Component for Intro {
                                             character: String,
                                             fixed_character,
                                             id: Uuid,
-                                            world: Value| {
+                                            world: Value,
+                                            _version: usize| {
                 let local_time: DateTime<Local> = DateTime::from(time.to_owned());
                 let character = characters.get(&character).unwrap();
                 let characters::Character { name, icon, .. } = character.as_ref().clone();
@@ -312,8 +320,14 @@ impl Component for Intro {
                       <table class="table is-bordered">
                         {
                             for self.worlds.iter().map(
-                                |(time, events, character, fixed_character, id, world)|
-                                render_stored_world(*time, events, character.clone(), *fixed_character, *id, world.to_owned())
+                                |(time, events, character, fixed_character, id, world, version)|
+                                render_stored_world(
+                                    *time, events,
+                                    character.clone(),
+                                    *fixed_character,
+                                    *id, world.to_owned(),
+                                    *version
+                                )
                             )
                         }
                       </table>
@@ -423,12 +437,20 @@ impl Component for Intro {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        Intro::update_worlds(ctx.props().name.clone(), ctx.link().clone());
+        Intro::update_worlds(
+            ctx.props().name.clone(),
+            ctx.link().clone(),
+            ctx.props().world_version,
+        );
         true
     }
 
     fn create(ctx: &Context<Self>) -> Self {
-        Intro::update_worlds(ctx.props().name.clone(), ctx.link().clone());
+        Intro::update_worlds(
+            ctx.props().name.clone(),
+            ctx.link().clone(),
+            ctx.props().world_version,
+        );
         Self {
             link_ref: NodeRef::default(),
             file_ref: NodeRef::default(),
@@ -439,16 +461,29 @@ impl Component for Intro {
 }
 
 impl Intro {
-    fn update_worlds(name: String, link: html::Scope<Self>) {
+    fn update_worlds(name: String, link: html::Scope<Self>, world_version: usize) {
         link.send_future(async move {
             let db = database::init_database(&name).await;
             match database::get_worlds(&db).await {
                 Ok(worlds) => Msg::UpdateWorlds(
                     worlds
                         .into_iter()
-                        .filter_map(|(last, id, character, fixed_character, data)| {
+                        .filter_map(|(last, id, character, fixed_character, data, version)| {
                             let count = data["event_count"].as_u64()?;
-                            Some((last, count as usize, character, fixed_character, id, data))
+                            if world_version == version {
+                                Some((
+                                    last,
+                                    count as usize,
+                                    character,
+                                    fixed_character,
+                                    id,
+                                    data,
+                                    version,
+                                ))
+                            } else {
+                                // Skip when versions are mismatched
+                                None
+                            }
                         })
                         .collect(),
                 ),

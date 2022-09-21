@@ -56,7 +56,9 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
     Ok(Some(world_json))
 }
 
-pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String, bool, Value)>> {
+pub async fn get_worlds(
+    rex: &Rexie,
+) -> Result<Vec<(DateTime<Utc>, Uuid, String, bool, Value, usize)>> {
     log::debug!("DB Get worlds '{}'", rex.name());
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadOnly)?;
 
@@ -75,12 +77,14 @@ pub async fn get_worlds(rex: &Rexie) -> Result<Vec<(DateTime<Utc>, Uuid, String,
                 .map(|e| e.to_string())
                 .unwrap_or_else(|| "narrator".to_string());
             let fixed_character = data["fixed_character"].as_bool().unwrap_or(false);
+            let version = data["version"].as_u64().unwrap_or(0);
             (
                 k.as_string().unwrap().parse::<DateTime<Utc>>().unwrap(),
                 data["id"].as_str().unwrap().parse::<Uuid>().unwrap(),
                 character,
                 fixed_character,
                 data["data"].clone(),
+                version as usize,
             )
         })
         .collect())
@@ -93,6 +97,7 @@ pub async fn put_world(
     fixed_character: bool,
     data: Value,
     owned: bool,
+    version: usize,
 ) -> Result<()> {
     log::debug!("DB Put world '{id}'");
 
@@ -116,6 +121,7 @@ pub async fn put_world(
         "fixed_character": fixed_character,
         "last": Utc::now(),
         "owned": owned,
+        "version": version,
     });
     worlds
         .put(&JsValue::from_serde(&Some(record)).unwrap(), None)

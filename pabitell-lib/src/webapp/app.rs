@@ -364,6 +364,7 @@ impl Component for App {
                                 false,
                                 world.dump(),
                                 true,
+                                world.version(),
                             )
                             .await
                             .unwrap();
@@ -409,6 +410,7 @@ impl Component for App {
                         false,
                         world.dump(),
                         true,
+                        world.version(),
                     )
                     .await
                     .unwrap();
@@ -589,6 +591,7 @@ impl Component for App {
                                                         false,
                                                         world.dump(),
                                                         true,
+                                                        world.version(),
                                                     )
                                                     .await
                                                     .unwrap();
@@ -679,6 +682,7 @@ impl Component for App {
                                                 fixed_character,
                                                 world.dump(),
                                                 false,
+                                                world.version(),
                                             )
                                             .await
                                             .unwrap();
@@ -868,6 +872,7 @@ impl Component for App {
                             false,
                             world.dump(),
                             true,
+                            world.version(),
                         )
                         .await
                         .unwrap();
@@ -1092,6 +1097,7 @@ impl Component for App {
                         load_failed={self.load_failed.clone()}
                         {load_failed_cb}
                         {try_load_world_cb}
+                        world_version={world.version()}
                     />
                     { loading }
                 </>

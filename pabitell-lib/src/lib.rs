@@ -254,6 +254,14 @@ pub trait World: Named + Dumpable {
     fn get_message(&self, msgid: &str, _args: Option<FluentArgs>) -> String {
         msgid.to_string()
     }
+
+    /// Format of the world
+    ///
+    /// when the format of stored world changes
+    /// this number should be bumped as well
+    fn version(&self) -> usize {
+        0
+    }
 }
 
 pub trait Narrator {
