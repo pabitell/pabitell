@@ -90,6 +90,7 @@ impl Component for Print {
                 .unwrap()
                 .create_element("div")
                 .unwrap();
+            qr_div.set_class_name("qr-code");
             qr_div.set_inner_html(&svg);
             let qr_part = Html::VRef(qr_div.into());
 
@@ -115,7 +116,7 @@ impl Component for Print {
                                     { render_image(e.img_url.clone()) }
                                     </div>
                                     <div class="media-content">
-                                        <p class="title">{ e.title.clone().unwrap_or_default() }</p>
+                                        <span class="is-size-4 has-text-weight-bold">{ e.title.clone().unwrap_or_default() }</span>
                                     </div>
                                 </div>
                             </div>
