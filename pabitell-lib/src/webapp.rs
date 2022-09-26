@@ -6,6 +6,7 @@ pub mod app;
 pub mod character_switch;
 pub mod characters;
 pub mod database;
+pub mod geo_navigator;
 pub mod intro;
 pub mod items;
 #[allow(non_snake_case)]

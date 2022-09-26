@@ -20,6 +20,7 @@ console_error_panic_hook = { version = "0.1", optional = true }
 data-url = { version = "0.1", optional = true }
 fluent = "0.16"
 futures = { version = "0.3", optional = true }
+geo = { version = "0.23", optional = true }
 gloo = { version = "0.8", features = ["futures"], optional = true }
 gloo-net = { version = "0.2", features = ["websocket"], optional = true }
 image = { version = "0.24", optional = true, features = ["png"] }
@@ -49,12 +50,16 @@ features = [
 	"Blob",
 	"CanvasRenderingContext2d",
 	"ConstrainBooleanParameters",
+	"Coordinates",
 	"DisplayMediaStreamConstraints",
 	"Document",
 	"FileList",
 	"FileReader",
+	"Geolocation",
 	"ImageData",
 	"OrientationLockType",
+	"Position",
+	"PositionOptions",
 	"MediaDevices",
 	"MediaDeviceKind",
 	"MediaDeviceInfo",
@@ -89,6 +94,7 @@ with_webapp = [
 	"chrono",
 	"data-url",
 	"futures",
+	"geo",
 	"gloo/futures",
 	"gloo-net/websocket",
 	"image/png",

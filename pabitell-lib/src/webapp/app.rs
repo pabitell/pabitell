@@ -1,3 +1,4 @@
+use geo::point;
 use gloo::{
     storage::{self, Storage},
     timers::callback::Timeout,
@@ -17,6 +18,7 @@ use crate::{
         actions::{Actions, Msg as ActionsMsg},
         character_switch::CharacterSwitch,
         characters, database,
+        geo_navigator::GeoNavigator,
         intro::{FailedLoadState, Intro},
         items::Item,
         language_switch::LanguageSwitch,
@@ -63,6 +65,7 @@ pub enum Msg {
     SetLanguage(String),
     LoadWorld(Value),
     SetFailedLoadState(FailedLoadState),
+    PositionReached,
 }
 
 pub struct App {
@@ -889,6 +892,7 @@ impl Component for App {
                 self.load_failed = Some(state);
                 true
             }
+            Msg::PositionReached => true,
         }
     }
 
@@ -996,6 +1000,8 @@ impl Component for App {
             let owned_items = Rc::new(owned_items);
 
             let world_id = world.id().to_owned();
+            let reached_cb = link.callback(|_| Msg::PositionReached);
+            let destination = point! { x: 50.0824, y: 14.5000 }.into();
 
             html! {
                 <>
@@ -1034,6 +1040,13 @@ impl Component for App {
                                         status={self.ws_status.clone()}
                                         ws_request_failed={self.ws_request_failed}
                                       />
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="subtitle is-flex">
+                              <div class="w-100 field is-justify-content-center">
+                                  <div class="has-text-centered">
+                                    <GeoNavigator destination={Some(destination)} reached={reached_cb} />
                                   </div>
                               </div>
                           </div>
