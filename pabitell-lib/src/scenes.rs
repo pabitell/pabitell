@@ -4,6 +4,7 @@ macro_rules! scene_base {
         #[derive(Debug, Default)]
         pub struct $class_name {
             id: uuid::Uuid,
+            location: Option<$crate::GeoLocation>,
         }
 
         impl $crate::Named for $class_name {
@@ -36,15 +37,28 @@ macro_rules! scene_base {
         impl $crate::Dumpable for $class_name {
             fn dump(&self) -> serde_json::Value {
                 serde_json::json!(
-                    {"name": self.name()}
+                    {
+                        "name": self.name(),
+                        "location": self.location,
+                    }
                 )
             }
             fn load(&mut self, data: serde_json::Value) -> anyhow::Result<()> {
+                let location: Option<$crate::GeoLocation> = serde_json::from_value(data["location"].clone())?;
+                self.location = location;
                 Ok(())  // Scenes doesn't cotain any extras here
             }
         }
 
-        impl $crate::Scene for $class_name {}
+        impl $crate::Scene for $class_name {
+            fn geo_location(&self) -> Option<$crate::GeoLocation> {
+                self.location
+            }
+
+            fn set_geo_location(&mut self, location: Option<$crate::GeoLocation>) {
+                self.location = location
+            }
+        }
     };
 }
 
@@ -62,6 +76,7 @@ macro_rules! scene_with_dialog {
         pub struct $class_name {
             id: uuid::Uuid,
             dialog: usize,
+            location: Option<$crate::GeoLocation>,
         }
 
         impl $crate::Named for $class_name {
@@ -94,7 +109,11 @@ macro_rules! scene_with_dialog {
         impl $crate::Dumpable for $class_name {
             fn dump(&self) -> serde_json::Value {
                 serde_json::json!(
-                    {"name": self.name(), "dialog": self.dialog}
+                    {
+                        "name": self.name(),
+                        "dialog": self.dialog,
+                        "location": self.location,
+                    }
                 )
             }
 
@@ -109,6 +128,10 @@ macro_rules! scene_with_dialog {
                     return Err(anyhow!("Scene format '{}'", self.name()));
                 }
 
+                let location: Option<$crate::GeoLocation> = serde_json::from_value(data["location"].clone())?;
+                self.location = location;
+
+
                 Ok(())
             }
         }
@@ -120,6 +143,14 @@ macro_rules! scene_with_dialog {
 
             fn next_dialog(&mut self) {
                 self.dialog += 1
+            }
+
+            fn geo_location(&self) -> Option<$crate::GeoLocation> {
+                self.location
+            }
+
+            fn set_geo_location(&mut self, location: Option<$crate::GeoLocation>) {
+                self.location = location
             }
         }
 

@@ -31,6 +31,9 @@ pub enum ItemState {
     Unassigned,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
+pub struct GeoLocation(f64, f64);
+
 impl Default for ItemState {
     fn default() -> Self {
         Self::Unassigned
@@ -124,6 +127,10 @@ pub trait Scene: Named + Tagged + AsAny + Description + Dumpable + Music + fmt::
         None
     }
     fn next_dialog(&mut self) {}
+    fn geo_location(&self) -> Option<GeoLocation> {
+        None
+    }
+    fn set_geo_location(&mut self, _location: Option<GeoLocation>) {}
 }
 
 pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
