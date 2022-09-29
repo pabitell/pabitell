@@ -238,7 +238,11 @@ pub trait World: Named + Dumpable {
     fn characters_mut(&mut self) -> &mut HashMap<String, Box<dyn Character>>;
     fn items(&self) -> &HashMap<String, Box<dyn Item>>;
     fn items_mut(&mut self) -> &mut HashMap<String, Box<dyn Item>>;
-    fn setup(&mut self);
+    fn setup(&mut self, new_id: bool);
+    fn reset(&mut self) {
+        self.clean();
+        self.setup(false);
+    }
     fn extra_clean(&mut self) {}
     fn clean(&mut self) {
         self.extra_clean();
@@ -249,7 +253,7 @@ pub trait World: Named + Dumpable {
             .values_mut()
             .for_each(|e| e.set_state(ItemState::Unassigned));
     }
-    fn randomize_ids(&mut self) {
+    fn randomize_id(&mut self) {
         self.set_id(Uuid::new_v4());
     }
     fn finished(&self) -> bool;
@@ -267,7 +271,7 @@ pub trait World: Named + Dumpable {
     /// when the format of stored world changes
     /// this number should be bumped as well
     fn version(&self) -> usize {
-        0
+        1
     }
 }
 
@@ -586,7 +590,7 @@ pub mod test {
             vec!["en-US".to_string()]
         }
 
-        fn setup(&mut self) {}
+        fn setup(&mut self, _new_id: bool) {}
 
         fn finished(&self) -> bool {
             true

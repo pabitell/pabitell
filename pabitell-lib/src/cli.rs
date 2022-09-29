@@ -379,7 +379,7 @@ where
     // Set up world
     world.set_lang(&lang);
     world.clean();
-    world.setup();
+    world.setup(true);
 
     println(color::BRIGHT_MAGENTA, format!("lang: {lang}"));
 
@@ -471,8 +471,7 @@ where
             }
             View::Exit => break,
             View::Reset => {
-                world.clean();
-                world.setup();
+                world.reset();
                 state = View::Menu;
             }
             View::Delete => {

@@ -351,8 +351,8 @@ impl Component for App {
                     if let Some(orig_world) = self.world.as_ref() {
                         log::debug!("World {} is going to be reseted", &orig_world.id());
                         let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
-                        world.setup();
-                        world.set_id(orig_world.id().to_owned());
+                        world.load(orig_world.dump()).unwrap();
+                        world.reset();
 
                         let name = ctx.props().name.clone();
                         let link = ctx.link().clone();
@@ -401,7 +401,7 @@ impl Component for App {
                 self.fixed_character = false;
                 let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
                 self.load_failed = None;
-                world.setup();
+                world.setup(true);
                 let name = ctx.props().name.clone();
                 let link = ctx.link().clone();
                 spawn_local(async move {
