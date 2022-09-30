@@ -1,12 +1,22 @@
-use geo::{coord, prelude::*, Line, Point};
+use geo::{coord, point, prelude::*, Line, Point};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::PositionOptions;
 use yew::{html, prelude::*};
 
-#[derive(Clone, Debug, Properties, PartialEq)]
-pub struct Position {
-    pub point: Point,
-    pub accuracy: f64,
+use crate::GeoLocation;
+
+use super::Position;
+
+impl From<Point<f64>> for GeoLocation {
+    fn from(point: Point<f64>) -> Self {
+        GeoLocation(point.x(), point.y())
+    }
+}
+
+impl From<GeoLocation> for Point<f64> {
+    fn from(geo_location: GeoLocation) -> Self {
+        point! { x: geo_location.0, y: geo_location.1 }
+    }
 }
 
 #[derive(Clone, Debug, Properties, PartialEq)]
@@ -160,13 +170,35 @@ impl Component for GeoNavigator {
                                     <p class="modal-card-title">{ distance.round() } <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</p>
                                 </header>
                                 <section class="modal-card-body">
-                                    <div class="container is-flex is-justify-content-center is-align-items-center">
+                                    <div class="container is-flex is-justify-content-center is-align-items-center w-75">
                                         <figure class="image is-1by1 w-50">
                                             {img_html}
 
                                         </figure>
                                     </div>
                                 </section>
+                                <footer class="modal-card-foot">
+                                    <a
+                                      class="button"
+                                      href={ Self::geo_url(destination) }
+                                    >
+                                        <i class="fas fa-up-right-from-square"></i>
+                                    </a>
+                                    <a
+                                      class="button"
+                                      target="_blank"
+                                      href={ Self::osm_url(destination) }
+                                    >
+                                        <i class="fas fa-map-location"></i>
+                                    </a>
+                                    <a
+                                      class="button"
+                                      target="_blank"
+                                      href={ Self::google_url(destination) }
+                                    >
+                                        <i class="fa-brands fa-google"></i>
+                                    </a>
+                                </footer>
                             </div>
                             <button
                               onclick={close_cb}
@@ -182,6 +214,13 @@ impl Component for GeoNavigator {
         } else {
             html! {}
         }
+    }
+
+    fn destroy(&mut self, _ctx: &Context<Self>) {
+        let window = web_sys::window().unwrap();
+        let navigator = window.navigator();
+        let geolocation = navigator.geolocation().unwrap();
+        geolocation.clear_watch(self.watch_id);
     }
 }
 
@@ -230,6 +269,29 @@ impl GeoNavigator {
     fn different_positions(p1: &Position, p2: &Position) -> bool {
         let distance = p1.point.geodesic_distance(&p2.point);
         distance > p1.accuracy + p2.accuracy
+    }
+
+    /// Build url in geo format
+    fn geo_url(point: &Point) -> String {
+        format!("geo:{},{}", point.x(), point.y())
+    }
+
+    /// Build osm url
+    fn osm_url(point: &Point) -> String {
+        format!(
+            "https://www.openstreetmap.org/?mlat={x}&mlon={y}#map=18/{x}/{y}",
+            x = point.x(),
+            y = point.y(),
+        )
+    }
+
+    /// Build google maps url
+    fn google_url(point: &Point) -> String {
+        format!(
+            "https://www.google.com/maps/search/?api=1&query={x}%2C{y}",
+            x = point.x(),
+            y = point.y(),
+        )
     }
 }
 

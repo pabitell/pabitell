@@ -6,10 +6,12 @@ pub struct Props {
     pub refresh_world: Callback<()>,
     pub reset_world: Callback<()>,
     pub leave_world: Callback<()>,
+    pub edit_world: Callback<()>,
     pub event_count: usize,
     pub status: WsStatus,
     pub ws_request_failed: bool,
     pub can_reset: bool,
+    pub can_edit: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -51,6 +53,7 @@ pub enum Msg {
     RefreshWorld,
     ResetWorld,
     LeaveWorld,
+    EditWorld,
 }
 
 impl Component for Status {
@@ -70,6 +73,9 @@ impl Component for Status {
             }
             Msg::ResetWorld => {
                 ctx.props().reset_world.emit(());
+            }
+            Msg::EditWorld => {
+                ctx.props().edit_world.emit(());
             }
         }
         true
@@ -92,6 +98,18 @@ impl Component for Status {
                 <button class="button is-outlined is-medium" onclick={reset_world_cb}>
                     <span class="icon has-text-danger">
                         <i class="fas fa-redo"></i>
+                    </span>
+                </button>
+            }
+        } else {
+            html! {}
+        };
+        let edit_part = if ctx.props().can_edit {
+            let edit_world_cb = link.callback(|_| Msg::EditWorld);
+            html! {
+                <button class="button is-outlined is-medium" onclick={edit_world_cb}>
+                    <span class="icon has-text-info">
+                        <i class="fas fa-edit"></i>
                     </span>
                 </button>
             }
@@ -134,6 +152,7 @@ impl Component for Status {
                     </span>
                 </button>
                 { reset_part }
+                { edit_part }
             </>
         }
     }

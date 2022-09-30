@@ -1,4 +1,4 @@
-use geo::point;
+use geo::{point, Point};
 use gloo::{
     storage::{self, Storage},
     timers::callback::Timeout,
@@ -18,6 +18,7 @@ use crate::{
         actions::{Actions, Msg as ActionsMsg},
         character_switch::CharacterSwitch,
         characters, database,
+        editor::Editor,
         geo_navigator::GeoNavigator,
         intro::{FailedLoadState, Intro},
         items::Item,
@@ -25,6 +26,7 @@ use crate::{
         message::{Kind as MessageKind, MessageItem},
         messages::{Messages, Msg as MessagesMsg},
         print::{Print, PrintItem},
+        scenes::make_scenes,
         speech::{Msg as SpeechMsg, Speech},
         status::{Status, WsStatus},
         websocket_client::{Msg as WsMsg, WebsocketClient},
@@ -55,7 +57,7 @@ pub enum Msg {
     WsMessageRecieved(String),
     WsGetWorld(Uuid),
     WsTriggerEvent(Uuid, Value),
-    WsNotifyResetWorld,
+    WsNotifyUpdateWorld,
     WsFailed,
     WsConnect(Uuid),
     WsStatusUpdate(WsStatus),
@@ -66,6 +68,8 @@ pub enum Msg {
     LoadWorld(Value),
     SetFailedLoadState(FailedLoadState),
     PositionReached,
+    UpdateSceneLocation(String, Option<Point>),
+    ShowEditor(bool),
 }
 
 pub struct App {
@@ -91,6 +95,7 @@ pub struct App {
     ws_status: WsStatus,
     ws_request_failed: bool,
     load_failed: Option<FailedLoadState>,
+    show_editor: bool,
 }
 
 #[derive(Properties, Default)]
@@ -172,6 +177,7 @@ impl Component for App {
             ws_request_failed: false,
             lang,
             load_failed: None,
+            show_editor: false,
         };
 
         if let Some(world_id) = world_id.as_ref() {
@@ -372,7 +378,7 @@ impl Component for App {
                             .await
                             .unwrap();
                             link.send_message(Msg::WorldUpdateFetched(world, true));
-                            link.send_message(Msg::WsNotifyResetWorld);
+                            link.send_message(Msg::WsNotifyUpdateWorld);
                         });
                         return true;
                     }
@@ -514,10 +520,10 @@ impl Component for App {
                                     actions_scope.send_message(ActionsMsg::QRCodeHide);
                                 }
                             }
-                            protocol::NotificationMessage::WorldReset => {
+                            protocol::NotificationMessage::WorldUpdate => {
                                 if let Some(world) = self.world.as_ref() {
                                     if !self.owned.unwrap_or(false) {
-                                        log::info!("World reset performed. Fetch new world");
+                                        log::info!("World update performed. Fetch new world");
                                         ctx.link()
                                             .send_message(Msg::WsGetWorld(world.id().to_owned()));
                                     }
@@ -767,11 +773,11 @@ impl Component for App {
 
                 true
             }
-            Msg::WsNotifyResetWorld => {
+            Msg::WsNotifyUpdateWorld => {
                 // Just send notification that the reset of the world was performed
                 self.ws_queue.push(
                     serde_json::to_string(&protocol::Message::Notification(
-                        protocol::NotificationMessage::WorldReset,
+                        protocol::NotificationMessage::WorldUpdate,
                     ))
                     .unwrap(),
                 );
@@ -893,6 +899,53 @@ impl Component for App {
                 true
             }
             Msg::PositionReached => true,
+            Msg::UpdateSceneLocation(scene_name, point_opt) => {
+                if let Some(world) = self.world.as_mut() {
+                    // update scene
+                    let scene = world.scenes_mut().get_mut(&scene_name).unwrap();
+                    if let Some(point) = point_opt {
+                        scene.set_geo_location(Some(point.into()));
+                    } else {
+                        scene.set_geo_location(None);
+                    }
+                    let world_data = world.dump();
+                    let world_id = world.id().to_owned();
+                    let world_version = world.version();
+                    let name = ctx.props().name.clone();
+                    let link = ctx.link().clone();
+
+                    spawn_local(async move {
+                        let db = database::init_database(&name).await;
+                        let world_id = world_id; // move world_id inside this closure
+                        database::put_world(
+                            &db,
+                            &world_id,
+                            "narrator".to_string(),
+                            false,
+                            world_data,
+                            true,
+                            world_version,
+                        )
+                        .await
+                        .unwrap();
+                        // Notifi connected client that the location changed
+                        link.send_message(Msg::WsNotifyUpdateWorld);
+                    });
+
+                    true
+                } else {
+                    false
+                }
+            }
+            Msg::ShowEditor(show) => {
+                if Some(true) == self.owned {
+                    self.show_editor = show;
+                    true
+                } else {
+                    log::warn!("Trying to show editor for not owned world");
+                    false
+                }
+            }
         }
     }
 
@@ -981,6 +1034,7 @@ impl Component for App {
 
             let leave_cb = link.callback(|_| Msg::Leave);
             let reset_cb = link.callback(|_| Msg::Reset);
+            let edit_cb = link.callback(|_| Msg::ShowEditor(true));
             let refresh_world_cb = link.callback(|_| Msg::RefreshWorld);
 
             let finished = if let Some(world) = self.world.as_ref() {
@@ -1034,7 +1088,9 @@ impl Component for App {
                                         refresh_world={refresh_world_cb}
                                         leave_world={leave_cb}
                                         reset_world={reset_cb}
+                                        edit_world={edit_cb}
                                         can_reset={self.owned.unwrap_or(false)}
+                                        can_edit={self.owned.unwrap_or(false)}
                                         connect_ws={link.callback(move |_| Msg::WsConnect(world_id))}
                                         event_count={self.event_count}
                                         status={self.ws_status.clone()}
@@ -1081,6 +1137,7 @@ impl Component for App {
                         </div>
                     </footer>
                     { loading }
+                    { self.view_editor(ctx, world.as_ref()) }
                 </>
             }
         } else {
@@ -1219,6 +1276,23 @@ impl App {
                 { scene_description }
                 { if world.finished() { restart } else { html! {} } }
                 </section>
+            }
+        } else {
+            html! {}
+        }
+    }
+
+    fn view_editor(&self, ctx: &Context<Self>, world: &dyn World) -> Html {
+        let close = ctx.link().callback(|_| Msg::ShowEditor(false));
+        let update_location = ctx
+            .link()
+            .callback(|(scene, point_opt)| Msg::UpdateSceneLocation(scene, point_opt));
+        let scenes = make_scenes(world);
+        let title = translations::get_message_global("world_editor", world.lang(), None);
+        let places_text = translations::get_message_global("places", world.lang(), None);
+        if self.show_editor {
+            html! {
+                <Editor {close} {update_location} {scenes} {title} {places_text} />
             }
         } else {
             html! {}
