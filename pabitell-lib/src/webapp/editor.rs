@@ -18,12 +18,12 @@ pub struct Editor {
     watch_id: i32,
     #[allow(dead_code)]
     success_cb: Closure<dyn Fn(web_sys::Position)>,
-    current_position: Option<Point>,
+    current_position: Option<(Point, f64)>,
 }
 
 pub enum Msg {
     UpdateSceneWithCurrentLocation(String),
-    LocationObtained(Point),
+    LocationObtained(Point, f64),
     RemoveLocation(String),
     Close,
 }
@@ -38,12 +38,12 @@ impl Component for Editor {
                 ctx.props().close.emit(());
                 true
             }
-            Msg::LocationObtained(point) => {
-                self.current_position = Some(point);
+            Msg::LocationObtained(point, accuracy) => {
+                self.current_position = Some((point, accuracy));
                 true
             }
             Msg::UpdateSceneWithCurrentLocation(scene) => {
-                if let Some(point) = self.current_position {
+                if let Some((point, _)) = self.current_position {
                     ctx.props().update_location.emit((scene, Some(point)));
                     true
                 } else {
@@ -61,9 +61,11 @@ impl Component for Editor {
     fn create(ctx: &Context<Self>) -> Self {
         let link = ctx.link().clone();
         let success_cb = Closure::wrap(Box::new(move |pos: web_sys::Position| {
-            let x = pos.coords().latitude();
-            let y = pos.coords().longitude();
-            link.send_future(async move { Msg::LocationObtained(point! {x: x, y: y}) });
+            let coords = pos.coords();
+            let x = coords.latitude();
+            let y = coords.longitude();
+            let accuracy = coords.accuracy();
+            link.send_future(async move { Msg::LocationObtained(point! {x: x, y: y}, accuracy) });
         }) as Box<dyn Fn(web_sys::Position)>);
 
         let window = web_sys::window().unwrap();
@@ -92,7 +94,7 @@ impl Component for Editor {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
         let close = ctx.link().callback(|_| Msg::Close);
-        let current_disabled = self.current_position.is_none();
+        let current_accuracy = self.current_position.map(|cp| cp.1);
 
         let render_scene_edit = |scene: &Scene| {
             let code = scene.code.to_string();
@@ -151,11 +153,22 @@ impl Component for Editor {
                                 <button
                                   class="button is-small is-outlined is-info"
                                   onclick={ set_current_location }
-                                  disabled={ current_disabled }
+                                  disabled={ current_accuracy.is_none() }
                                 >
                                     <span class="icon is-small">
                                         <i class="fas fa-arrows-to-circle"></i>
                                     </span>
+                                    {
+                                        if let Some(current) = current_accuracy {
+                                            html! {
+                                                <span class="ml-2">
+                                                    { format!("~{}m", current.round()) }
+                                                </span>
+                                            }
+                                        } else {
+                                            html! {}
+                                        }
+                                    }
                                 </button>
                             </p>
                         </div>

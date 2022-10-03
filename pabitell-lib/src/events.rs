@@ -2,7 +2,7 @@ use crate::{
     conditions::Condition,
     data::{self, EventData},
     updates::Change,
-    AsAny, Event, Tagged, World,
+    AsAny, Event, GeoLocation, Tagged, World,
 };
 use std::{any::Any, fmt};
 
@@ -478,6 +478,17 @@ impl Event for Move {
 
     fn msg_base(&self, world: &dyn World) -> String {
         format!("{}-{}_{}", world.name(), self.character(), self.name(),)
+    }
+
+    fn geo_location(&self, world: &dyn World) -> Option<(String, Option<String>, GeoLocation)> {
+        let scene = world.scenes().get(&self.data.scene).unwrap();
+        scene.geo_location().map(|loc| {
+            (
+                self.character().to_string(),
+                Some(scene.name().to_string()),
+                loc,
+            )
+        })
     }
 }
 

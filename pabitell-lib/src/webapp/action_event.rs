@@ -1,6 +1,9 @@
-use super::characters;
 use std::rc::Rc;
 use yew::{html, prelude::*};
+
+use crate::GeoLocation;
+
+use super::characters;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionEventItem {
@@ -12,6 +15,7 @@ pub struct ActionEventItem {
     pub data: Rc<Vec<u8>>,
     pub self_triggering: bool,
     pub show_qr: bool,
+    pub geo_location: Option<GeoLocation>,
 }
 
 impl ActionEventItem {
@@ -25,6 +29,7 @@ impl ActionEventItem {
         data: Vec<u8>,
         self_triggering: bool,
         show_qr: bool,
+        geo_location: Option<GeoLocation>,
     ) -> Self {
         Self {
             idx,
@@ -35,6 +40,7 @@ impl ActionEventItem {
             data: Rc::new(data),
             self_triggering,
             show_qr,
+            geo_location,
         }
     }
 }
@@ -66,7 +72,6 @@ impl Component for ActionEvent {
             }
             Msg::TriggerEvent => {
                 ctx.props().trigger_event_cb.emit(());
-                // TODO emit trigger event
                 true
             }
         }

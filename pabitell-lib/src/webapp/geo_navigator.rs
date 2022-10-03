@@ -3,7 +3,7 @@ use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::PositionOptions;
 use yew::{html, prelude::*};
 
-use crate::GeoLocation;
+use crate::{Event, GeoLocation, World};
 
 use super::Position;
 
@@ -21,8 +21,11 @@ impl From<GeoLocation> for Point<f64> {
 
 #[derive(Clone, Debug, Properties, PartialEq)]
 pub struct Props {
-    pub destination: Option<Point>,
-    pub reached: Callback<()>,
+    pub destination: Point,
+    pub scene_name: Option<String>,
+    pub scene_title: Option<String>,
+    pub character: String,
+    pub reached: Callback<(String, Point)>,
 }
 
 const SVG_INITIAL_ROTATION: f64 = -45.;
@@ -58,21 +61,23 @@ impl Component for GeoNavigator {
                 log::debug!(
                     "Location obtained {:?} -> {:?}",
                     position,
-                    ctx.props().destination.as_ref()
+                    ctx.props().destination,
                 );
                 let accuracy = position.accuracy;
-                if let Some(destination) = ctx.props().destination.as_ref() {
-                    let distance = position.point.geodesic_distance(&destination);
-                    if distance < position.accuracy {
-                        // Close modal
-                        self.active = false;
-                        ctx.props().reached.emit(());
-                    } else {
-                        self.update_positions(position);
-                    }
-                    self.distance = Some(distance);
-                    self.accuracy = Some(accuracy);
+                let destination = ctx.props().destination;
+
+                let distance = position.point.geodesic_distance(&destination);
+                if distance < position.accuracy {
+                    // Close modal
+                    self.active = false;
+                    ctx.props()
+                        .reached
+                        .emit((ctx.props().character.clone(), destination.to_owned()));
+                } else {
+                    self.update_positions(position);
                 }
+                self.distance = Some(distance);
+                self.accuracy = Some(accuracy);
             }
             Msg::OpenCompass => self.active = true,
             Msg::CloseCompass => self.active = false,
@@ -118,98 +123,96 @@ impl Component for GeoNavigator {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if let Some(destination) = ctx.props().destination.as_ref() {
-            if let Some(distance) = self.distance.as_ref() {
-                let accuracy = self.accuracy.unwrap();
-                let modal_classes = if self.active {
-                    classes!("modal", "is-active")
-                } else {
-                    classes!("modal")
-                };
-                let close_cb = ctx.link().callback(|_| Msg::CloseCompass);
-                let open_cb = ctx.link().callback(|_| Msg::OpenCompass);
+        let destination = ctx.props().destination;
 
-                let img_html = if let (Some(pos1), Some(pos2)) =
-                    (self.position1.as_ref(), self.position2.as_ref())
-                {
-                    let direction = Line::new(pos1.point.clone(), pos2.point.clone());
-                    let rotation = Self::calculate_rotation(&destination, &direction);
-                    html! {
-                        <img
-                          src="images/location-arrow.svg"
-                          class="w-75"
-                          style={format!("transform: rotate({}deg)", rotation)}
-                        />
-                    }
-                } else {
-                    html! {
-                        <img
-                          src="images/location-arrow.svg"
-                          class="w-75 rotate"
-                        />
-                    }
-                };
+        if let Some(distance) = self.distance.as_ref() {
+            let accuracy = self.accuracy.unwrap();
+            let modal_classes = if self.active {
+                classes!("modal", "is-active")
+            } else {
+                classes!("modal")
+            };
+            let close_cb = ctx.link().callback(|_| Msg::CloseCompass);
+            let open_cb = ctx.link().callback(|_| Msg::OpenCompass);
 
+            let img_html = if let (Some(pos1), Some(pos2)) =
+                (self.position1.as_ref(), self.position2.as_ref())
+            {
+                let direction = Line::new(pos1.point.clone(), pos2.point.clone());
+                let rotation = Self::calculate_rotation(&destination, &direction);
                 html! {
-                    <>
-                        <button
-                          class="button is-outlined is-medium"
-                          onclick={open_cb}
-                        >
-                            <span class="icon-text">
-                                <span class="icon has-text-info">
-                                    <i class="fas fa-compass"></i>
-                                </span>
-                                <span>{ distance.round() }  <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</span>
-                            </span>
-                        </button>
-                        <div class={modal_classes}>
-                            <div class="modal-background"></div>
-                            <div class="modal-card has-text-centered">
-                                <header class="modal-card-head">
-                                    <p class="modal-card-title">{ distance.round() } <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</p>
-                                </header>
-                                <section class="modal-card-body">
-                                    <div class="container is-flex is-justify-content-center is-align-items-center w-75">
-                                        <figure class="image is-1by1 w-50">
-                                            {img_html}
-
-                                        </figure>
-                                    </div>
-                                </section>
-                                <footer class="modal-card-foot">
-                                    <a
-                                      class="button"
-                                      href={ Self::geo_url(destination) }
-                                    >
-                                        <i class="fas fa-up-right-from-square"></i>
-                                    </a>
-                                    <a
-                                      class="button"
-                                      target="_blank"
-                                      href={ Self::osm_url(destination) }
-                                    >
-                                        <i class="fas fa-map-location"></i>
-                                    </a>
-                                    <a
-                                      class="button"
-                                      target="_blank"
-                                      href={ Self::google_url(destination) }
-                                    >
-                                        <i class="fa-brands fa-google"></i>
-                                    </a>
-                                </footer>
-                            </div>
-                            <button
-                              onclick={close_cb}
-                              class="modal-close is-large"
-                              aria-label="close"
-                             ></button>
-                        </div>
-                    </>
+                    <img
+                      src="images/location-arrow.svg"
+                      class="w-75"
+                      style={format!("transform: rotate({}deg)", rotation)}
+                    />
                 }
             } else {
-                html! {}
+                html! {
+                    <img
+                      src="images/location-arrow.svg"
+                      class="w-75 rotate"
+                    />
+                }
+            };
+
+            html! {
+                <>
+                    <button
+                      class="button is-outlined is-medium"
+                      onclick={open_cb}
+                    >
+                        <span class="icon-text">
+                            <span class="icon has-text-info">
+                                <i class="fas fa-compass"></i>
+                            </span>
+                            <span>{ distance.round() }  <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</span>
+                        </span>
+                    </button>
+                    <div class={modal_classes}>
+                        <div class="modal-background"></div>
+                        <div class="modal-card has-text-centered">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">{ distance.round() } <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</p>
+                            </header>
+                            <section class="modal-card-body">
+                                <div class="container is-flex is-justify-content-center is-align-items-center w-75">
+                                    <figure class="image is-1by1 w-50">
+                                        {img_html}
+
+                                    </figure>
+                                </div>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <a
+                                  class="button"
+                                  href={ Self::geo_url(&destination) }
+                                >
+                                    <i class="fas fa-up-right-from-square"></i>
+                                </a>
+                                <a
+                                  class="button"
+                                  target="_blank"
+                                  href={ Self::osm_url(&destination) }
+                                >
+                                    <i class="fas fa-map-location"></i>
+                                </a>
+                                <a
+                                  class="button"
+                                  target="_blank"
+                                  href={ Self::google_url(&destination) }
+                                >
+                                    <i class="fa-brands fa-google"></i>
+                                </a>
+                            </footer>
+                        </div>
+                        <button
+                          onclick={close_cb}
+                          class="modal-close is-large"
+                          aria-label="close"
+                         ></button>
+                    </div>
+                </>
             }
         } else {
             html! {}
@@ -293,6 +296,37 @@ impl GeoNavigator {
             y = point.y(),
         )
     }
+}
+
+pub fn make_navigations_data(
+    events: &[Box<dyn Event>],
+    world: &dyn World,
+) -> Vec<(String, Option<String>, Option<String>, Point)> {
+    events
+        .iter()
+        .filter_map(|e| {
+            if let Some((character, scene_name_opt, location)) = e.geo_location(world) {
+                if let Some(scene_name) = scene_name_opt {
+                    let scene_title = world.scenes().get(&scene_name).unwrap().short(world);
+                    Some((
+                        character,
+                        Some(scene_name),
+                        Some(scene_title),
+                        point! { x: location.0, y: location.1 },
+                    ))
+                } else {
+                    Some((
+                        character,
+                        None,
+                        None,
+                        point! { x: location.0, y: location.1 },
+                    ))
+                }
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]

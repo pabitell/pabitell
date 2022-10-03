@@ -214,6 +214,11 @@ pub trait Event: Tagged + AsAny + fmt::Debug + PartialEq<[u8]> {
             self.name().to_string(),
         )
     }
+
+    /// Can be event be triggered by moving to given geo location
+    fn geo_location(&self, _world: &dyn World) -> Option<(String, Option<String>, GeoLocation)> {
+        None
+    }
 }
 
 pub trait WorldBuilder<S>

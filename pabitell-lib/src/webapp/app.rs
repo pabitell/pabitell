@@ -1,4 +1,4 @@
-use geo::{point, Point};
+use geo::Point;
 use gloo::{
     storage::{self, Storage},
     timers::callback::Timeout,
@@ -19,7 +19,7 @@ use crate::{
         character_switch::CharacterSwitch,
         characters, database,
         editor::Editor,
-        geo_navigator::GeoNavigator,
+        geo_navigator::{make_navigations_data, GeoNavigator},
         intro::{FailedLoadState, Intro},
         items::Item,
         language_switch::LanguageSwitch,
@@ -31,7 +31,7 @@ use crate::{
         status::{Status, WsStatus},
         websocket_client::{Msg as WsMsg, WebsocketClient},
     },
-    Narrator, World,
+    Event, GeoLocation, Narrator, World,
 };
 
 pub type MakeCharacters = Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>;
@@ -67,7 +67,7 @@ pub enum Msg {
     SetLanguage(String),
     LoadWorld(Value),
     SetFailedLoadState(FailedLoadState),
-    PositionReached,
+    PositionReached(String, Point),
     UpdateSceneLocation(String, Option<Point>),
     ShowEditor(bool),
 }
@@ -898,7 +898,31 @@ impl Component for App {
                 self.load_failed = Some(state);
                 true
             }
-            Msg::PositionReached => true,
+            Msg::PositionReached(character, point) => {
+                if let Some(world) = self.world.as_ref() {
+                    log::debug!("Character {} reached {:?}", character, point);
+                    // same character and destination
+                    let narrator = ctx.props().make_narrator.as_ref().unwrap()();
+                    let geo_location: GeoLocation = point.into();
+
+                    // Trigger matched events
+                    narrator
+                        .available_events_sorted(world.as_ref())
+                        .into_iter()
+                        .filter(|e| {
+                            if let Some((ch, _, p)) = e.geo_location(world.as_ref()) {
+                                ch == character && p == geo_location
+                            } else {
+                                false
+                            }
+                        })
+                        .for_each(|e| ctx.link().send_message(Msg::TriggerEventData(e.dump())));
+
+                    true
+                } else {
+                    false
+                }
+            }
             Msg::UpdateSceneLocation(scene_name, point_opt) => {
                 if let Some(world) = self.world.as_mut() {
                     // update scene
@@ -988,6 +1012,38 @@ impl Component for App {
             let set_character_callback = link.callback(Msg::UpdateCharacter);
             let narrator = props.make_narrator.as_ref().unwrap()();
             let events = narrator.available_events_sorted(world.as_ref());
+
+            // Prepare geo navitions
+            let nav_data = make_navigations_data(&events, world.as_ref())
+                .into_iter()
+                .filter(|e| Some(&e.0) == self.character.as_ref().as_ref())
+                .collect::<Vec<_>>();
+            let nav_element_html = |(character, scene_name, scene_title, point): (
+                String,
+                Option<String>,
+                Option<String>,
+                Point,
+            )| {
+                let character_cloned = character.to_string();
+                let reached_cb =
+                    link.callback(move |_| Msg::PositionReached(character_cloned.clone(), point));
+                html! {
+                  <div class="subtitle is-flex">
+                      <div class="w-100 field is-justify-content-center">
+                          <div class="has-text-centered">
+                            <GeoNavigator
+                              destination={point}
+                              reached={reached_cb}
+                              {character}
+                              {scene_name}
+                              {scene_title}
+                            />
+                          </div>
+                      </div>
+                  </div>
+                }
+            };
+
             let characters_map: HashMap<String, Rc<characters::Character>> =
                 props.make_characters.as_ref().unwrap()(world.as_ref())
                     .iter()
@@ -998,24 +1054,45 @@ impl Component for App {
                 .into_iter()
                 .enumerate()
                 .map(|(idx, e)| {
-                    let (image, self_triggering) =
+                    let (image, self_triggering, geo_location) =
                         if let Some(event) = e.as_any().downcast_ref::<events::Pick>() {
-                            (Some(format!("images/{}.svg", event.item())), false)
+                            (
+                                Some(format!("images/{}.svg", event.item())),
+                                false,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
+                            )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Give>() {
-                            (Some(format!("images/{}.svg", event.item())), false)
+                            (
+                                Some(format!("images/{}.svg", event.item())),
+                                false,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
+                            )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Move>() {
-                            (Some(format!("images/{}.svg", event.scene())), false)
+                            (
+                                Some(format!("images/{}.svg", event.scene())),
+                                false,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
+                            )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::UseItem>() {
-                            (Some(format!("images/{}.svg", event.item())), false)
+                            (
+                                Some(format!("images/{}.svg", event.item())),
+                                false,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
+                            )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Void>() {
                             (
                                 event.item().as_ref().map(|e| format!("images/{}.svg", e)),
                                 false,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
                             )
-                        } else if e.as_any().downcast_ref::<events::Talk>().is_some() {
-                            (Some("images/comment.svg".to_owned()), true)
+                        } else if let Some(event) = e.as_any().downcast_ref::<events::Talk>() {
+                            (
+                                Some("images/comment.svg".to_owned()),
+                                true,
+                                event.geo_location(world.as_ref()).map(|e| e.2),
+                            )
                         } else {
-                            (None, false)
+                            (None, false, None)
                         };
                     Rc::new(ActionEventItem::new(
                         idx,
@@ -1026,6 +1103,7 @@ impl Component for App {
                         serde_json::to_vec(&e.dump()).unwrap(),
                         self_triggering,
                         self.character.is_none(),
+                        geo_location,
                     ))
                 })
                 .collect();
@@ -1054,8 +1132,6 @@ impl Component for App {
             let owned_items = Rc::new(owned_items);
 
             let world_id = world.id().to_owned();
-            let reached_cb = link.callback(|_| Msg::PositionReached);
-            let destination = point! { x: 50.0824, y: 14.5000 }.into();
 
             html! {
                 <>
@@ -1099,13 +1175,7 @@ impl Component for App {
                                   </div>
                               </div>
                           </div>
-                          <div class="subtitle is-flex">
-                              <div class="w-100 field is-justify-content-center">
-                                  <div class="has-text-centered">
-                                    <GeoNavigator destination={Some(destination)} reached={reached_cb} />
-                                  </div>
-                              </div>
-                          </div>
+                          { for nav_data.into_iter().map(nav_element_html) }
                       </div>
                     </section>
                     <main>
