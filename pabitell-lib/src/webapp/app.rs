@@ -359,6 +359,7 @@ impl Component for App {
                         log::debug!("World {} is going to be reseted", &orig_world.id());
                         let mut world = ctx.props().make_world.as_ref().unwrap()(&self.lang);
                         world.load(orig_world.dump()).unwrap();
+                        world.set_id(orig_world.id().to_owned());
                         world.reset();
 
                         let name = ctx.props().name.clone();
