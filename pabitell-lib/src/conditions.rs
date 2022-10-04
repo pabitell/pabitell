@@ -208,11 +208,11 @@ impl From<HasItemCheck> for Condition {
 
 pub struct CharacterInSceneCheck {
     character: String,
-    scene: String,
+    scene: Option<String>,
 }
 
 impl CharacterInSceneCheck {
-    pub fn cond(character: String, scene: String) -> Condition {
+    pub fn cond(character: String, scene: Option<String>) -> Condition {
         Self { character, scene }.into()
     }
 }
@@ -230,11 +230,7 @@ impl Check for CharacterInSceneCheck {
     fn check(&self, world: &dyn World) -> Result<bool> {
         Ok(
             if let Some(character) = world.characters().get(&self.character) {
-                if let Some(character_scene) = character.scene() {
-                    &self.scene == character_scene
-                } else {
-                    false
-                }
+                &self.scene == character.scene()
             } else {
                 false
             },

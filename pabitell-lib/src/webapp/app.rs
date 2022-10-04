@@ -206,10 +206,11 @@ impl Component for App {
                 if let Some(world) = &self.world {
                     if let Some(character) = self.character.as_ref() {
                         let character = world.characters().get(character).unwrap();
-                        let scene_name = character.scene().as_ref().unwrap();
-                        let scene = world.scenes().get(scene_name).unwrap();
-                        ctx.link()
-                            .send_message(Msg::PlayText(scene.long(world.as_ref())));
+                        if let Some(scene_name) = character.scene().as_ref() {
+                            let scene = world.scenes().get(scene_name).unwrap();
+                            ctx.link()
+                                .send_message(Msg::PlayText(scene.long(world.as_ref())));
+                        }
                     }
                     true
                 } else {
@@ -1270,9 +1271,12 @@ impl App {
         let world = world.as_ref()?;
         if let Some(character) = character.as_ref() {
             let character = world.characters().get(character).unwrap();
-            let scene_name = character.scene().as_ref().unwrap();
-            let scene = world.scenes().get(scene_name).unwrap();
-            Some(scene.long(world.as_ref()))
+            if let Some(scene_name) = character.scene().as_ref() {
+                let scene = world.scenes().get(scene_name).unwrap();
+                Some(scene.long(world.as_ref()))
+            } else {
+                None
+            }
         } else {
             None
         }
@@ -1306,30 +1310,32 @@ impl App {
 
             let scene_description = if let Some(character) = self.character.as_ref() {
                 let character = world.characters().get(character).unwrap();
-                let scene_name = character.scene().as_ref().unwrap();
-                let scene = world.scenes().get(scene_name).unwrap();
-                let audio = if let Some(filename) = scene.music() {
+                if let Some(scene_name) = character.scene().as_ref() {
+                    let scene = world.scenes().get(scene_name).unwrap();
+                    let audio = if let Some(filename) = scene.music() {
+                        html! {
+                            <audio loop=true autoplay=true>
+                                <source src={filename} type="audio/ogg"/>
+                            </audio>
+                        }
+                    } else {
+                        html! {}
+                    };
                     html! {
-                        <audio loop=true autoplay=true>
-                            <source src={filename} type="audio/ogg"/>
-                        </audio>
+                        <>
+                            <h1 class="title">{ scene.short(world.as_ref()) }</h1>
+                            { audio }
+                            <p class="subtitle">
+                                <article class="message">
+                                    <div class="message-body">
+                                        { scene.long(world.as_ref()) }
+                                    </div>
+                                </article>
+                            </p>
+                        </>
                     }
                 } else {
                     html! {}
-                };
-
-                html! {
-                    <>
-                        <h1 class="title">{ scene.short(world.as_ref()) }</h1>
-                        { audio }
-                        <p class="subtitle">
-                            <article class="message">
-                                <div class="message-body">
-                                    { scene.long(world.as_ref()) }
-                                </div>
-                            </article>
-                        </p>
-                    </>
                 }
             } else {
                 html! {}
