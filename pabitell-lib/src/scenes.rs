@@ -59,6 +59,10 @@ macro_rules! scene_base {
                 self.location = location
             }
         }
+
+        impl $crate::Clean for $class_name {
+            fn clean(&mut self) {}
+        }
     };
 }
 
@@ -167,6 +171,12 @@ macro_rules! scene_with_dialog {
                     &format!("{}-{}-short", world.name(), self.name()),
                     None,
                 )
+            }
+        }
+
+        impl $crate::Clean for $class_name {
+            fn clean(&mut self) {
+                self.dialog = 0;
             }
         }
     };

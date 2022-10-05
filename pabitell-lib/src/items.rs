@@ -3,7 +3,6 @@ macro_rules! simple_item {
     ($class_name: ident, $name: literal, [$( $tag:expr ),* ]) => {
         #[derive(Debug, Default)]
         pub struct $class_name {
-            id: uuid::Uuid,
             state: $crate::ItemState,
             last_event: Option<usize>,
         }
@@ -80,6 +79,13 @@ macro_rules! simple_item {
                 } else{
                     Err(anyhow::anyhow!("Wrong format of item '{}'", self.name()))
                 }
+            }
+        }
+
+        impl $crate::Clean for $class_name {
+            fn clean(&mut self) {
+                self.state = $crate::ItemState::Unassigned;
+                self.last_event = None;
             }
         }
 

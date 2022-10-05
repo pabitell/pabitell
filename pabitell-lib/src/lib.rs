@@ -96,6 +96,11 @@ pub trait Music {
     }
 }
 
+pub trait Clean {
+    /// Reset to original state
+    fn clean(&mut self) {}
+}
+
 pub trait Description: Named {
     fn long(&self, world: &dyn World) -> String {
         world.get_message(&format!("{}-{}-long", world.name(), self.name()), None)
@@ -110,19 +115,21 @@ pub trait Dumpable {
     fn load(&mut self, data: serde_json::Value) -> Result<()>;
 }
 
-pub trait Item: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+pub trait Item: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug + Clean {
     fn state(&self) -> &ItemState;
     fn set_state(&mut self, state: ItemState);
     fn last_event(&self) -> Option<usize>;
     fn set_last_event(&mut self, event: usize);
 }
 
-pub trait Character: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug {
+pub trait Character: Named + Tagged + AsAny + Description + Dumpable + fmt::Debug + Clean {
     fn scene(&self) -> &Option<String>;
     fn set_scene(&mut self, scene: Option<String>);
 }
 
-pub trait Scene: Named + Tagged + AsAny + Description + Dumpable + Music + fmt::Debug {
+pub trait Scene:
+    Named + Tagged + AsAny + Description + Dumpable + Music + fmt::Debug + Clean
+{
     fn dialog(&self) -> Option<usize> {
         None
     }
@@ -232,7 +239,7 @@ where
     fn make_world() -> Result<S>;
 }
 
-pub trait World: Named + Dumpable {
+pub trait World: Named + Dumpable + Clean {
     fn available_languages(&self) -> Vec<String>;
     fn lang(&self) -> &str;
     fn set_lang(&mut self, lang: &str) -> bool;
@@ -245,18 +252,14 @@ pub trait World: Named + Dumpable {
     fn items_mut(&mut self) -> &mut HashMap<String, Box<dyn Item>>;
     fn setup(&mut self, new_id: bool);
     fn reset(&mut self) {
-        self.clean();
+        self.clean_world();
         self.setup(false);
     }
-    fn extra_clean(&mut self) {}
-    fn clean(&mut self) {
-        self.extra_clean();
-        self.characters_mut()
-            .values_mut()
-            .for_each(|e| e.set_scene(None));
-        self.items_mut()
-            .values_mut()
-            .for_each(|e| e.set_state(ItemState::Unassigned));
+    fn clean_world(&mut self) {
+        self.clean();
+        self.characters_mut().values_mut().for_each(|e| e.clean());
+        self.items_mut().values_mut().for_each(|e| e.clean());
+        self.scenes_mut().values_mut().for_each(|e| e.clean());
     }
     fn randomize_id(&mut self) {
         self.set_id(Uuid::new_v4());
@@ -299,8 +302,8 @@ pub trait Narrator {
 #[cfg(test)]
 pub mod test {
     use super::{
-        conditions, updates, AsAny, Character, Description, Dumpable, Event, Item, ItemState,
-        Music, Named, Scene, Tagged, World, WorldBuilder,
+        conditions, updates, AsAny, Character, Clean, Description, Dumpable, Event, Item,
+        ItemState, Music, Named, Scene, Tagged, World, WorldBuilder,
     };
     use anyhow::{anyhow, Result};
     use std::{any::Any, collections::HashMap};
@@ -328,6 +331,10 @@ pub mod test {
         fn as_any_mut(&mut self) -> &mut dyn Any {
             self
         }
+    }
+
+    impl Clean for TestCharacter {
+        fn clean(&mut self) {}
     }
 
     impl Character for TestCharacter {
@@ -365,6 +372,10 @@ pub mod test {
         fn name(&self) -> &'static str {
             "test_item"
         }
+    }
+
+    impl Clean for TestItem {
+        fn clean(&mut self) {}
     }
 
     impl Description for TestItem {}
@@ -419,6 +430,10 @@ pub mod test {
     }
 
     impl Description for TestScene {}
+
+    impl Clean for TestScene {
+        fn clean(&mut self) {}
+    }
 
     impl AsAny for TestScene {
         fn as_any(&self) -> &dyn Any {
@@ -551,6 +566,10 @@ pub mod test {
         fn name(&self) -> &'static str {
             "test_world"
         }
+    }
+
+    impl Clean for TestWorld {
+        fn clean(&mut self) {}
     }
 
     impl World for TestWorld {
