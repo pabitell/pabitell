@@ -1,11 +1,9 @@
-use geo::{coord, point, prelude::*, Line, Point};
+use geo::{point, prelude::*, Line, Point};
 use wasm_bindgen::{closure::Closure, JsCast};
-use web_sys::PositionOptions;
+use web_sys::{Position, PositionOptions};
 use yew::{html, prelude::*};
 
 use crate::{Event, GeoLocation, World};
-
-use super::Position;
 
 impl From<Point<f64>> for GeoLocation {
     fn from(point: Point<f64>) -> Self {
@@ -33,11 +31,13 @@ const SVG_INITIAL_ROTATION: f64 = -45.;
 pub struct GeoNavigator {
     pub watch_id: i32,
     #[allow(dead_code)]
-    success_cb: Closure<dyn Fn(web_sys::Position)>,
+    success_cb: Closure<dyn Fn(Position)>,
     /// Distance from target
     distance: Option<f64>,
     /// Accuracy of last measurement
     accuracy: Option<f64>,
+    /// Heading of last measurement
+    heading: Option<f64>,
     /// Fist position for direction calculation
     position1: Option<Position>,
     /// Second position used for direction calculation
@@ -63,11 +63,14 @@ impl Component for GeoNavigator {
                     position,
                     ctx.props().destination,
                 );
-                let accuracy = position.accuracy;
+                let accuracy = position.coords().accuracy();
                 let destination = ctx.props().destination;
+                let heading = position.coords().heading();
 
-                let distance = position.point.geodesic_distance(&destination);
-                if distance < position.accuracy {
+                let current_point =
+                    point! { x: position.coords().latitude(), y: position.coords().longitude() };
+                let distance = current_point.geodesic_distance(&destination);
+                if distance < accuracy {
                     // Close modal
                     self.active = false;
                     ctx.props()
@@ -78,6 +81,7 @@ impl Component for GeoNavigator {
                 }
                 self.distance = Some(distance);
                 self.accuracy = Some(accuracy);
+                self.heading = heading;
             }
             Msg::OpenCompass => self.active = true,
             Msg::CloseCompass => self.active = false,
@@ -87,13 +91,9 @@ impl Component for GeoNavigator {
 
     fn create(ctx: &Context<Self>) -> Self {
         let link = ctx.link().clone();
-        let success_cb = Closure::wrap(Box::new(move |pos: web_sys::Position| {
-            let position = Position {
-                point: coord! {x: pos.coords().latitude(), y: pos.coords().longitude() }.into(),
-                accuracy: pos.coords().accuracy(),
-            };
-            link.send_future(async move { Msg::LocationObtained(position) });
-        }) as Box<dyn Fn(web_sys::Position)>);
+        let success_cb = Closure::wrap(Box::new(move |pos: Position| {
+            link.send_future(async move { Msg::LocationObtained(pos) });
+        }) as Box<dyn Fn(Position)>);
 
         let window = web_sys::window().unwrap();
         // prepare js instances
@@ -119,6 +119,7 @@ impl Component for GeoNavigator {
             position1: None,
             position2: None,
             accuracy: None,
+            heading: None,
         }
     }
 
@@ -138,8 +139,11 @@ impl Component for GeoNavigator {
             let img_html = if let (Some(pos1), Some(pos2)) =
                 (self.position1.as_ref(), self.position2.as_ref())
             {
-                let direction = Line::new(pos1.point.clone(), pos2.point.clone());
-                let rotation = Self::calculate_rotation(&destination, &direction);
+                let direction = Line::new(
+                    point! { x: pos1.coords().latitude(), y: pos1.coords().latitude() },
+                    point! { x: pos2.coords().longitude(), y: pos2.coords().longitude() },
+                );
+                let rotation = Self::calculate_rotation(&destination, &direction, self.heading);
                 html! {
                     <img
                       src="images/location-arrow.svg"
@@ -229,22 +233,28 @@ impl Component for GeoNavigator {
 
 impl GeoNavigator {
     fn update_positions(&mut self, position: Position) {
+        let point = point! { x: position.coords().latitude(), y: position.coords().longitude() };
+        let pointa = position.coords().accuracy();
         // Assign starting point
         if let Some(pos1) = self.position1.as_ref() {
             if let Some(pos2) = self.position2.as_ref() {
-                if Self::more_precise(pos2, &position) {
+                let point2 = point! { x: pos2.coords().latitude(), y: pos2.coords().longitude() };
+                let point2a = pos2.coords().accuracy();
+                if Self::more_precise(&point2, point2a, &point, pointa) {
                     // new position is more precise than the previous one
                     self.position2 = Some(position)
-                } else if Self::different_positions(pos2, &position) {
+                } else if Self::different_positions(&point2, point2a, &point, pointa) {
                     // new location was reached - swap positions
                     self.position1 = self.position2.take();
                     self.position2 = Some(position);
                 }
             } else {
-                if Self::more_precise(pos1, &position) {
+                let point1 = point! { x: pos1.coords().latitude(), y: pos1.coords().longitude() };
+                let point1a = pos1.coords().accuracy();
+                if Self::more_precise(&point1, point1a, &point, pointa) {
                     // new position is more precise than the previous one
                     self.position1 = Some(position);
-                } else if Self::different_positions(pos1, &position) {
+                } else if Self::different_positions(&point1, point1a, &point, pointa) {
                     // second point can be established
                     self.position2 = Some(position);
                 }
@@ -255,23 +265,28 @@ impl GeoNavigator {
         }
     }
 
-    fn calculate_rotation(destination: &Point, direction: &Line) -> f64 {
+    fn calculate_rotation(destination: &Point, direction: &Line, heading: Option<f64>) -> f64 {
         let start: Point = direction.start.clone().into();
         let end: Point = direction.end.clone().into();
+        let first_angle = if let Some(heading) = heading {
+            heading + 180.
+        } else {
+            start.bearing(end.clone())
+        };
 
-        SVG_INITIAL_ROTATION - start.bearing(end.clone()) + end.bearing(destination.clone())
+        SVG_INITIAL_ROTATION - first_angle + end.bearing(destination.clone())
     }
 
     /// Is second point more precise than the first one
-    fn more_precise(p1: &Position, p2: &Position) -> bool {
-        let distance = p1.point.geodesic_distance(&p2.point);
-        p1.accuracy > distance + p2.accuracy
+    fn more_precise(p1: &Point, acc1: f64, p2: &Point, acc2: f64) -> bool {
+        let distance = p1.geodesic_distance(&p2);
+        acc1 > distance + acc2
     }
 
     /// We are sure that the positions are different
-    fn different_positions(p1: &Position, p2: &Position) -> bool {
-        let distance = p1.point.geodesic_distance(&p2.point);
-        distance > p1.accuracy + p2.accuracy
+    fn different_positions(p1: &Point, acc1: f64, p2: &Point, acc2: f64) -> bool {
+        let distance = p1.geodesic_distance(&p2);
+        distance > acc1 + acc2
     }
 
     /// Build url in geo format
@@ -333,74 +348,72 @@ pub fn make_navigations_data(
 pub mod test {
     use geo::{point, Line};
 
-    use super::{GeoNavigator, Position};
+    use super::{GeoNavigator, SVG_INITIAL_ROTATION};
 
     #[test]
     fn more_precise() {
-        let old = Position {
-            point: point! { x: 50.0824, y: 14.5000 },
-            accuracy: 30.,
-        };
+        let p1 = point! { x: 50.0824, y: 14.5000 };
+        let p1a = 30.;
 
         // ~15m distance
-        let pos1 = Position {
-            point: point! { x: 50.0825, y: 14.5001 },
-            accuracy: 10.,
-        };
-        assert_eq!(GeoNavigator::more_precise(&old, &pos1), true);
-        assert_eq!(GeoNavigator::more_precise(&pos1, &old), false);
+        let p2 = point! { x: 50.0825, y: 14.5001 };
+        let p2a = 10.;
+        assert_eq!(GeoNavigator::more_precise(&p1, p1a, &p2, p2a), true);
+        assert_eq!(GeoNavigator::more_precise(&p2, p2a, &p1, p1a), false);
 
-        let pos2 = Position {
-            point: point! { x: 50.0825, y: 14.6000 },
-            accuracy: 10.,
-        };
-        assert_eq!(GeoNavigator::more_precise(&old, &pos2), false);
-        assert_eq!(GeoNavigator::more_precise(&pos2, &old), false);
+        let p2 = point! { x: 50.0825, y: 14.6000 };
+        let p2a = 10.;
+        assert_eq!(GeoNavigator::more_precise(&p1, p1a, &p2, p2a), false,);
+        assert_eq!(GeoNavigator::more_precise(&p2, p2a, &p1, p1a), false);
 
         // ~15m distance
-        let pos3 = Position {
-            point: point! { x: 50.0825, y: 14.5001 },
-            accuracy: 20.,
-        };
-        assert_eq!(GeoNavigator::more_precise(&old, &pos3), false);
-        assert_eq!(GeoNavigator::more_precise(&pos3, &old), false);
+        let p2 = point! { x: 50.0825, y: 14.5001 };
+        let p2a = 20.;
+        assert_eq!(GeoNavigator::more_precise(&p1, p1a, &p2, p2a), false,);
+        assert_eq!(GeoNavigator::more_precise(&p2, p2a, &p1, p1a), false);
     }
 
     #[test]
     fn different_positions() {
-        let old = Position {
-            point: point! { x: 50.0824, y: 14.5000 },
-            accuracy: 10.,
-        };
-        // ~15m distance
-        let pos1 = Position {
-            point: point! { x: 50.0825, y: 14.5001 },
-            accuracy: 5.,
-        };
-        assert_eq!(GeoNavigator::different_positions(&old, &pos1), true);
-        assert_eq!(GeoNavigator::different_positions(&pos1, &old), true);
+        let old_point = point! { x: 50.0824, y: 14.5000 };
+        let old_accuracy = 10.;
 
         // ~15m distance
-        let pos1 = Position {
-            point: point! { x: 50.0825, y: 14.5001 },
-            accuracy: 6., // small overlap
-        };
-        assert_eq!(GeoNavigator::different_positions(&old, &pos1), false);
-        assert_eq!(GeoNavigator::different_positions(&pos1, &old), false);
+        let p1 = point! { x: 50.0825, y: 14.5001 };
+        let p1a = 5.;
+        assert_eq!(
+            GeoNavigator::different_positions(&old_point, old_accuracy, &p1, p1a),
+            true
+        );
+        assert_eq!(
+            GeoNavigator::different_positions(&p1, p1a, &old_point, old_accuracy),
+            true
+        );
+
+        // ~15m distance
+        let p1a = 6.; // small overlap
+        assert_eq!(
+            GeoNavigator::different_positions(&old_point, old_accuracy, &p1, p1a),
+            false
+        );
+        assert_eq!(
+            GeoNavigator::different_positions(&p1, p1a, &old_point, old_accuracy),
+            false
+        );
     }
 
     #[test]
     fn calculate_rotation() {
         let destination = point! { x: 50.0001, y: 14.5001 };
 
-        // left
+        // right
         let line1 = Line::new(
             point! { x: 50.0000, y: 14.5000 },
             point! { x: 50.0001, y: 14.5000 },
         );
         assert_eq!(
-            GeoNavigator::calculate_rotation(&destination, &line1).round(),
-            -135.
+            GeoNavigator::calculate_rotation(&destination, &line1, None).round(),
+            SVG_INITIAL_ROTATION - 90.,
         );
 
         // backwards
@@ -409,18 +422,18 @@ pub mod test {
             point! { x: 50.0001, y: 14.5003 },
         );
         assert_eq!(
-            GeoNavigator::calculate_rotation(&destination, &line2).round(),
-            135.
+            GeoNavigator::calculate_rotation(&destination, &line2, None).round(),
+            SVG_INITIAL_ROTATION + 180.
         );
 
-        // right
+        // left
         let line3 = Line::new(
             point! { x: 50.0000, y: 14.5000 },
             point! { x: 50.0000, y: 14.5001 },
         );
         assert_eq!(
-            GeoNavigator::calculate_rotation(&destination, &line3).round(),
-            45.
+            GeoNavigator::calculate_rotation(&destination, &line3, None).round(),
+            SVG_INITIAL_ROTATION + 90.,
         );
 
         // forward
@@ -429,8 +442,8 @@ pub mod test {
             point! { x: 50.0002, y: 14.5001 },
         );
         assert_eq!(
-            GeoNavigator::calculate_rotation(&destination, &line4).round(),
-            -45.
+            GeoNavigator::calculate_rotation(&destination, &line4, None).round(),
+            SVG_INITIAL_ROTATION,
         );
 
         // upper right
@@ -439,7 +452,7 @@ pub mod test {
             point! { x: 50.0000, y: 14.5000 },
         );
         assert_eq!(
-            GeoNavigator::calculate_rotation(&destination, &line5).round(),
+            GeoNavigator::calculate_rotation(&destination, &line5, None).round(),
             -1.
         );
     }
