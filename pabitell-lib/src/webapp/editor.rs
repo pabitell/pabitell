@@ -1,7 +1,12 @@
+use std::collections::HashMap;
+
 use geo::{point, Point};
+use url::Url;
 use wasm_bindgen::{closure::Closure, JsCast};
-use web_sys::PositionOptions;
+use web_sys::{HtmlInputElement, PositionOptions};
 use yew::{html, prelude::*};
+
+use crate::GeoLocation;
 
 use super::scenes::Scene;
 
@@ -19,12 +24,15 @@ pub struct Editor {
     #[allow(dead_code)]
     success_cb: Closure<dyn Fn(web_sys::Position)>,
     current_position: Option<(Point, f64)>,
+    url_inputs: HashMap<String, Option<(Point, HtmlInputElement)>>,
 }
 
 pub enum Msg {
     UpdateSceneWithCurrentLocation(String),
     LocationObtained(Point, f64),
     RemoveLocation(String),
+    UrlUpdated(String, Option<Point>, HtmlInputElement),
+    ApplyUrl(String),
     Close,
 }
 
@@ -39,6 +47,7 @@ impl Component for Editor {
                 true
             }
             Msg::LocationObtained(point, accuracy) => {
+                log::debug!("Location obtained {:?} ~{}m", point, accuracy);
                 self.current_position = Some((point, accuracy));
                 true
             }
@@ -53,6 +62,26 @@ impl Component for Editor {
             }
             Msg::RemoveLocation(scene) => {
                 ctx.props().update_location.emit((scene, None));
+                true
+            }
+            Msg::UrlUpdated(scene, point_opt, input_html) => {
+                let value = if let Some(point) = point_opt {
+                    Some((point, input_html))
+                } else {
+                    None
+                };
+                self.url_inputs.insert(scene, value);
+                true
+            }
+            Msg::ApplyUrl(scene) => {
+                if let Some((point, html_input)) =
+                    self.url_inputs.insert(scene.clone(), None).unwrap()
+                {
+                    ctx.props()
+                        .update_location
+                        .emit((scene, Some(point.clone())));
+                    html_input.set_value("");
+                }
                 true
             }
         }
@@ -84,10 +113,18 @@ impl Component for Editor {
             )
             .unwrap();
 
+        let url_inputs = ctx
+            .props()
+            .scenes
+            .iter()
+            .map(|s| (s.code.clone(), None))
+            .collect();
+
         Self {
             watch_id,
             success_cb,
             current_position: None,
+            url_inputs,
         }
     }
 
@@ -97,26 +134,35 @@ impl Component for Editor {
         let current_accuracy = self.current_position.map(|cp| cp.1);
 
         let render_scene_edit = |scene: &Scene| {
+            let link = link.clone();
             let code = scene.code.to_string();
+
+            let url_apply_disabled = self
+                .url_inputs
+                .get(&code)
+                .map(|e| e.is_none())
+                .unwrap_or(true);
+
             let code_cloned = code.clone();
-            let coords_html = if let Some(geo_location) = scene.geo_location {
-                html! {
-                    <>
-                        <small>{ format!("Lat {}", geo_location.0) }</small>
-                        <small class="ml-2">{ format!("Lon {}", geo_location.1) }</small>
-                    </>
-                }
+            let coords_text = if let Some(geo_location) = scene.geo_location {
+                format!("{} {}", geo_location.0, geo_location.1)
             } else {
-                html! {}
+                String::default()
             };
 
-            let set_current_location = link
-                .clone()
-                .callback(move |_| Msg::UpdateSceneWithCurrentLocation(code.clone()));
+            let remove_location = link.callback(move |_| Msg::RemoveLocation(code_cloned.clone()));
 
-            let remove_location = link
-                .clone()
-                .callback(move |_| Msg::RemoveLocation(code_cloned.clone()));
+            let code_cloned = code.clone();
+            let set_current_location =
+                link.callback(move |_| Msg::UpdateSceneWithCurrentLocation(code_cloned.clone()));
+
+            let code_cloned = code.clone();
+            let apply_url = link.callback(move |_| Msg::ApplyUrl(code_cloned.clone()));
+
+            let update_url = link.clone().callback(move |e: Event| {
+                let input: HtmlInputElement = e.target_unchecked_into();
+                Msg::UrlUpdated(code.clone(), Self::parse_osm_url(&input.value()), input)
+            });
 
             html! {
                 <article class="media">
@@ -131,45 +177,94 @@ impl Component for Editor {
                                 <strong>{ &scene.short }</strong>
                             </p>
                             <p>
-                                <button class="button is-inverted is-small">
-                                    <span class="icon is-small">
-                                        <i class="fas fa-location-crosshairs"></i>
-                                    </span>
-                                    { coords_html }
-                                </button>
+                                <div class="field has-addons">
+                                  <div class="control">
+                                    <a
+                                      class="button is-info is-small is-outlined"
+                                      href={ Self::osm_url(self.current_position, scene.geo_location) }
+                                      target="_blank"
+                                      disabled={ self.current_position.is_none() }
+                                    >
+                                        <span class="icon is-small">
+                                            <i class="fas fa-map-location"></i>
+                                        </span>
+                                    </a>
+                                  </div>
+                                  <div class="control">
+                                    <input
+                                      class="input is-small"
+                                      type="url"
+                                      placeholder="https://www.openstreetmap.org/#map=../......../........"
+                                      onchange={ update_url }
+                                    />
+                                  </div>
+                                  <div class="control">
+                                    <button
+                                      class="button is-success is-small is-outlined"
+                                      disabled={url_apply_disabled}
+                                      onclick={apply_url}
+                                    >
+                                        <span class="icon is-small">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div class="field">
+                                    <div class="control">
+                                        <button
+                                          class="button is-small is-outlined is-info"
+                                          onclick={ set_current_location }
+                                          disabled={ current_accuracy.is_none() }
+                                        >
+                                            <span class="icon is-small">
+                                                <i class="fas fa-arrows-to-circle"></i>
+                                            </span>
+                                            {
+                                                if let Some(current) = current_accuracy {
+                                                    html! {
+                                                        <span class="ml-2">
+                                                            { format!("~{}m", current.round()) }
+                                                        </span>
+                                                    }
+                                                } else {
+                                                    html! {}
+                                                }
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            </p>
+                            <p>
                                 {
                                     if scene.geo_location.is_some() {
                                         html! {
-                                            <button class="button is-small is-outlined is-danger" onclick={remove_location}>
-                                                <span class="icon is-small">
-                                                    <i class="fas fa-trash"></i>
-                                                </span>
-                                            </button>
+                                            <div class="field has-addons">
+                                                <div class="control">
+                                                    <button
+                                                      class="button is-small is-outlined is-danger"
+                                                      onclick={remove_location}
+                                                    >
+                                                        <span class="icon is-small">
+                                                            <i class="fas fa-trash"></i>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div class="control">
+                                                    <input
+                                                      class="input is-small"
+                                                      type="text"
+                                                      placeholder="https://www.openstreetmap.org/#map=../......../........"
+                                                      readonly={true}
+                                                      value={ coords_text }
+                                                    />
+                                                </div>
+                                            </div>
                                         }
                                     } else {
                                         html! {}
                                     }
                                 }
-                                <button
-                                  class="button is-small is-outlined is-info"
-                                  onclick={ set_current_location }
-                                  disabled={ current_accuracy.is_none() }
-                                >
-                                    <span class="icon is-small">
-                                        <i class="fas fa-arrows-to-circle"></i>
-                                    </span>
-                                    {
-                                        if let Some(current) = current_accuracy {
-                                            html! {
-                                                <span class="ml-2">
-                                                    { format!("~{}m", current.round()) }
-                                                </span>
-                                            }
-                                        } else {
-                                            html! {}
-                                        }
-                                    }
-                                </button>
                             </p>
                         </div>
                     </div>
@@ -210,4 +305,42 @@ impl Component for Editor {
     }
 }
 
-impl Editor {}
+impl Editor {
+    /// Build osm url
+    fn osm_url(current: Option<(Point, f64)>, target: Option<GeoLocation>) -> String {
+        if let Some(current) = current {
+            if let Some(target) = target {
+                format!(
+                    "https://www.openstreetmap.org/?mlat={}&mlon={}#map=18/{}/{}",
+                    target.0,
+                    target.1,
+                    current.0.x(),
+                    current.0.y(),
+                )
+            } else {
+                format!(
+                    "https://www.openstreetmap.org/#map=18/{}/{}",
+                    current.0.x(),
+                    current.0.y(),
+                )
+            }
+        } else {
+            String::default()
+        }
+    }
+
+    /// Parse osm url from copy paste
+    fn parse_osm_url(url: &str) -> Option<Point> {
+        let parsed = Url::parse(url).ok()?;
+        let fragment = parsed.fragment()?;
+        let map_part = fragment.splitn(2, "&").collect::<Vec<_>>()[0];
+        let coords = map_part.splitn(3, "/").collect::<Vec<_>>();
+        if coords.len() < 3 {
+            return None;
+        }
+        let x: f64 = coords[1].parse().ok()?;
+        let y: f64 = coords[2].parse().ok()?;
+
+        Some(point! { x: x, y: y })
+    }
+}

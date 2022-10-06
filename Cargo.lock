@@ -1946,6 +1946,7 @@ dependencies = [
  "stream-cancel",
  "term",
  "unic-langid",
+ "url",
  "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",
