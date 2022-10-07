@@ -32,6 +32,7 @@ pub struct GeoNavigator {
     pub watch_id: i32,
     #[allow(dead_code)]
     success_cb: Closure<dyn Fn(Position)>,
+    current_success_cb: Option<Closure<dyn Fn(Position)>>,
     /// Distance from target
     distance: Option<f64>,
     /// Accuracy of last measurement
@@ -49,6 +50,8 @@ pub enum Msg {
     LocationObtained(Position),
     OpenCompass,
     CloseCompass,
+    RefreshPosition,
+    SetCurrentSuccessCb(Option<Closure<dyn Fn(Position)>>),
 }
 
 impl Component for GeoNavigator {
@@ -85,23 +88,45 @@ impl Component for GeoNavigator {
             }
             Msg::OpenCompass => self.active = true,
             Msg::CloseCompass => self.active = false,
+            Msg::RefreshPosition => {
+                if self.current_success_cb.is_some() {
+                    // Already running
+                    return false;
+                }
+                let window = web_sys::window().unwrap();
+                let geolocation = window.navigator().geolocation().unwrap();
+
+                let options = Self::make_geoapi_options();
+                self.current_success_cb = Some(Self::location_obtained_cb(ctx, true));
+
+                geolocation
+                    .get_current_position_with_error_callback_and_options(
+                        self.current_success_cb
+                            .as_ref()
+                            .unwrap()
+                            .as_ref()
+                            .unchecked_ref(),
+                        None,
+                        &options,
+                    )
+                    .unwrap();
+            }
+            Msg::SetCurrentSuccessCb(current_success_cb) => {
+                self.current_success_cb = current_success_cb;
+            }
         }
         true
     }
 
     fn create(ctx: &Context<Self>) -> Self {
-        let link = ctx.link().clone();
-        let success_cb = Closure::wrap(Box::new(move |pos: Position| {
-            link.send_future(async move { Msg::LocationObtained(pos) });
-        }) as Box<dyn Fn(Position)>);
-
+        let success_cb = Self::location_obtained_cb(ctx, false);
         let window = web_sys::window().unwrap();
+
         // prepare js instances
         let navigator = window.navigator();
         let geolocation = navigator.geolocation().unwrap();
 
-        let mut options = PositionOptions::new();
-        options.enable_high_accuracy(true);
+        let options = Self::make_geoapi_options();
 
         let watch_id = geolocation
             .watch_position_with_error_callback_and_options(
@@ -114,6 +139,7 @@ impl Component for GeoNavigator {
         Self {
             watch_id,
             success_cb,
+            current_success_cb: None,
             distance: None,
             active: false,
             position1: None,
@@ -160,6 +186,14 @@ impl Component for GeoNavigator {
                 }
             };
 
+            let refresh_cb = ctx.link().callback(|_| Msg::RefreshPosition);
+            let refresh_disabled = self.current_success_cb.is_some();
+            let refresh_classes = if refresh_disabled {
+                classes!("fas", "fa-arrows-rotate", "rotate")
+            } else {
+                classes!("fas", "fa-arrows-rotate")
+            };
+
             html! {
                 <>
                     <button
@@ -178,10 +212,17 @@ impl Component for GeoNavigator {
                         <div class="modal-card has-text-centered">
                             <header class="modal-card-head">
                                 <p class="modal-card-title">{ distance.round() } <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</p>
+                                <button
+                                  class="button is-info is-outlined"
+                                  onclick={refresh_cb}
+                                  disabled={refresh_disabled}
+                                >
+                                    <i class={refresh_classes}></i>
+                                </button>
                             </header>
                             <section class="modal-card-body">
                                 <div class="container is-flex is-justify-content-center is-align-items-center w-75">
-                                    <figure class="image is-1by1 w-50">
+                                    <figure class="image is-1by1 w-25">
                                         {img_html}
 
                                     </figure>
@@ -310,6 +351,22 @@ impl GeoNavigator {
             x = point.x(),
             y = point.y(),
         )
+    }
+
+    fn make_geoapi_options() -> PositionOptions {
+        let mut options = PositionOptions::new();
+        options.enable_high_accuracy(true);
+        options
+    }
+
+    fn location_obtained_cb(ctx: &Context<Self>, reset_cb: bool) -> Closure<dyn Fn(Position)> {
+        let link = ctx.link().clone();
+        Closure::wrap(Box::new(move |pos: Position| {
+            if reset_cb {
+                link.send_message(Msg::SetCurrentSuccessCb(None));
+            }
+            link.send_future(async move { Msg::LocationObtained(pos) });
+        }) as Box<dyn Fn(Position)>)
     }
 }
 
