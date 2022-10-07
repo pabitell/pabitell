@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Local, Timelike, Utc};
+use chrono::{DateTime, Datelike, Local, Timelike};
 use data_url::DataUrl;
 use js_sys::{Array, Uint8Array};
 use serde_json::Value;
@@ -48,7 +48,7 @@ pub enum Msg {
     QRCodeScanShow,
     QRCodeScanned(String),
     ShowPrint,
-    UpdateWorlds(Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value, usize)>),
+    UpdateWorlds(Vec<database::StoredWorld>),
     WorldDelete(Uuid),
     WorldPicked(Uuid, String, bool),
     SetLanguage(String),
@@ -62,7 +62,7 @@ pub struct Intro {
     pub link_ref: NodeRef,
     pub file_ref: NodeRef,
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
-    pub worlds: Vec<(DateTime<Utc>, usize, String, bool, Uuid, Value, usize)>,
+    pub worlds: Vec<database::StoredWorld>,
 }
 
 impl Component for Intro {
@@ -253,22 +253,28 @@ impl Component for Intro {
                 .map(|e| (e.name.to_string(), e))
                 .collect();
             let cloned_link = link.clone();
-            let render_stored_world = move |time: DateTime<Utc>,
-                                            events,
-                                            character: String,
-                                            fixed_character,
-                                            id: Uuid,
-                                            world: Value,
-                                            _version: usize| {
-                let local_time: DateTime<Local> = DateTime::from(time.to_owned());
-                let character = characters.get(&character).unwrap();
+            let render_stored_world = |stored_world: database::StoredWorld| {
+                let local_time: DateTime<Local> = DateTime::from(stored_world.last.to_owned());
+                let character = characters
+                    .get(
+                        &stored_world
+                            .character
+                            .clone()
+                            .unwrap_or_else(|| "narrator".to_string()),
+                    )
+                    .unwrap();
                 let characters::Character { name, icon, .. } = character.as_ref().clone();
-                let restore_cb = cloned_link
-                    .callback(move |_| Msg::WorldPicked(id, name.to_string(), fixed_character));
-                let delete_cb = cloned_link.callback(move |_| Msg::WorldDelete(id));
+                let world_id = stored_world.id.clone();
+                let events = stored_world.data["event_count"].as_u64().unwrap();
+                let restore_cb = cloned_link.callback(move |_| {
+                    Msg::WorldPicked(world_id, name.to_string(), stored_world.fixed_character)
+                });
+                let delete_cb =
+                    cloned_link.callback(move |_| Msg::WorldDelete(stored_world.id.clone()));
 
-                let download_cb =
-                    cloned_link.callback(move |_| Msg::DownloadWorld(id, world.clone()));
+                let download_cb = cloned_link.callback(move |_| {
+                    Msg::DownloadWorld(stored_world.id.clone(), stored_world.data.clone())
+                });
 
                 html! {
                     <tr>
@@ -319,16 +325,7 @@ impl Component for Intro {
                     <div class="table-container">
                       <table class="table is-bordered">
                         {
-                            for self.worlds.iter().map(
-                                |(time, events, character, fixed_character, id, world, version)|
-                                render_stored_world(
-                                    *time, events,
-                                    character.clone(),
-                                    *fixed_character,
-                                    *id, world.to_owned(),
-                                    *version
-                                )
-                            )
+                            for self.worlds.clone().into_iter().map(render_stored_world)
                         }
                       </table>
                     </div>
@@ -468,23 +465,7 @@ impl Intro {
                 Ok(worlds) => Msg::UpdateWorlds(
                     worlds
                         .into_iter()
-                        .filter_map(|(last, id, character, fixed_character, data, version)| {
-                            let count = data["event_count"].as_u64()?;
-                            if world_version == version {
-                                Some((
-                                    last,
-                                    count as usize,
-                                    character,
-                                    fixed_character,
-                                    id,
-                                    data,
-                                    version,
-                                ))
-                            } else {
-                                // Skip when versions are mismatched
-                                None
-                            }
-                        })
+                        .filter(|e| e.version == world_version)
                         .collect(),
                 ),
                 Err(err) => {

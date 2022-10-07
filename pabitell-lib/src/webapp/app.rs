@@ -1,3 +1,4 @@
+use chrono::Utc;
 use geo::Point;
 use gloo::{
     storage::{self, Storage},
@@ -370,12 +371,15 @@ impl Component for App {
                             let db = database::init_database(&name).await;
                             database::put_world(
                                 &db,
-                                world.id(),
-                                "narrator".to_string(),
-                                false,
-                                world.dump(),
-                                true,
-                                world.version(),
+                                database::StoredWorld {
+                                    id: world.id().to_owned(),
+                                    character: None,
+                                    last: Utc::now(),
+                                    fixed_character: false,
+                                    data: world.dump(),
+                                    version: world.version(),
+                                    owned: true,
+                                },
                             )
                             .await
                             .unwrap();
@@ -416,12 +420,15 @@ impl Component for App {
                     let db = database::init_database(&name).await;
                     database::put_world(
                         &db,
-                        world.id(),
-                        "narrator".to_string(),
-                        false,
-                        world.dump(),
-                        true,
-                        world.version(),
+                        database::StoredWorld {
+                            id: world.id().to_owned(),
+                            character: None,
+                            last: Utc::now(),
+                            fixed_character: false,
+                            data: world.dump(),
+                            version: world.version(),
+                            owned: true,
+                        },
                     )
                     .await
                     .unwrap();
@@ -548,7 +555,7 @@ impl Component for App {
                                         let world = database::get_world(&db, &world_id)
                                             .await
                                             .unwrap()
-                                            .map(|record| record["data"].clone());
+                                            .map(|record| record.data.clone());
 
                                         let resp = protocol::Message::Response(
                                             protocol::ResponseMessage::GetWorld(
@@ -584,7 +591,7 @@ impl Component for App {
                                                 .unwrap()
                                         {
                                             // First try to get world from database
-                                            world.load(record["data"].clone()).unwrap();
+                                            world.load(record.data.clone()).unwrap();
                                             world.set_id(world_id);
                                             if let Some(mut event) =
                                                 narrator.parse_event(world.as_ref(), event)
@@ -597,12 +604,15 @@ impl Component for App {
                                                     // Store world
                                                     database::put_world(
                                                         &db,
-                                                        world.id(),
-                                                        "narrator".to_string(),
-                                                        false,
-                                                        world.dump(),
-                                                        true,
-                                                        world.version(),
+                                                        database::StoredWorld {
+                                                            id: world.id().to_owned(),
+                                                            character: None,
+                                                            last: Utc::now(),
+                                                            fixed_character: false,
+                                                            data: world.dump(),
+                                                            version: world.version(),
+                                                            owned: true,
+                                                        },
                                                     )
                                                     .await
                                                     .unwrap();
@@ -688,12 +698,15 @@ impl Component for App {
                                             let db = database::init_database(&name).await;
                                             database::put_world(
                                                 &db,
-                                                &world_id,
-                                                character.unwrap_or_else(|| "narrator".to_string()),
-                                                fixed_character,
-                                                world.dump(),
-                                                false,
-                                                world.version(),
+                                                database::StoredWorld {
+                                                    id: world_id,
+                                                    character,
+                                                    last: Utc::now(),
+                                                    fixed_character,
+                                                    data: world.dump(),
+                                                    version: world.version(),
+                                                    owned: false,
+                                                },
                                             )
                                             .await
                                             .unwrap();
@@ -878,12 +891,15 @@ impl Component for App {
                         let db = database::init_database(&name).await;
                         database::put_world(
                             &db,
-                            world.id(),
-                            "narrator".to_string(),
-                            false,
-                            world.dump(),
-                            true,
-                            world.version(),
+                            database::StoredWorld {
+                                id: world.id().to_owned(),
+                                character: None,
+                                last: Utc::now(),
+                                fixed_character: false,
+                                data: world.dump(),
+                                version: world.version(),
+                                owned: true,
+                            },
                         )
                         .await
                         .unwrap();
@@ -945,12 +961,15 @@ impl Component for App {
                         let world_id = world_id; // move world_id inside this closure
                         database::put_world(
                             &db,
-                            &world_id,
-                            "narrator".to_string(),
-                            false,
-                            world_data,
-                            true,
-                            world_version,
+                            database::StoredWorld {
+                                id: world_id,
+                                character: None,
+                                last: Utc::now(),
+                                fixed_character: false,
+                                data: world_data,
+                                version: world_version,
+                                owned: true,
+                            },
                         )
                         .await
                         .unwrap();
@@ -1391,7 +1410,7 @@ impl App {
                     let db = database::init_database(&name).await;
                     if let Some(record) = database::get_world(&db, &world_id).await.unwrap() {
                         // First try to get world from database
-                        world.load(record["data"].clone()).unwrap();
+                        world.load(record.data).unwrap();
 
                         // If this world is owned update it right away
                         log::debug!("World {} is owned. Local db queried.", world_id);
@@ -1408,19 +1427,16 @@ impl App {
                 None => {
                     let db = database::init_database(&name).await;
                     if let Some(record) = database::get_world(&db, &world_id).await.unwrap() {
-                        match record["owned"].as_bool() {
-                            Some(true) => {
-                                // First try to get world from database
-                                world.load(record["data"].clone()).unwrap();
+                        if record.owned {
+                            // First try to get world from database
+                            world.load(record.data).unwrap();
 
-                                // If this world is owned update it right away
-                                log::debug!("World {} is owned. Local db queried.", world_id);
-                                Msg::WorldUpdateFetched(world, true)
-                            }
-                            _ => {
-                                // world is not owned get it using WS
-                                Msg::WsGetWorld(world_id)
-                            }
+                            // If this world is owned update it right away
+                            log::debug!("World {} is owned. Local db queried.", world_id);
+                            Msg::WorldUpdateFetched(world, true)
+                        } else {
+                            // world is not owned get it using WS
+                            Msg::WsGetWorld(world_id)
                         }
                     } else {
                         // World is not present it db, this means that it is not owned

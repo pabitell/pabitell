@@ -1,8 +1,20 @@
 use chrono::{DateTime, Utc};
 use rexie::{Index, KeyRange, ObjectStore, Result, Rexie, TransactionMode};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct StoredWorld {
+    pub id: Uuid,
+    pub last: DateTime<Utc>,
+    pub character: Option<String>,
+    pub fixed_character: bool,
+    pub data: Value,
+    pub version: usize,
+    pub owned: bool,
+}
 
 async fn _init_database(name: &str) -> Result<Rexie> {
     Rexie::builder(name)
@@ -42,7 +54,7 @@ pub async fn init_database(name: &str) -> Rexie {
     }
 }
 
-pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
+pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<StoredWorld>> {
     log::debug!("DB Get world '{id}'");
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadOnly)?;
 
@@ -56,9 +68,7 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<Value>> {
     Ok(Some(world_json))
 }
 
-pub async fn get_worlds(
-    rex: &Rexie,
-) -> Result<Vec<(DateTime<Utc>, Uuid, String, bool, Value, usize)>> {
+pub async fn get_worlds(rex: &Rexie) -> Result<Vec<StoredWorld>> {
     log::debug!("DB Get worlds '{}'", rex.name());
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadOnly)?;
 
@@ -70,59 +80,24 @@ pub async fn get_worlds(
     transaction.done().await?;
     Ok(worlds
         .iter()
-        .map(|(k, v)| {
-            let data: Value = v.into_serde().unwrap();
-            let character = data["character"]
-                .as_str()
-                .map(|e| e.to_string())
-                .unwrap_or_else(|| "narrator".to_string());
-            let fixed_character = data["fixed_character"].as_bool().unwrap_or(false);
-            let version = data["version"].as_u64().unwrap_or(0);
-            (
-                k.as_string().unwrap().parse::<DateTime<Utc>>().unwrap(),
-                data["id"].as_str().unwrap().parse::<Uuid>().unwrap(),
-                character,
-                fixed_character,
-                data["data"].clone(),
-                version as usize,
-            )
+        .filter_map(|(_, v)| {
+            let stored_world: StoredWorld = serde_json::from_value(v.into_serde().ok()?).ok()?;
+            Some(stored_world)
         })
         .collect())
 }
 
-pub async fn put_world(
-    rex: &Rexie,
-    id: &Uuid,
-    character: String,
-    fixed_character: bool,
-    data: Value,
-    owned: bool,
-    version: usize,
-) -> Result<()> {
-    log::debug!("DB Put world '{id}'");
+pub async fn put_world(rex: &Rexie, mut stored_world: StoredWorld) -> Result<()> {
+    log::debug!("DB Put world '{}'", &stored_world.id);
 
     // Test whether world is present and if so keep owned attr
-    let owned = if let Some(world) = get_world(rex, id).await? {
-        if let Some(owned) = world["owned"].as_bool() {
-            owned
-        } else {
-            owned
-        }
-    } else {
-        owned
-    };
+    if let Some(world) = get_world(rex, &stored_world.id).await? {
+        stored_world.owned = world.owned;
+    }
+
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadWrite)?;
     let worlds = transaction.store("worlds")?;
-    let world_id = id.to_string();
-    let record = serde_json::json!({
-        "id":  world_id,
-        "data": data,
-        "character": character,
-        "fixed_character": fixed_character,
-        "last": Utc::now(),
-        "owned": owned,
-        "version": version,
-    });
+    let record = serde_json::to_value(&stored_world).unwrap();
     worlds
         .put(&JsValue::from_serde(&Some(record)).unwrap(), None)
         .await?;
