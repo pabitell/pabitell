@@ -5,6 +5,13 @@ use yew::{html, prelude::*};
 
 use crate::{Event, GeoLocation, World};
 
+/// Limits range for inaccurate locations
+const MAX_TRIGGER_DISTANCE: f64 = 25.;
+/// Extennds range when GPS is too precise
+const MIN_TRIGGER_DISTANCE: f64 = 10.;
+/// Can't trigger when accuracy really bad
+const MAX_TRIGGER_ACCURACY: f64 = 50.;
+
 impl From<Point<f64>> for GeoLocation {
     fn from(point: Point<f64>) -> Self {
         GeoLocation(point.x(), point.y())
@@ -73,7 +80,14 @@ impl Component for GeoNavigator {
                 let current_point =
                     point! { x: position.coords().latitude(), y: position.coords().longitude() };
                 let distance = current_point.geodesic_distance(&destination);
-                if distance < accuracy {
+
+                if distance
+                    < f64::max(
+                        MIN_TRIGGER_DISTANCE,
+                        f64::min(MAX_TRIGGER_DISTANCE, accuracy),
+                    )
+                    && accuracy < MAX_TRIGGER_ACCURACY
+                {
                     // Close modal
                     self.active = false;
                     ctx.props()
