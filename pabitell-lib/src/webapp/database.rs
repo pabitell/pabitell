@@ -14,6 +14,7 @@ pub struct StoredWorld {
     pub data: Value,
     pub version: usize,
     pub owned: bool,
+    pub name: Option<String>,
 }
 
 async fn _init_database(name: &str) -> Result<Rexie> {

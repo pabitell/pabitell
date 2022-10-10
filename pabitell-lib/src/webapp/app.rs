@@ -71,11 +71,13 @@ pub enum Msg {
     PositionReached(String, Point),
     UpdateSceneLocation(String, Option<Point>),
     ShowEditor(bool),
+    SetWorldName(Option<String>),
 }
 
 pub struct App {
     world_id: Option<Uuid>,
     world: Option<Box<dyn World>>,
+    world_name: Option<String>,
     lang: String,
     owned: Option<bool>,
     /// Request which is being currently processed
@@ -158,6 +160,7 @@ impl Component for App {
         let mut res = Self {
             world_id,
             world: None,
+            world_name: None,
             owned: None,
             request_id: None,
             character: Rc::new(storage::LocalStorage::get("character").ok()),
@@ -365,6 +368,7 @@ impl Component for App {
 
                         let name = ctx.props().name.clone();
                         let link = ctx.link().clone();
+                        let world_name = self.world_name.clone();
 
                         // Update db and send notifications
                         spawn_local(async move {
@@ -379,6 +383,7 @@ impl Component for App {
                                     data: world.dump(),
                                     version: world.version(),
                                     owned: true,
+                                    name: world_name,
                                 },
                             )
                             .await
@@ -428,6 +433,7 @@ impl Component for App {
                             data: world.dump(),
                             version: world.version(),
                             owned: true,
+                            name: None,
                         },
                     )
                     .await
@@ -612,6 +618,7 @@ impl Component for App {
                                                             data: world.dump(),
                                                             version: world.version(),
                                                             owned: true,
+                                                            name: record.name,
                                                         },
                                                     )
                                                     .await
@@ -688,6 +695,7 @@ impl Component for App {
                                     let fixed_character = self.fixed_character;
                                     let character: Option<String> = self.character.as_ref().clone();
                                     let name = ctx.props().name.clone();
+                                    let world_name = self.world_name.clone();
 
                                     if let Some(world_data) = get_world.world {
                                         ctx.link().send_future(async move {
@@ -706,6 +714,7 @@ impl Component for App {
                                                     data: world.dump(),
                                                     version: world.version(),
                                                     owned: false,
+                                                    name: world_name,
                                                 },
                                             )
                                             .await
@@ -899,6 +908,7 @@ impl Component for App {
                                 data: world.dump(),
                                 version: world.version(),
                                 owned: true,
+                                name: None,
                             },
                         )
                         .await
@@ -954,6 +964,7 @@ impl Component for App {
                     let world_id = world.id().to_owned();
                     let world_version = world.version();
                     let name = ctx.props().name.clone();
+                    let world_name = self.world_name.clone();
                     let link = ctx.link().clone();
 
                     spawn_local(async move {
@@ -969,6 +980,7 @@ impl Component for App {
                                 data: world_data,
                                 version: world_version,
                                 owned: true,
+                                name: world_name,
                             },
                         )
                         .await
@@ -990,6 +1002,10 @@ impl Component for App {
                     log::warn!("Trying to show editor for not owned world");
                     false
                 }
+            }
+            Msg::SetWorldName(name) => {
+                self.world_name = name;
+                false
             }
         }
     }
@@ -1402,6 +1418,8 @@ impl App {
         world.set_id(world_id);
         let owned = self.owned;
 
+        let link = ctx.link().clone();
+
         ctx.link().send_future(async move {
             // first try to detect whether the world is owned
             match owned {
@@ -1411,6 +1429,7 @@ impl App {
                     if let Some(record) = database::get_world(&db, &world_id).await.unwrap() {
                         // First try to get world from database
                         world.load(record.data).unwrap();
+                        link.send_message(Msg::SetWorldName(record.name));
 
                         // If this world is owned update it right away
                         log::debug!("World {} is owned. Local db queried.", world_id);
@@ -1430,6 +1449,7 @@ impl App {
                         if record.owned {
                             // First try to get world from database
                             world.load(record.data).unwrap();
+                            link.send_message(Msg::SetWorldName(record.name));
 
                             // If this world is owned update it right away
                             log::debug!("World {} is owned. Local db queried.", world_id);

@@ -10,6 +10,7 @@ use yew::{html, prelude::*, NodeRef};
 
 use super::{
     characters, database,
+    database::StoredWorld,
     language_switch::LanguageSwitch,
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
@@ -56,6 +57,8 @@ pub enum Msg {
     ShowUpload,
     FileChanged,
     FileReadFailed,
+    UpdateWorldName(Uuid, String),
+    EditableNameToggle(Uuid, NodeRef),
 }
 
 pub struct Intro {
@@ -63,6 +66,7 @@ pub struct Intro {
     pub file_ref: NodeRef,
     pub qr_scanner_character_callback: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
     pub worlds: Vec<database::StoredWorld>,
+    pub editable_worlds: HashMap<Uuid, NodeRef>,
 }
 
 impl Component for Intro {
@@ -228,6 +232,42 @@ impl Component for Intro {
                 ctx.props().load_failed_cb.emit(FailedLoadState::NotJson);
                 true
             }
+            Msg::UpdateWorldName(id, name) => {
+                let link = ctx.link().clone();
+                let story_name = ctx.props().name.clone();
+                let world_version = ctx.props().world_version.clone();
+
+                spawn_local(async move {
+                    let db = database::init_database(&story_name).await;
+                    match database::get_world(&db, &id).await {
+                        Ok(Some(mut world)) => {
+                            world.name = Some(name);
+                            if let Err(err) = database::put_world(&db, world).await {
+                                log::error!("Failed to put world {}: {}", id, err);
+                            } else {
+                                Self::update_worlds(story_name, link, world_version);
+                            }
+                        }
+                        Ok(None) => {
+                            log::warn!("World {} not found", id);
+                        }
+                        Err(err) => {
+                            log::error!("Failed to get world {}: {}", id, err);
+                        }
+                    }
+                });
+                false
+            }
+            Msg::EditableNameToggle(uuid, name_input_ref) => {
+                if self.editable_worlds.remove(&uuid).is_none() {
+                    self.editable_worlds.insert(uuid.clone(), name_input_ref);
+                } else {
+                    let new_name = name_input_ref.cast::<HtmlInputElement>().unwrap().value();
+                    ctx.link()
+                        .send_message(Msg::UpdateWorldName(uuid, new_name));
+                }
+                true
+            }
         }
     }
 
@@ -265,6 +305,18 @@ impl Component for Intro {
                     .unwrap();
                 let characters::Character { name, icon, .. } = character.as_ref().clone();
                 let world_id = stored_world.id.clone();
+                let world_id_cloned = world_id.clone();
+                let name_input_ref = NodeRef::default();
+                let name_input_ref_cloned = name_input_ref.clone();
+                let toggle_editable = link.callback(move |_| {
+                    Msg::EditableNameToggle(world_id_cloned, name_input_ref_cloned.clone())
+                });
+                let name_editable = self.editable_worlds.contains_key(&world_id);
+                let name_editable_classes = if name_editable {
+                    classes!("button", "is-small", "is-info")
+                } else {
+                    classes!("button", "is-small", "is-info", "is-outlined")
+                };
                 let events = stored_world.data["event_count"].as_u64().unwrap();
                 let restore_cb = cloned_link.callback(move |_| {
                     Msg::WorldPicked(world_id, name.to_string(), stored_world.fixed_character)
@@ -278,40 +330,71 @@ impl Component for Intro {
 
                 html! {
                     <tr>
-                        <td>
-                            {{
-                                format!(
-                                    "{:04}-{:02}-{:02} {:02}:{:02}",
-                                    local_time.year(),
-                                    local_time.month(),
-                                    local_time.day(),
-                                    local_time.hour(),
-                                    local_time.minute(),
-                                )
-                            }}
+                        <td class="is-vcentered">
+                            <span class="is-size-7">
+                                {{
+                                    format!(
+                                        "{:04}-{:02}-{:02} {:02}:{:02}",
+                                        local_time.year(),
+                                        local_time.month(),
+                                        local_time.day(),
+                                        local_time.hour(),
+                                        local_time.minute(),
+                                    )
+                                }}
+                            </span>
+                            <div class="field has-addons">
+                                <div class="control">
+                                    <input
+                                      class="input is-small"
+                                      type="text"
+                                      ref={name_input_ref}
+                                      readonly={!name_editable}
+                                      value={stored_world.name.unwrap_or_default()}
+                                    />
+                                </div>
+                                <div class="control">
+                                    <a
+                                      class={ name_editable_classes }
+                                      onclick={ toggle_editable }
+                                    >
+                                        <span class="icon">
+                                            <i class="fas fa-edit"></i>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
                         </td>
-                        <td class="has-text-centered">{{ events }}</td>
-                        <td class="has-text-centered">
+                        <td class="has-text-centered is-vcentered">{{ events }}</td>
+                        <td class="has-text-centered is-vcentered">
                             <span class="icon is-small">
                                 <i class={ icon.to_string() }></i>
                             </span>
                         </td>
-                        <td class="has-text-centered">
-                            <button class="button is-small is-info is-outlined mr-1">
+                        <td class="has-text-centered is-vcentered">
+                            <div class="columns p-1">
+                                <div class="column m-0 p-0 is-12-mobile">
+                            <button class="button is-small is-info is-outlined">
                                 <span class="icon">
                                     <i class="fas fa-sign-in-alt" onclick={restore_cb}></i>
                                 </span>
                             </button>
-                            <button class="button is-small is-info is-outlined mr-1 ml-1">
+                                </div>
+                                <div class="column m-0 p-0 is-12-mobile">
+                            <button class="button is-small is-info is-outlined">
                                 <span class="icon">
                                     <i class="fas fa-download" onclick={download_cb}></i>
                                 </span>
                             </button>
-                            <button class="button is-small is-danger is-outlined ml-1">
+                                </div>
+                                <div class="column m-0 p-0 is-12-mobile">
+                            <button class="button is-small is-danger is-outlined">
                                 <span class="icon">
                                     <i class="fas fa-trash-alt" onclick={delete_cb}></i>
                                 </span>
                             </button>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -392,33 +475,33 @@ impl Component for Intro {
                     </section>
                     <footer class="modal-card-foot is-justify-content-center">
                         <div class="content">
-                        <div class="columns">
-                            <div class="column is-justify-content-center is-flex">
-                                <button class="button is-medium is-success is-outlined mx-1">
-                                    <span class="icon">
-                                        <i class="fas fa-plus-circle" onclick={new_world_cb}></i>
-                                    </span>
-                                </button>
-                                <button class="button is-medium is-info is-outlined mx-1">
-                                    <span class="icon">
-                                        <i class="fas fa-upload" onclick={show_upload_cb}></i>
-                                    </span>
-                                </button>
-                                <button class="button is-medium is-info is-outlined mx-1">
-                                    <span class="icon">
-                                        <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
-                                    </span>
-                                </button>
-                                <button class="button is-medium is-outlined mx-1 is-dark is-hidden-touch" onclick={show_print_cb}>
-                                    <span class="icon">
-                                        <i class="fas fa-print"></i>
-                                    </span>
-                                </button>
+                            <div class="columns">
+                                <div class="column is-justify-content-center is-flex">
+                                    <button class="button is-medium is-success is-outlined mx-1">
+                                        <span class="icon">
+                                            <i class="fas fa-plus-circle" onclick={new_world_cb}></i>
+                                        </span>
+                                    </button>
+                                    <button class="button is-medium is-info is-outlined mx-1">
+                                        <span class="icon">
+                                            <i class="fas fa-upload" onclick={show_upload_cb}></i>
+                                        </span>
+                                    </button>
+                                    <button class="button is-medium is-info is-outlined mx-1">
+                                        <span class="icon">
+                                            <i class="fas fa-sign-in-alt" onclick={show_qr_cb}></i>
+                                        </span>
+                                    </button>
+                                    <button class="button is-medium is-outlined mx-1 is-dark is-hidden-touch" onclick={show_print_cb}>
+                                        <span class="icon">
+                                            <i class="fas fa-print"></i>
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="columns">
-                            <div class="column is-size-7">{ load_error }</div>
-                        </div>
+                            <div class="columns">
+                                <div class="column is-size-7">{ load_error }</div>
+                            </div>
                         </div>
                     </footer>
                 </div>
@@ -434,7 +517,7 @@ impl Component for Intro {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        Intro::update_worlds(
+        Self::update_worlds(
             ctx.props().name.clone(),
             ctx.link().clone(),
             ctx.props().world_version,
@@ -443,7 +526,7 @@ impl Component for Intro {
     }
 
     fn create(ctx: &Context<Self>) -> Self {
-        Intro::update_worlds(
+        Self::update_worlds(
             ctx.props().name.clone(),
             ctx.link().clone(),
             ctx.props().world_version,
@@ -453,21 +536,28 @@ impl Component for Intro {
             file_ref: NodeRef::default(),
             qr_scanner_character_callback: Rc::new(RefCell::new(None)),
             worlds: vec![],
+            editable_worlds: HashMap::new(),
         }
     }
 }
 
 impl Intro {
+    async fn get_worlds(
+        name: String,
+        world_version: usize,
+    ) -> Result<Vec<StoredWorld>, rexie::Error> {
+        let db = database::init_database(&name).await;
+        database::get_worlds(&db).await.map(|e| {
+            e.into_iter()
+                .filter(|i| i.version == world_version)
+                .collect()
+        })
+    }
+
     fn update_worlds(name: String, link: html::Scope<Self>, world_version: usize) {
         link.send_future(async move {
-            let db = database::init_database(&name).await;
-            match database::get_worlds(&db).await {
-                Ok(worlds) => Msg::UpdateWorlds(
-                    worlds
-                        .into_iter()
-                        .filter(|e| e.version == world_version)
-                        .collect(),
-                ),
+            match Self::get_worlds(name, world_version).await {
+                Ok(worlds) => Msg::UpdateWorlds(worlds),
                 Err(err) => {
                     log::error!("Failed to get worlds {}", err);
                     Msg::UpdateWorlds(vec![])
