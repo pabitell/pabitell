@@ -20,7 +20,7 @@ use crate::{
         character_switch::CharacterSwitch,
         characters, database,
         editor::Editor,
-        geo_navigator::{make_navigations_data, GeoNavigator},
+        geo_navigator::make_navigations_data,
         intro::{FailedLoadState, Intro},
         items::Item,
         language_switch::LanguageSwitch,
@@ -1050,42 +1050,14 @@ impl Component for App {
             let narrator = props.make_narrator.as_ref().unwrap()();
             let events = narrator.available_events_sorted(world.as_ref());
 
-            // Prepare geo navitions
-            let nav_data = make_navigations_data(&events, world.as_ref())
-                .into_iter()
-                .filter(|e| Some(&e.0) == self.character.as_ref().as_ref())
-                .collect::<Vec<_>>();
-            let nav_element_html = |(character, scene_name, scene_title, point): (
-                String,
-                Option<String>,
-                Option<String>,
-                Point,
-            )| {
-                let character_cloned = character.to_string();
-                let reached_cb =
-                    link.callback(move |_| Msg::PositionReached(character_cloned.clone(), point));
-                html! {
-                  <div class="subtitle is-flex">
-                      <div class="w-100 field is-justify-content-center">
-                          <div class="has-text-centered">
-                            <GeoNavigator
-                              destination={point}
-                              reached={reached_cb}
-                              {character}
-                              {scene_name}
-                              {scene_title}
-                            />
-                          </div>
-                      </div>
-                  </div>
-                }
-            };
-
             let characters_map: HashMap<String, Rc<characters::Character>> =
                 props.make_characters.as_ref().unwrap()(world.as_ref())
                     .iter()
                     .map(|c| (c.name.to_string(), c.clone()))
                     .collect();
+
+            // Prepare geo navitions
+            let nav_data = make_navigations_data(&events, world.as_ref(), &characters_map);
 
             let events: Vec<Rc<ActionEventItem>> = events
                 .into_iter()
@@ -1146,6 +1118,8 @@ impl Component for App {
                 .collect();
 
             let trigger_event_data_callback = link.callback(Msg::TriggerEventData);
+            let position_reached_cb =
+                link.callback(|(character, position)| Msg::PositionReached(character, position));
 
             let leave_cb = link.callback(|_| Msg::Leave);
             let reset_cb = link.callback(|_| Msg::Reset);
@@ -1212,7 +1186,6 @@ impl Component for App {
                                   </div>
                               </div>
                           </div>
-                          { for nav_data.into_iter().map(nav_element_html) }
                       </div>
                     </section>
                     <main>
@@ -1223,12 +1196,14 @@ impl Component for App {
                           fixed={self.fixed_character}
                         />
                         <Actions
+                          {nav_data}
                           lang={ self.lang.clone() }
                           available_characters={ available_characters }
                           { owned_items }
                           character={ self.character.clone() }
                           events={ events }
                           trigger_event_data={ trigger_event_data_callback }
+                          { position_reached_cb }
                           world_id={self.world_id.unwrap_or_default()}
                           actions_scope={self.actions_scope.clone()}
                           { finished }

@@ -3,7 +3,10 @@ use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Position, PositionOptions};
 use yew::{html, prelude::*};
 
-use crate::{Event, GeoLocation, World};
+use std::{collections::HashMap, rc::Rc};
+
+use super::characters::Character;
+use crate::{translations::get_message_global, Event, GeoLocation, World};
 
 /// Limits range for inaccurate locations
 const MAX_TRIGGER_DISTANCE: f64 = 25.;
@@ -11,6 +14,8 @@ const MAX_TRIGGER_DISTANCE: f64 = 25.;
 const MIN_TRIGGER_DISTANCE: f64 = 10.;
 /// Can't trigger when accuracy really bad
 const MAX_TRIGGER_ACCURACY: f64 = 50.;
+
+pub type NavigationData = (Rc<Character>, Option<String>, Option<String>, Point);
 
 impl From<Point<f64>> for GeoLocation {
     fn from(point: Point<f64>) -> Self {
@@ -29,8 +34,9 @@ pub struct Props {
     pub destination: Point,
     pub scene_name: Option<String>,
     pub scene_title: Option<String>,
-    pub character: String,
+    pub character: Rc<Character>,
     pub reached: Callback<(String, Point)>,
+    pub lang: String,
 }
 
 const SVG_INITIAL_ROTATION: f64 = -45.;
@@ -90,9 +96,10 @@ impl Component for GeoNavigator {
                 {
                     // Close modal
                     self.active = false;
-                    ctx.props()
-                        .reached
-                        .emit((ctx.props().character.clone(), destination.to_owned()));
+                    ctx.props().reached.emit((
+                        ctx.props().character.code.as_ref().clone().unwrap(),
+                        destination.to_owned(),
+                    ));
                 } else {
                     self.update_positions(position);
                 }
@@ -208,19 +215,39 @@ impl Component for GeoNavigator {
                 classes!("fas", "fa-arrows-rotate")
             };
 
+            let navigate_text = get_message_global("navigate", &ctx.props().lang, None);
+
             html! {
                 <>
-                    <button
-                      class="button is-outlined is-medium"
-                      onclick={open_cb}
-                    >
-                        <span class="icon-text">
-                            <span class="icon has-text-info">
-                                <i class="fas fa-compass"></i>
-                            </span>
-                            <span>{ distance.round() }  <small class="is-size-7 p-1 has-text-warning-dark"><i class="fas fa-plus-minus pr-1"></i>{ accuracy.round() }</small> {"m"}</span>
-                        </span>
-                    </button>
+                    <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-32x32">
+                                        <img src="images/person-walking.svg"/>
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4">{ctx.props().character.short.clone()}</p>
+                                    <p class="subtitle is-6">{navigate_text}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-image has-text-centered">
+                            <figure onclick={ open_cb } class="image is-clickable is-square w-75 is-inline-block box">
+                                <img class="box" src="images/compass.svg" alt="QR code"/>
+                            </figure>
+                            <div class="content">
+                                <span>
+                                    { distance.round() }
+                                    <small class="is-size-7 p-1 has-text-warning-dark">
+                                        <i class="fas fa-plus-minus pr-1"></i>
+                                        { accuracy.round() }
+                                    </small> {"m"}
+                                </span>
+                </div>
+                        </div>
+                    </div>
                     <div class={modal_classes}>
                         <div class="modal-background"></div>
                         <div class="modal-card has-text-centered">
@@ -387,26 +414,31 @@ impl GeoNavigator {
 pub fn make_navigations_data(
     events: &[Box<dyn Event>],
     world: &dyn World,
-) -> Vec<(String, Option<String>, Option<String>, Point)> {
+    character_map: &HashMap<String, Rc<Character>>,
+) -> Vec<NavigationData> {
     events
         .iter()
         .filter_map(|e| {
             if let Some((character, scene_name_opt, location)) = e.geo_location(world) {
-                if let Some(scene_name) = scene_name_opt {
-                    let scene_title = world.scenes().get(&scene_name).unwrap().short(world);
-                    Some((
-                        character,
-                        Some(scene_name),
-                        Some(scene_title),
-                        point! { x: location.0, y: location.1 },
-                    ))
+                if let Some(character) = character_map.get(&character) {
+                    if let Some(scene_name) = scene_name_opt {
+                        let scene_title = world.scenes().get(&scene_name).unwrap().short(world);
+                        Some((
+                            character.clone(),
+                            Some(scene_name),
+                            Some(scene_title),
+                            point! { x: location.0, y: location.1 },
+                        ))
+                    } else {
+                        Some((
+                            character.clone(),
+                            None,
+                            None,
+                            point! { x: location.0, y: location.1 },
+                        ))
+                    }
                 } else {
-                    Some((
-                        character,
-                        None,
-                        None,
-                        point! { x: location.0, y: location.1 },
-                    ))
+                    None
                 }
             } else {
                 None

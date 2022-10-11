@@ -12,3 +12,4 @@ not_json = Nahraný soubor není v JSON formátu.
 wrong_json = Formát nahraného souboru není platný.
 world_editor = Editor příběhu
 places = Místa
+navigate = Naviguj

@@ -12,3 +12,4 @@ not_json = The provided file is not in JSON format.
 wrong_json = The format of the provided file is not valid.
 world_editor = World editor
 places = Places
+navigate = Navigate

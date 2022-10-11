@@ -1,11 +1,14 @@
 use data_url::DataUrl;
+use geo::Point;
 use serde_json::Value;
 use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 use yew::prelude::*;
 
 use super::{
-    action_event, action_item, action_join, characters, items,
+    action_event, action_item, action_join, characters,
+    geo_navigator::{GeoNavigator, NavigationData},
+    items,
     qrcode::{Msg as QRCodeMsg, QRCode},
     qrscanner::{Msg as QRScannerMsg, QRScanner},
 };
@@ -22,6 +25,8 @@ pub struct Props {
     pub world_id: Uuid,
     pub actions_scope: Rc<RefCell<Option<html::Scope<Actions>>>>,
     pub finished: bool,
+    pub nav_data: Vec<NavigationData>,
+    pub position_reached_cb: Callback<(String, Point)>,
 }
 
 impl PartialEq for Props {
@@ -33,6 +38,8 @@ impl PartialEq for Props {
             && self.events == other.events
             && self.trigger_event_data == other.trigger_event_data
             && self.world_id == other.world_id
+            && self.finished == other.finished
+            && self.nav_data == other.nav_data
     }
 }
 
@@ -43,6 +50,7 @@ pub enum Msg {
     QRCodeHide,
     QRCodeScanned(String),
     QRCodeUseItemScanned(String, String),
+    PositionReached(String, Point),
 }
 
 pub struct Actions {
@@ -140,6 +148,10 @@ impl Component for Actions {
                     .send_message(QRScannerMsg::Active(true));
                 false
             }
+            Msg::PositionReached(character, point) => {
+                ctx.props().position_reached_cb.emit((character, point));
+                true
+            }
         }
     }
 
@@ -156,6 +168,34 @@ impl Component for Actions {
 
             html! {
                 <action_event::ActionEvent {item} trigger_event_cb={cb} {show_qr_cb} />
+            }
+        };
+        let cloned_link = ctx.link().clone();
+        let lang = ctx.props().lang.clone();
+        let geo_navs = |data: NavigationData| {
+            let (character, scene_name, scene_title, destination) = data;
+            let lang = lang.clone();
+            let link = cloned_link.clone();
+
+            let destination_cloned = destination.clone();
+            if let Some(character_code) = character.code.as_ref() {
+                let character_code = character_code.to_owned();
+                let reached_cb = link.callback(move |_| {
+                    Msg::PositionReached(character_code.clone(), destination_cloned)
+                });
+                html! {
+                    <GeoNavigator
+                      {lang}
+                      {destination}
+                      character={character.clone()}
+                      reached={reached_cb}
+                      {scene_name}
+                      {scene_title}
+                    />
+                }
+            } else {
+                // don't show navigation for narrator
+                html! {}
             }
         };
         let cloned_link = ctx.link().clone();
@@ -247,9 +287,27 @@ impl Component for Actions {
 
         let items = props.owned_items.clone();
 
+        let nav_data = ctx
+            .props()
+            .nav_data
+            .clone()
+            .into_iter()
+            .filter(|(character, _, _, _)| {
+                if let Some(character2) = ctx.props().character.as_ref() {
+                    if let Some(code) = character.code.as_ref() {
+                        code == character2
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            });
+
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
+                    { for nav_data.into_iter().map(move |e| geo_navs(e)) }
                     { for characters.clone().into_iter().map(|e| qr_scans(e.clone())) }
                     { for joinable_characters.iter().map(|e| render_join(e)) }
                     { for items.iter().map(render_item) }
