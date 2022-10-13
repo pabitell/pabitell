@@ -91,8 +91,8 @@ impl Component for Editor {
         let link = ctx.link().clone();
         let success_cb = Closure::wrap(Box::new(move |pos: web_sys::Position| {
             let coords = pos.coords();
-            let x = coords.latitude();
-            let y = coords.longitude();
+            let y = coords.latitude();
+            let x = coords.longitude();
             let accuracy = coords.accuracy();
             link.send_future(async move { Msg::LocationObtained(point! {x: x, y: y}, accuracy) });
         }) as Box<dyn Fn(web_sys::Position)>);
@@ -312,16 +312,16 @@ impl Editor {
             if let Some(target) = target {
                 format!(
                     "https://www.openstreetmap.org/?mlat={}&mlon={}#map=18/{}/{}",
-                    target.0,
                     target.1,
-                    current.0.x(),
+                    target.0,
                     current.0.y(),
+                    current.0.x(),
                 )
             } else {
                 format!(
                     "https://www.openstreetmap.org/#map=18/{}/{}",
-                    current.0.x(),
                     current.0.y(),
+                    current.0.x(),
                 )
             }
         } else {
