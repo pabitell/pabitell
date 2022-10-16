@@ -32,7 +32,7 @@ use crate::{
         status::{Status, WsStatus},
         websocket_client::{Msg as WsMsg, WebsocketClient},
     },
-    Event, GeoLocation, Narrator, World,
+    Event, GeoLocation, Narrator, Tagged, World,
 };
 
 pub type MakeCharacters = Option<Box<dyn Fn(&dyn World) -> Rc<Vec<Rc<characters::Character>>>>>;
@@ -1067,37 +1067,37 @@ impl Component for App {
                         if let Some(event) = e.as_any().downcast_ref::<events::Pick>() {
                             (
                                 Some(format!("images/{}.svg", event.item())),
-                                false,
+                                event.get_tags().contains(&"self-trigger".to_string()),
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Give>() {
                             (
                                 Some(format!("images/{}.svg", event.item())),
-                                false,
+                                event.get_tags().contains(&"self-trigger".to_string()),
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Move>() {
                             (
                                 Some(format!("images/{}.svg", event.scene())),
-                                false,
+                                event.get_tags().contains(&"self-trigger".to_string()),
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::UseItem>() {
                             (
                                 Some(format!("images/{}.svg", event.item())),
-                                false,
+                                event.get_tags().contains(&"self-trigger".to_string()),
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Void>() {
                             (
                                 event.item().as_ref().map(|e| format!("images/{}.svg", e)),
-                                false,
+                                event.get_tags().contains(&"self-trigger".to_string()),
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else if let Some(event) = e.as_any().downcast_ref::<events::Talk>() {
                             (
                                 Some("images/comment.svg".to_owned()),
-                                true,
+                                true, // talk events should be always self-triggered
                                 event.geo_location(world.as_ref()).map(|e| e.2),
                             )
                         } else {
