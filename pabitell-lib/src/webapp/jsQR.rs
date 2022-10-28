@@ -1,3 +1,4 @@
+use gloo_utils::format::JsValueSerdeExt;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 
@@ -8,7 +9,7 @@ extern "C" {
 }
 
 pub fn js_qr(data: Clamped<Vec<u8>>, width: u32, height: u32, options: JsValue) -> Option<String> {
-    let res = jsQR(data, width, height, options).into_serde().ok()?;
+    let res = JsValueSerdeExt::into_serde(&jsQR(data, width, height, options)).ok()?;
     match res {
         serde_json::Value::Object(obj) => {
             let data = obj.get("data")?;

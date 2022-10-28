@@ -1,4 +1,6 @@
 use chrono::{DateTime, Utc};
+use gloo_utils::format::JsValueSerdeExt;
+
 use rexie::{Index, KeyRange, ObjectStore, Result, Rexie, TransactionMode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -64,7 +66,7 @@ pub async fn get_world(rex: &Rexie, id: &Uuid) -> Result<Option<StoredWorld>> {
     if !world.is_object() {
         return Ok(None);
     }
-    let world_json = world.into_serde().unwrap();
+    let world_json = JsValueSerdeExt::into_serde(&world).unwrap();
     transaction.done().await?;
     Ok(Some(world_json))
 }
@@ -82,7 +84,8 @@ pub async fn get_worlds(rex: &Rexie) -> Result<Vec<StoredWorld>> {
     Ok(worlds
         .iter()
         .filter_map(|(_, v)| {
-            let stored_world: StoredWorld = serde_json::from_value(v.into_serde().ok()?).ok()?;
+            let stored_world: StoredWorld =
+                serde_json::from_value(JsValueSerdeExt::into_serde(v).ok()?).ok()?;
             Some(stored_world)
         })
         .collect())
@@ -99,9 +102,8 @@ pub async fn put_world(rex: &Rexie, mut stored_world: StoredWorld) -> Result<()>
     let transaction = rex.transaction(&["worlds"], TransactionMode::ReadWrite)?;
     let worlds = transaction.store("worlds")?;
     let record = serde_json::to_value(&stored_world).unwrap();
-    worlds
-        .put(&JsValue::from_serde(&Some(record)).unwrap(), None)
-        .await?;
+    let value: JsValue = <JsValue as JsValueSerdeExt>::from_serde(&record).unwrap();
+    worlds.put(&value, None).await?;
     transaction.done().await?;
 
     Ok(())
@@ -136,7 +138,7 @@ pub async fn get_events(rex: &Rexie, world_id: &Uuid) -> Result<Vec<Value>> {
 
     Ok(world_events
         .iter()
-        .map(|(_, v)| v.into_serde().unwrap())
+        .map(|(_, v)| JsValueSerdeExt::into_serde(v).unwrap())
         .collect())
 }
 
@@ -157,7 +159,7 @@ pub async fn get_event(rex: &Rexie, world_id: &Uuid, idx: u64) -> Result<Option<
 
     let mut res: Vec<_> = world_events
         .iter()
-        .filter_map(|(_, v)| v.into_serde().ok())
+        .filter_map(|(_, v)| JsValueSerdeExt::into_serde(v).ok())
         .filter_map(|v: Value| {
             if let Value::Number(num) = &v["idx"] {
                 if num.as_u64() == Some(idx) {
@@ -201,7 +203,7 @@ pub async fn put_event(rex: &Rexie, world_id: &Uuid, idx: u64, data: Value) -> R
             if let Some(idx) = num.as_f64() {
                 events
                     .put(
-                        &JsValue::from_serde(&record).unwrap(),
+                        &<JsValue as JsValueSerdeExt>::from_serde(&record).unwrap(),
                         Some(&JsValue::from_f64(idx)),
                     )
                     .await?;
@@ -214,7 +216,10 @@ pub async fn put_event(rex: &Rexie, world_id: &Uuid, idx: u64, data: Value) -> R
         }
     } else {
         events
-            .put(&JsValue::from_serde(&record).unwrap(), None)
+            .put(
+                &<JsValue as JsValueSerdeExt>::from_serde(&record).unwrap(),
+                None,
+            )
             .await?;
     }
 

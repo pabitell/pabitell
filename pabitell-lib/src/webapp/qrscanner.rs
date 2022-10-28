@@ -4,6 +4,7 @@ use gloo::{
     storage::{self, Storage},
     timers,
 };
+use gloo_utils::format::JsValueSerdeExt;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
@@ -119,7 +120,7 @@ impl Component for QRScanner {
                     input,
                     width,
                     height,
-                    JsValue::from_serde(&serde_json::json!({})).unwrap(),
+                    <JsValue as JsValueSerdeExt>::from_serde(&serde_json::json!({})).unwrap(),
                 );
                 if let Some(qr_data) = res {
                     ctx.props().qr_found.emit(qr_data);
@@ -170,7 +171,7 @@ impl Component for QRScanner {
                     ctx.link().send_future(async move {
                         let mut constraints = MediaStreamConstraints::new();
                         constraints.video(
-                            &JsValue::from_serde(
+                            &<JsValue as JsValueSerdeExt>::from_serde(
                                 &serde_json::json!({"deviceId": {"exact": device_id}}),
                             )
                             .unwrap(),
