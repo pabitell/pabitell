@@ -1,8 +1,10 @@
+use anyhow::{anyhow, Result as AnyhowResult};
 use chrono::{DateTime, Datelike, Local, Timelike};
 use data_url::DataUrl;
 use js_sys::{Array, Uint8Array};
 use serde_json::Value;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use url;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::{spawn_local, JsFuture};
@@ -461,6 +463,11 @@ impl Component for Intro {
                         <div class="modal-card-title is-flex-shrink-1">
                             {ctx.props().story_name.clone()}
                         </div>
+                        <div>
+                            <a class="button" href={self.backlink_url().unwrap()}>
+                                <i class="fas fa-arrow-up"></i>
+                            </a>
+                        </div>
                     </header>
                     <section class="modal-card-body">
                         <div class="content">
@@ -564,5 +571,26 @@ impl Intro {
                 }
             }
         });
+    }
+
+    fn backlink_url(&self) -> AnyhowResult<String> {
+        let window = web_sys::window().unwrap();
+        let current_url = window.location().href().unwrap();
+        let parsed = url::Url::parse(&current_url)?;
+        let mut path_segments: Vec<String> = parsed
+            .path_segments()
+            .ok_or_else(|| anyhow!("Failed to parse backlink"))?
+            .map(|e| e.to_owned())
+            .collect::<Vec<String>>()
+            .into_iter()
+            .filter(|e| !e.is_empty())
+            .collect();
+        let _ = path_segments.pop();
+        let res = path_segments.into_iter().collect::<Vec<String>>().join("/");
+        Ok(if res.is_empty() {
+            "/".to_string()
+        } else {
+            format!("/{}", res)
+        })
     }
 }
