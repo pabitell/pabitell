@@ -448,6 +448,8 @@ impl Component for Intro {
             None => html! {},
         };
 
+        let join_story_text = translations::get_message_global("join_story", &lang, None);
+
         html! {
             <div class="modal is-active">
                 <div class="modal-background"></div>
@@ -476,6 +478,7 @@ impl Component for Intro {
                               qr_found={qr_found_cb}
                               lang={ctx.props().lang.clone()}
                               shared_scope={self.qr_scanner_character_callback.clone()}
+                              title={Rc::new(join_story_text)}
                             />
                         </div>
                         {table}

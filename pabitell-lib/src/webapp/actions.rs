@@ -304,6 +304,8 @@ impl Component for Actions {
                 }
             });
 
+        let scanner_text = get_message_global("move_pick_or_use", &props.lang, None);
+
         html! {
             <section class="section is-flex">
                 <div class="columns is-flex-wrap-wrap w-100">
@@ -315,6 +317,7 @@ impl Component for Actions {
                       qr_found={qr_found_cb}
                       lang={ctx.props().lang.clone()}
                       shared_scope={self.qr_scanner_scope.clone()}
+                      title={Rc::new(scanner_text)}
                     />
                     { for events.into_iter().map(render_action) }
                     <QRCode qr_code_scope={self.qr_code_scope.clone()}/>

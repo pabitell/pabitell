@@ -13,3 +13,6 @@ wrong_json = Formát nahraného souboru není platný.
 world_editor = Editor příběhu
 places = Místa
 navigate = Naviguj
+join_story = Připojit se k příběhu
+use_item = Použij věc
+move_pick_or_use = Přesunout se, zvednout nebo použít

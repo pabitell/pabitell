@@ -5,6 +5,8 @@ use super::{
 use std::{cell::RefCell, rc::Rc};
 use yew::{html, prelude::*};
 
+use crate::translations;
+
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct Props {
     pub item: Rc<items::Item>,
@@ -134,6 +136,8 @@ impl Component for ActionItem {
             }
         };
 
+        let use_item_text = translations::get_message_global("use_item", &ctx.props().lang, None);
+
         html! {
             <div class="column card is-12-mobile is-6-tablet is-3-desktop is-3-widescreen is-3-fullhd">
                 <div class="card-content">
@@ -158,6 +162,7 @@ impl Component for ActionItem {
                       lang={ctx.props().lang.clone()}
                       qr_found={qr_found_cb}
                       shared_scope={self.qr_scanner_callback.clone()}
+                      title={Rc::new(use_item_text)}
                     />
                 </div>
                 <footer class="card-footer">

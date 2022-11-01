@@ -13,3 +13,6 @@ wrong_json = The format of the provided file is not valid.
 world_editor = World editor
 places = Places
 navigate = Navigate
+join_story = Join story
+use_item = Use item
+move_pick_or_use = Move, pick or use

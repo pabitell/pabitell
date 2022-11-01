@@ -23,6 +23,7 @@ pub struct Props {
     pub qr_found: Callback<String>,
     pub shared_scope: Rc<RefCell<Option<html::Scope<QRScanner>>>>,
     pub lang: String,
+    pub title: Rc<String>,
 }
 
 impl PartialEq<Self> for Props {
@@ -245,6 +246,9 @@ impl Component for QRScanner {
             <div class={classes}>
                 <div class="modal-background"></div>
                 <div class="modal-content has-text-centered">
+                    <div class="content has-text-white has-text-weight-bold">
+                        <small>{ ctx.props().title.clone() }</small>
+                    </div>
                 { self.view_cameras(ctx) }
                 { self.video_view(ctx) }
                 </div>
