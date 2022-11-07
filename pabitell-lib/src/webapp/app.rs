@@ -1209,7 +1209,11 @@ impl Component for App {
                           { finished }
                         />
                         { self.view_scene(ctx) }
-                        <Messages shared_scope={ self.messages_scope.clone() }/>
+                        <Messages
+                          shared_scope={ self.messages_scope.clone() }
+                          lang={ Rc::new(self.lang.clone()) }
+                          world_name={ Rc::new(world.name().to_string()) }
+                        />
                     </main>
                     <footer class="footer">
                         <div class="content has-text-centered">
