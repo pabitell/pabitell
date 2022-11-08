@@ -5,6 +5,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.4.0] - 2022-11-08
+
+### Added
+- reset world button
+- GeoNavigation component added (as action item)
+- editor page (right now it assigns location to scenes - using OSM)
+- triggering event via geolocation
+- allow characters without scene (move to initial location)
+- setting world name in intro
+- self-trigger events - events which can be triggered by user right away
+- added refresh button for speech syntesis
+- backlink to upper path `/doggie_and_kitie/cake/` -> `/doggie_and_kitie/`
+- display title when scanning QR code
+
+### Changed
+- pabitell-root moved to a separate repo
+- refactored event translations
+- refactored event conditions
+- refactored event updates
+- better file name (contains story code now)
+- pritable qr-codes should be in A7 format and have same size
+- scene contains geolocation field
+
+### Fixed
+- speech synthesis should work for google chrome
+- skim update to deal with security warnings
+
+
 ## [0.3.0] - 2022-08-30
 
 ### Changed
